@@ -284,6 +284,7 @@ class CostModel:
     def _engineering_keys(self) -> list[str]:
         """Return engineering parameter names (things you can actually improve)."""
         common = [
+            "availability", "construction_time_yr",
             "mn", "eta_th", "eta_p", "f_sub",
             "p_pump", "p_trit", "p_house", "p_cryo",
         ]
@@ -343,13 +344,15 @@ class CostModel:
             # Extract named args from traced vector if present
             ir = eng.pop("interest_rate", params.get("interest_rate", 0.07))
             inf = eng.pop("inflation_rate", params.get("inflation_rate", 0.0245))
+            av = eng.pop("availability", avail)
+            ct_val = eng.pop("construction_time_yr", ct)
 
             result = self.forward(
                 net_electric_mw=net_mw,
-                availability=avail,
+                availability=av,
                 lifetime_yr=life,
                 n_mod=n_mod,
-                construction_time_yr=ct,
+                construction_time_yr=ct_val,
                 interest_rate=ir,
                 inflation_rate=inf,
                 noak=noak,
