@@ -1,5 +1,8 @@
 """Top-level CostModel API: wires all 5 layers together."""
 
+import jax
+import jax.numpy as jnp
+
 from costingfe.defaults import (
     CostingConstants,
     load_costing_constants,
@@ -275,22 +278,14 @@ class CostModel:
         )
         return ForwardResult(power_table=pt, costs=costs, params=params)
 
-    def sensitivity(self, params: dict) -> dict[str, float]:
-        """Compute elasticity of LCOE w.r.t. each continuous parameter.
-
-        Elasticity = (dLCOE/dp) * (p / LCOE) = %ΔLCOE / %Δparam.
-        Dimensionless, allowing fair comparison across parameters.
-
-        Uses finite-difference for MVP. Will be replaced with jax.grad
-        when the pipeline is fully JAX-traced (Task 14).
-        """
-        # Family-specific continuous keys
-        common_keys = [
+    def _continuous_keys(self) -> list[str]:
+        """Return the list of differentiable continuous parameter names."""
+        common = [
             "mn", "eta_th", "eta_p", "f_sub",
             "p_pump", "p_trit", "p_house", "p_cryo",
             "interest_rate", "inflation_rate",
         ]
-        family_keys = {
+        family_specific = {
             ConfinementFamily.MFE: [
                 "p_input", "eta_pin", "eta_de", "f_dec",
                 "p_coils", "p_cool",
@@ -303,51 +298,109 @@ class CostModel:
                 "p_driver", "eta_pin", "p_target", "p_coils",
             ],
         }
-        continuous_keys = common_keys + family_keys.get(self.family, [])
+        return common + family_specific.get(self.family, [])
 
-        # Params that are passed as named forward() args, not **overrides
+    def _build_lcoe_fn(self, params: dict):
+        """Build a JAX-differentiable function: param_vector -> LCOE.
+
+        Fuel, concept, CostingConstants, and discrete params are closed
+        over. Only continuous engineering/financial params are traced.
+        Returns (lcoe_fn, keys, base_values) where lcoe_fn takes a 1D
+        JAX array and returns a scalar LCOE.
+        """
+        keys = [k for k in self._continuous_keys() if k in params and params[k] != 0]
+        base_vals = jnp.array([float(params[k]) for k in keys])
+
+        # Named args passed to forward() directly
         named_args = {
             "net_electric_mw", "availability", "lifetime_yr", "n_mod",
             "construction_time_yr", "interest_rate", "inflation_rate",
             "noak", "fuel", "concept",
         }
 
-        def _run(override_key=None, override_val=None):
-            eng = {k: v for k, v in params.items() if k not in named_args}
-            if override_key and override_key in eng:
-                eng[override_key] = override_val
-            return self.forward(
-                net_electric_mw=params["net_electric_mw"],
-                availability=params["availability"],
-                lifetime_yr=params["lifetime_yr"],
-                n_mod=params.get("n_mod", 1),
-                construction_time_yr=params.get("construction_time_yr", 6.0),
-                interest_rate=(
-                    override_val
-                    if override_key == "interest_rate"
-                    else params.get("interest_rate", 0.07)
-                ),
-                inflation_rate=(
-                    override_val
-                    if override_key == "inflation_rate"
-                    else params.get("inflation_rate", 0.0245)
-                ),
-                noak=params.get("noak", True),
+        # Static params (closed over, not traced)
+        static_eng = {k: v for k, v in params.items()
+                      if k not in named_args and k not in keys}
+        net_mw = params["net_electric_mw"]
+        avail = params["availability"]
+        life = params["lifetime_yr"]
+        n_mod = params.get("n_mod", 1)
+        ct = params.get("construction_time_yr", 6.0)
+        noak = params.get("noak", True)
+
+        def lcoe_fn(x):
+            # Unpack traced params into a dict
+            eng = dict(static_eng)
+            for i, k in enumerate(keys):
+                eng[k] = x[i]
+
+            # Extract named args from traced vector if present
+            ir = eng.pop("interest_rate", params.get("interest_rate", 0.07))
+            inf = eng.pop("inflation_rate", params.get("inflation_rate", 0.0245))
+
+            result = self.forward(
+                net_electric_mw=net_mw,
+                availability=avail,
+                lifetime_yr=life,
+                n_mod=n_mod,
+                construction_time_yr=ct,
+                interest_rate=ir,
+                inflation_rate=inf,
+                noak=noak,
                 **eng,
             )
+            return result.costs.lcoe
 
-        base_lcoe = float(_run().costs.lcoe)
+        return lcoe_fn, keys, base_vals
+
+    def sensitivity(self, params: dict) -> dict[str, float]:
+        """Compute elasticity of LCOE w.r.t. each continuous parameter.
+
+        Elasticity = (dLCOE/dp) * (p / LCOE) = %ΔLCOE / %Δparam.
+        Dimensionless, allowing fair comparison across parameters.
+
+        Uses jax.grad for exact autodiff gradients.
+        """
+        lcoe_fn, keys, base_vals = self._build_lcoe_fn(params)
+        base_lcoe = float(lcoe_fn(base_vals))
+
+        grad_fn = jax.grad(lcoe_fn)
+        grads = grad_fn(base_vals)
+
         elasticities = {}
-
-        for key in continuous_keys:
-            if key not in params:
-                continue
-            base_val = float(params[key])
-            if base_val == 0:
-                continue
-            delta = abs(base_val) * 0.01
-            lcoe_plus = float(_run(key, base_val + delta).costs.lcoe)
-            dLCOE_dp = (lcoe_plus - base_lcoe) / delta
-            elasticities[key] = dLCOE_dp * base_val / base_lcoe
+        for i, key in enumerate(keys):
+            p = float(base_vals[i])
+            dLCOE_dp = float(grads[i])
+            elasticities[key] = dLCOE_dp * p / base_lcoe
 
         return elasticities
+
+    def batch_lcoe(self, param_sets: dict[str, list[float]], params: dict) -> list[float]:
+        """Evaluate LCOE for many parameter sets using jax.vmap.
+
+        Args:
+            param_sets: Dict of param_name -> list of values (all same length).
+                Only the listed params vary; others held at base values.
+            params: Base parameter dict (from a forward() result).
+
+        Returns:
+            List of LCOE values, one per parameter set.
+        """
+        lcoe_fn, keys, base_vals = self._build_lcoe_fn(params)
+
+        n = len(next(iter(param_sets.values())))
+        # Build matrix: each row is a param vector
+        rows = []
+        for _ in range(n):
+            rows.append(base_vals)
+        batch = jnp.stack(rows)
+
+        # Override the varying params
+        for param_name, values in param_sets.items():
+            if param_name in keys:
+                idx = keys.index(param_name)
+                batch = batch.at[:, idx].set(jnp.array(values))
+
+        vmapped = jax.vmap(lcoe_fn)
+        results = vmapped(batch)
+        return [float(r) for r in results]

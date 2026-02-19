@@ -67,6 +67,43 @@ def test_sensitivity_ife():
     assert "p_input" not in sens  # MFE-specific param
 
 
+def test_sensitivity_jax_grad_matches_finite_diff():
+    """JAX grad elasticities should be close to finite-difference estimates."""
+    model = CostModel(concept=ConfinementConcept.TOKAMAK, fuel=Fuel.DT)
+    result = model.forward(net_electric_mw=1000.0, availability=0.85, lifetime_yr=30)
+
+    # JAX grad
+    sens = model.sensitivity(result.params)
+
+    # Manual finite-difference for eta_th
+    base_lcoe = float(result.costs.lcoe)
+    eta_th = result.params["eta_th"]
+    delta = eta_th * 0.01
+    r2 = model.forward(net_electric_mw=1000.0, availability=0.85, lifetime_yr=30,
+                        eta_th=eta_th + delta)
+    fd_elasticity = ((float(r2.costs.lcoe) - base_lcoe) / delta) * eta_th / base_lcoe
+
+    assert abs(sens["eta_th"] - fd_elasticity) < 0.01, (
+        f"JAX grad {sens['eta_th']:.4f} vs FD {fd_elasticity:.4f}"
+    )
+
+
+def test_batch_lcoe_vmap():
+    """batch_lcoe should evaluate many parameter sets via vmap."""
+    model = CostModel(concept=ConfinementConcept.TOKAMAK, fuel=Fuel.DT)
+    result = model.forward(net_electric_mw=1000.0, availability=0.85, lifetime_yr=30)
+
+    # Sweep eta_th from 0.35 to 0.55
+    eta_values = [0.35, 0.40, 0.45, 0.50, 0.55]
+    lcoes = model.batch_lcoe({"eta_th": eta_values}, result.params)
+
+    assert len(lcoes) == 5
+    # Higher eta_th should give lower LCOE
+    assert lcoes[0] > lcoes[-1]
+    # All should be positive
+    assert all(l > 0 for l in lcoes)
+
+
 def test_compare_all_returns_ranking():
     """Cross-concept comparison should return sorted results."""
     from costingfe import compare_all
