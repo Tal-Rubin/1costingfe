@@ -1,8 +1,11 @@
 """Layer 2: Physics — fuel physics, power balance (forward + inverse)."""
 
+from typing import Optional
+
 import jax.numpy as jnp
 from scipy import constants as sc
-from costingfe.types import Fuel
+
+from costingfe.types import Fuel, PowerTable
 
 # ---------------------------------------------------------------------------
 # Fundamental constants from scipy (CODATA)
@@ -79,3 +82,128 @@ def ash_neutron_split(
     p_ash = p_fus * ash_frac
     p_neutron = p_fus * (1.0 - ash_frac)
     return p_ash, p_neutron
+
+
+def compute_p_rad(
+    n_e: float,
+    T_e: float,
+    Z_eff: float,
+    volume: float,
+    B: float = 0.0,
+) -> float:
+    """Plasma radiation power (bremsstrahlung + synchrotron).
+
+    Calculated from plasma parameters by default, can be overridden.
+    P_brem = 5.35e-37 * n_e^2 * Z_eff * sqrt(T_e) * V  [W], T_e in keV, n_e in m^-3
+    P_sync = 6.2e-22 * n_e * T_e^2 * B^2 * V  [W] (MFE only)
+    """
+    p_brem = 5.35e-37 * n_e**2 * Z_eff * jnp.sqrt(T_e) * volume * 1e-6  # -> MW
+    p_sync = 6.2e-22 * n_e * T_e**2 * B**2 * volume * 1e-6  # -> MW
+    return p_brem + p_sync
+
+
+def mfe_forward_power_balance(
+    p_fus: float,
+    fuel: Fuel,
+    p_input: float,
+    mn: float,
+    eta_th: float,
+    eta_p: float,
+    eta_pin: float,
+    eta_de: float,
+    f_sub: float,
+    f_dec: float,
+    p_coils: float,
+    p_cool: float,
+    p_pump: float,
+    p_trit: float,
+    p_house: float,
+    p_cryo: float,
+    # Radiation: calculated from plasma params, or override with p_rad_override
+    n_e: float = 1.0e20,
+    T_e: float = 15.0,
+    Z_eff: float = 1.5,
+    plasma_volume: float = 500.0,
+    B: float = 5.0,
+    p_rad_override: Optional[float] = None,
+    dd_f_T: float = 0.969,
+    dd_f_He3: float = 0.689,
+    dhe3_dd_frac: float = 0.07,
+    dhe3_f_T: float = 0.97,
+) -> PowerTable:
+    """MFE forward power balance: fusion power -> net electric.
+
+    Source: pyFECONs power_balance.py + fusion-tea mfe_power_balance.sysml
+    Radiation model: bremsstrahlung + synchrotron from plasma parameters.
+    """
+    # Step 1: Ash/neutron split
+    p_ash, p_neutron = ash_neutron_split(
+        p_fus, fuel, dd_f_T, dd_f_He3, dhe3_dd_frac, dhe3_f_T
+    )
+
+    # Step 2: Radiation power (p_rad + p_transport = p_ash)
+    if p_rad_override is not None:
+        p_rad = p_rad_override
+    else:
+        p_rad = compute_p_rad(n_e, T_e, Z_eff, plasma_volume, B)
+    p_rad = jnp.minimum(p_rad, p_ash)  # Can't radiate more than ash power
+    p_transport = p_ash - p_rad
+
+    # Step 3: Auxiliary power
+    p_aux = p_trit + p_house
+
+    # Step 4: DEC routing (operates on transport channel only)
+    p_dee = f_dec * eta_de * p_transport
+    p_dec_waste = f_dec * (1.0 - eta_de) * p_transport
+    p_wall = (1.0 - f_dec) * p_transport
+
+    # Step 5: Thermal power (neutrons + radiation + wall transport + heating + pumping)
+    p_th = mn * p_neutron + p_rad + p_wall + p_input + eta_p * p_pump
+
+    # Step 6: Thermal electric
+    p_the = eta_th * p_th
+
+    # Step 7: Gross electric
+    p_et = p_dee + p_the
+
+    # Step 8: Lost power
+    p_loss = (p_th - p_the) + p_dec_waste
+
+    # Step 9: Subsystem power
+    p_sub = f_sub * p_et
+
+    # Step 10: Scientific Q
+    q_sci = p_fus / p_input
+
+    # Step 11: Engineering Q
+    recirculating = (
+        p_coils + p_pump + p_sub + p_aux + p_cool + p_cryo + p_input / eta_pin
+    )
+    q_eng = p_et / recirculating
+
+    # Step 12: Net electric
+    rec_frac = 1.0 / q_eng
+    p_net = (1.0 - rec_frac) * p_et
+
+    return PowerTable(
+        p_fus=p_fus,
+        p_ash=p_ash,
+        p_neutron=p_neutron,
+        p_rad=p_rad,
+        p_wall=p_wall,
+        p_dee=p_dee,
+        p_dec_waste=p_dec_waste,
+        p_th=p_th,
+        p_the=p_the,
+        p_et=p_et,
+        p_loss=p_loss,
+        p_net=p_net,
+        p_pump=p_pump,
+        p_sub=p_sub,
+        p_aux=p_aux,
+        p_coils=p_coils,
+        p_cool=p_cool,
+        q_sci=q_sci,
+        q_eng=q_eng,
+        rec_frac=rec_frac,
+    )
