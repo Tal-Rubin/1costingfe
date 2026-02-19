@@ -30,6 +30,46 @@ class CostingConstants:
     licensing_time_dhe3: float = 2.0
     licensing_time_pb11: float = 1.0
 
+    # CAS22 — Reactor Plant Equipment (power-scaled approximations)
+    # 220101: First Wall + Blanket (fuel-dependent base cost, M$)
+    blanket_dt_base: float = 350.0       # Full breeding blanket (TBR>1.05)
+    blanket_dd_base: float = 180.0       # Energy capture, no breeding
+    blanket_dhe3_base: float = 50.0      # Minimal X-ray + ~5% neutron
+    blanket_pb11_base: float = 30.0      # Minimal X-ray only
+
+    # 220102: Shield
+    shield_base: float = 220.0           # M$ at 1 GWth, DT reference
+
+    # 220103-220108: Reactor components (M$ at 1 GWe reference)
+    coils_base: float = 500.0            # TF + CS + PF + structure
+    heating_base: float = 150.0          # NBI + ICRF + ECRH
+    primary_structure_base: float = 30.0
+    vacuum_base: float = 100.0           # Vessel + cryo + pumps
+    power_supplies_base: float = 80.0
+    divertor_base: float = 60.0
+
+    # 220111: Installation labor (fraction of reactor subtotal)
+    installation_frac: float = 0.14
+
+    # 220112: Isotope Separation (M$ at 1 GWe reference)
+    deuterium_extraction_base: float = 15.0
+    li6_enrichment_base: float = 25.0
+    he3_extraction_base: float = 0.0     # Lunar mining not viable
+    protium_purification_base: float = 5.0
+    b11_enrichment_base: float = 20.0
+
+    # 220119: Scheduled Replacement (fraction of reactor subtotal)
+    replacement_frac_dt: float = 0.05
+    replacement_frac_dd: float = 0.03
+    replacement_frac_dhe3: float = 0.02
+    replacement_frac_pb11: float = 0.01
+
+    # 220500: Fuel Handling (M$ at 1 GWe reference)
+    fuel_handling_dt_base: float = 120.0   # Full tritium processing
+    fuel_handling_dd_base: float = 60.0    # Small-scale tritium + deuterium
+    fuel_handling_dhe3_base: float = 40.0  # He-3 handling
+    fuel_handling_pb11_base: float = 15.0  # Boron powder injection
+
     # CAS21
     building_costs_per_kw: Dict[str, float] = None  # loaded from YAML
 

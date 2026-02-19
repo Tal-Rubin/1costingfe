@@ -18,6 +18,47 @@ licensing_time_dd: 3.0
 licensing_time_dhe3: 2.0
 licensing_time_pb11: 1.0
 
+# CAS22 — Reactor Plant Equipment (power-scaled approximations)
+# Source: pyFECONs costing/calculations/cas22/ sub-modules
+# 220101: First Wall + Blanket (M$ at 1 GWth reference)
+blanket_dt_base: 350.0       # Full breeding blanket (TBR>1.05)
+blanket_dd_base: 180.0       # Energy capture, no breeding
+blanket_dhe3_base: 50.0      # Minimal X-ray + ~5% neutron
+blanket_pb11_base: 30.0      # Minimal X-ray only
+
+# 220102: Shield (M$ at 1 GWth, DT reference)
+shield_base: 220.0
+
+# 220103-220108: Reactor components (M$ at 1 GWe reference)
+coils_base: 500.0            # TF + CS + PF + structure + cooling
+heating_base: 150.0          # NBI + ICRF + ECRH + LHCD
+primary_structure_base: 30.0
+vacuum_base: 100.0           # Vessel + cryo cooling + pumps
+power_supplies_base: 80.0
+divertor_base: 60.0
+
+# 220111: Installation labor
+installation_frac: 0.14      # Fraction of reactor subtotal
+
+# 220112: Isotope Separation (M$ at 1 GWe reference)
+deuterium_extraction_base: 15.0
+li6_enrichment_base: 25.0
+he3_extraction_base: 0.0     # Lunar mining not viable
+protium_purification_base: 5.0
+b11_enrichment_base: 20.0
+
+# 220119: Scheduled Replacement (fraction of reactor subtotal)
+replacement_frac_dt: 0.05
+replacement_frac_dd: 0.03
+replacement_frac_dhe3: 0.02
+replacement_frac_pb11: 0.01
+
+# 220500: Fuel Handling (M$ at 1 GWe reference)
+fuel_handling_dt_base: 120.0   # Full tritium processing + containment
+fuel_handling_dd_base: 60.0    # Small-scale tritium + deuterium
+fuel_handling_dhe3_base: 40.0  # He-3 handling
+fuel_handling_pb11_base: 15.0  # Boron powder injection
+
 # CAS21 building costs ($/kW of gross electric)
 building_costs_per_kw:
   site_improvements: 268

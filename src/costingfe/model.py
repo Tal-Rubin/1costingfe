@@ -5,6 +5,7 @@ from costingfe.defaults import (
     load_costing_constants,
     load_engineering_defaults,
 )
+from costingfe.layers.cas22 import cas22_reactor_plant_equipment
 from costingfe.layers.costs import (
     cas10_preconstruction,
     cas21_buildings,
@@ -126,13 +127,18 @@ class CostModel:
         cc = self.cc
         c10 = cas10_preconstruction(cc, pt.p_net, n_mod, self.fuel, noak)
         c21 = cas21_buildings(cc, pt.p_et, self.fuel, noak)
+        c22_detail = cas22_reactor_plant_equipment(
+            cc, pt.p_net, pt.p_th, pt.p_et, pt.p_fus,
+            params["p_cryo"], n_mod, self.fuel, noak,
+        )
+        c22 = c22_detail["C220000"]
         c23 = cas23_turbine(cc, pt.p_et, n_mod)
         c24 = cas24_electrical(cc, pt.p_et, n_mod)
         c25 = cas25_misc(cc, pt.p_et, n_mod)
         c26 = cas26_heat_rejection(cc, pt.p_et, n_mod)
         c27 = 0.0  # TODO: special materials (needs blanket details)
         c28 = cas28_digital_twin(cc)
-        cas2x_pre_contingency = c21 + c23 + c24 + c25 + c26 + c27 + c28
+        cas2x_pre_contingency = c21 + c22 + c23 + c24 + c25 + c26 + c27 + c28
         c29 = cas29_contingency(cc, cas2x_pre_contingency, noak)
         c20 = cas2x_pre_contingency + c29
         c30 = cas30_indirect(cc, c20, pt.p_net, construction_time_yr)
@@ -162,7 +168,7 @@ class CostModel:
         costs = CostResult(
             cas10=c10,
             cas21=c21,
-            cas22=0.0,
+            cas22=c22,
             cas23=c23,
             cas24=c24,
             cas25=c25,
