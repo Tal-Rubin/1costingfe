@@ -1,6 +1,6 @@
 """Example: DT Tokamak — cost breakdown and sensitivity analysis."""
 
-from costingfe import CostModel, ConfinementConcept, Fuel
+from costingfe import ConfinementConcept, CostModel, Fuel
 
 model = CostModel(concept=ConfinementConcept.TOKAMAK, fuel=Fuel.DT)
 result = model.forward(net_electric_mw=1000.0, availability=0.85, lifetime_yr=30)

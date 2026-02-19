@@ -1,5 +1,4 @@
 from costingfe.defaults import (
-    CostingConstants,
     load_costing_constants,
     load_engineering_defaults,
 )

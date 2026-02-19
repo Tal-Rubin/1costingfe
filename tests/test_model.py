@@ -88,9 +88,9 @@ def test_sensitivity_jax_grad_matches_finite_diff():
     )
     fd_elasticity = ((float(r2.costs.lcoe) - base_lcoe) / delta) * eta_th / base_lcoe
 
-    assert (
-        abs(sens["engineering"]["eta_th"] - fd_elasticity) < 0.01
-    ), f"JAX grad {sens['engineering']['eta_th']:.4f} vs FD {fd_elasticity:.4f}"
+    assert abs(sens["engineering"]["eta_th"] - fd_elasticity) < 0.01, (
+        f"JAX grad {sens['engineering']['eta_th']:.4f} vs FD {fd_elasticity:.4f}"
+    )
 
 
 def test_batch_lcoe_vmap():

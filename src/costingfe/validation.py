@@ -90,19 +90,42 @@ class CostingInput(BaseModel):
 
     # --- Tier 2: family-required parameter lists ---
     _COMMON_REQUIRED = [
-        "mn", "eta_th", "eta_p", "f_sub",
-        "p_pump", "p_trit", "p_house", "p_cryo",
-        "blanket_t", "ht_shield_t", "structure_t", "vessel_t", "plasma_t",
+        "mn",
+        "eta_th",
+        "eta_p",
+        "f_sub",
+        "p_pump",
+        "p_trit",
+        "p_house",
+        "p_cryo",
+        "blanket_t",
+        "ht_shield_t",
+        "structure_t",
+        "vessel_t",
+        "plasma_t",
     ]
     _MFE_REQUIRED = [
-        "p_input", "eta_pin", "eta_de", "f_dec",
-        "p_coils", "p_cool", "axis_t", "elon",
+        "p_input",
+        "eta_pin",
+        "eta_de",
+        "f_dec",
+        "p_coils",
+        "p_cool",
+        "axis_t",
+        "elon",
     ]
     _IFE_REQUIRED = [
-        "p_implosion", "p_ignition", "eta_pin1", "eta_pin2", "p_target",
+        "p_implosion",
+        "p_ignition",
+        "eta_pin1",
+        "eta_pin2",
+        "p_target",
     ]
     _MIF_REQUIRED = [
-        "p_driver", "eta_pin", "p_target", "p_coils",
+        "p_driver",
+        "eta_pin",
+        "p_target",
+        "p_coils",
     ]
 
     @model_validator(mode="after")
@@ -112,7 +135,9 @@ class CostingInput(BaseModel):
 
         all_eng = (
             self._COMMON_REQUIRED
-            + self._MFE_REQUIRED + self._IFE_REQUIRED + self._MIF_REQUIRED
+            + self._MFE_REQUIRED
+            + self._IFE_REQUIRED
+            + self._MIF_REQUIRED
         )
         any_set = any(getattr(self, k) is not None for k in all_eng)
         if not any_set:
@@ -182,27 +207,53 @@ class CostingInput(BaseModel):
             mfe_inverse_power_balance,
         )
 
-        mfe_params = [self.p_input, self.eta_pin, self.eta_de, self.f_dec,
-                      self.p_coils, self.p_cool]
+        mfe_params = [
+            self.p_input,
+            self.eta_pin,
+            self.eta_de,
+            self.f_dec,
+            self.p_coils,
+            self.p_cool,
+        ]
         if any(v is None for v in mfe_params):
             return
 
         p_net_per_mod = self.net_electric_mw / self.n_mod
         p_fus = mfe_inverse_power_balance(
-            p_net_target=p_net_per_mod, fuel=self.fuel,
-            p_input=self.p_input, mn=self.mn, eta_th=self.eta_th,
-            eta_p=self.eta_p, eta_pin=self.eta_pin, eta_de=self.eta_de,
-            f_sub=self.f_sub, f_dec=self.f_dec, p_coils=self.p_coils,
-            p_cool=self.p_cool, p_pump=self.p_pump, p_trit=self.p_trit,
-            p_house=self.p_house, p_cryo=self.p_cryo,
+            p_net_target=p_net_per_mod,
+            fuel=self.fuel,
+            p_input=self.p_input,
+            mn=self.mn,
+            eta_th=self.eta_th,
+            eta_p=self.eta_p,
+            eta_pin=self.eta_pin,
+            eta_de=self.eta_de,
+            f_sub=self.f_sub,
+            f_dec=self.f_dec,
+            p_coils=self.p_coils,
+            p_cool=self.p_cool,
+            p_pump=self.p_pump,
+            p_trit=self.p_trit,
+            p_house=self.p_house,
+            p_cryo=self.p_cryo,
         )
         pt = mfe_forward_power_balance(
-            p_fus=p_fus, fuel=self.fuel,
-            p_input=self.p_input, mn=self.mn, eta_th=self.eta_th,
-            eta_p=self.eta_p, eta_pin=self.eta_pin, eta_de=self.eta_de,
-            f_sub=self.f_sub, f_dec=self.f_dec, p_coils=self.p_coils,
-            p_cool=self.p_cool, p_pump=self.p_pump, p_trit=self.p_trit,
-            p_house=self.p_house, p_cryo=self.p_cryo,
+            p_fus=p_fus,
+            fuel=self.fuel,
+            p_input=self.p_input,
+            mn=self.mn,
+            eta_th=self.eta_th,
+            eta_p=self.eta_p,
+            eta_pin=self.eta_pin,
+            eta_de=self.eta_de,
+            f_sub=self.f_sub,
+            f_dec=self.f_dec,
+            p_coils=self.p_coils,
+            p_cool=self.p_cool,
+            p_pump=self.p_pump,
+            p_trit=self.p_trit,
+            p_house=self.p_house,
+            p_cryo=self.p_cryo,
         )
         self._check_power_table(pt, p_fus)
 
@@ -212,27 +263,50 @@ class CostingInput(BaseModel):
             ife_inverse_power_balance,
         )
 
-        ife_params = [self.p_implosion, self.p_ignition,
-                      self.eta_pin1, self.eta_pin2, self.p_target]
+        ife_params = [
+            self.p_implosion,
+            self.p_ignition,
+            self.eta_pin1,
+            self.eta_pin2,
+            self.p_target,
+        ]
         if any(v is None for v in ife_params):
             return
 
         p_net_per_mod = self.net_electric_mw / self.n_mod
         p_fus = ife_inverse_power_balance(
-            p_net_target=p_net_per_mod, fuel=self.fuel,
-            p_implosion=self.p_implosion, p_ignition=self.p_ignition,
-            mn=self.mn, eta_th=self.eta_th, eta_p=self.eta_p,
-            eta_pin1=self.eta_pin1, eta_pin2=self.eta_pin2,
-            f_sub=self.f_sub, p_pump=self.p_pump, p_trit=self.p_trit,
-            p_house=self.p_house, p_cryo=self.p_cryo, p_target=self.p_target,
+            p_net_target=p_net_per_mod,
+            fuel=self.fuel,
+            p_implosion=self.p_implosion,
+            p_ignition=self.p_ignition,
+            mn=self.mn,
+            eta_th=self.eta_th,
+            eta_p=self.eta_p,
+            eta_pin1=self.eta_pin1,
+            eta_pin2=self.eta_pin2,
+            f_sub=self.f_sub,
+            p_pump=self.p_pump,
+            p_trit=self.p_trit,
+            p_house=self.p_house,
+            p_cryo=self.p_cryo,
+            p_target=self.p_target,
         )
         pt = ife_forward_power_balance(
-            p_fus=p_fus, fuel=self.fuel,
-            p_implosion=self.p_implosion, p_ignition=self.p_ignition,
-            mn=self.mn, eta_th=self.eta_th, eta_p=self.eta_p,
-            eta_pin1=self.eta_pin1, eta_pin2=self.eta_pin2,
-            f_sub=self.f_sub, p_pump=self.p_pump, p_trit=self.p_trit,
-            p_house=self.p_house, p_cryo=self.p_cryo, p_target=self.p_target,
+            p_fus=p_fus,
+            fuel=self.fuel,
+            p_implosion=self.p_implosion,
+            p_ignition=self.p_ignition,
+            mn=self.mn,
+            eta_th=self.eta_th,
+            eta_p=self.eta_p,
+            eta_pin1=self.eta_pin1,
+            eta_pin2=self.eta_pin2,
+            f_sub=self.f_sub,
+            p_pump=self.p_pump,
+            p_trit=self.p_trit,
+            p_house=self.p_house,
+            p_cryo=self.p_cryo,
+            p_target=self.p_target,
         )
         self._check_power_table(pt, p_fus)
 
@@ -248,19 +322,35 @@ class CostingInput(BaseModel):
 
         p_net_per_mod = self.net_electric_mw / self.n_mod
         p_fus = mif_inverse_power_balance(
-            p_net_target=p_net_per_mod, fuel=self.fuel,
-            p_driver=self.p_driver, mn=self.mn, eta_th=self.eta_th,
-            eta_p=self.eta_p, eta_pin=self.eta_pin, f_sub=self.f_sub,
-            p_pump=self.p_pump, p_trit=self.p_trit, p_house=self.p_house,
-            p_cryo=self.p_cryo, p_target=self.p_target,
+            p_net_target=p_net_per_mod,
+            fuel=self.fuel,
+            p_driver=self.p_driver,
+            mn=self.mn,
+            eta_th=self.eta_th,
+            eta_p=self.eta_p,
+            eta_pin=self.eta_pin,
+            f_sub=self.f_sub,
+            p_pump=self.p_pump,
+            p_trit=self.p_trit,
+            p_house=self.p_house,
+            p_cryo=self.p_cryo,
+            p_target=self.p_target,
             p_coils=self.p_coils or 0.0,
         )
         pt = mif_forward_power_balance(
-            p_fus=p_fus, fuel=self.fuel,
-            p_driver=self.p_driver, mn=self.mn, eta_th=self.eta_th,
-            eta_p=self.eta_p, eta_pin=self.eta_pin, f_sub=self.f_sub,
-            p_pump=self.p_pump, p_trit=self.p_trit, p_house=self.p_house,
-            p_cryo=self.p_cryo, p_target=self.p_target,
+            p_fus=p_fus,
+            fuel=self.fuel,
+            p_driver=self.p_driver,
+            mn=self.mn,
+            eta_th=self.eta_th,
+            eta_p=self.eta_p,
+            eta_pin=self.eta_pin,
+            f_sub=self.f_sub,
+            p_pump=self.p_pump,
+            p_trit=self.p_trit,
+            p_house=self.p_house,
+            p_cryo=self.p_cryo,
+            p_target=self.p_target,
             p_coils=self.p_coils or 0.0,
         )
         self._check_power_table(pt, p_fus)

@@ -87,7 +87,9 @@ def test_ife_inverse_roundtrip():
     pt = ife_forward_power_balance(**IFE_PARAMS)
     eng = {k: v for k, v in IFE_PARAMS.items() if k not in ("p_fus", "fuel")}
     p_fus_recovered = ife_inverse_power_balance(
-        p_net_target=pt.p_net, fuel=Fuel.DT, **eng,
+        p_net_target=pt.p_net,
+        fuel=Fuel.DT,
+        **eng,
     )
     assert abs(p_fus_recovered - 2500.0) < 0.1, f"Expected ~2500, got {p_fus_recovered}"
 
@@ -96,7 +98,9 @@ def test_ife_inverse_1gw_target():
     """1 GW net electric target should give reasonable fusion power."""
     eng = {k: v for k, v in IFE_PARAMS.items() if k not in ("p_fus", "fuel")}
     p_fus = ife_inverse_power_balance(
-        p_net_target=1000.0, fuel=Fuel.DT, **eng,
+        p_net_target=1000.0,
+        fuel=Fuel.DT,
+        **eng,
     )
     assert p_fus > 1000
     assert p_fus < 10000
@@ -137,7 +141,9 @@ def test_mif_inverse_roundtrip():
     pt = mif_forward_power_balance(**MIF_PARAMS)
     eng = {k: v for k, v in MIF_PARAMS.items() if k not in ("p_fus", "fuel")}
     p_fus_recovered = mif_inverse_power_balance(
-        p_net_target=pt.p_net, fuel=Fuel.DT, **eng,
+        p_net_target=pt.p_net,
+        fuel=Fuel.DT,
+        **eng,
     )
     assert abs(p_fus_recovered - 2500.0) < 0.1, f"Expected ~2500, got {p_fus_recovered}"
 
@@ -146,7 +152,9 @@ def test_mif_inverse_1gw_target():
     """1 GW net electric target should give reasonable fusion power."""
     eng = {k: v for k, v in MIF_PARAMS.items() if k not in ("p_fus", "fuel")}
     p_fus = mif_inverse_power_balance(
-        p_net_target=1000.0, fuel=Fuel.DT, **eng,
+        p_net_target=1000.0,
+        fuel=Fuel.DT,
+        **eng,
     )
     assert p_fus > 1000
     assert p_fus < 10000

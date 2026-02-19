@@ -6,7 +6,6 @@ from costingfe.layers.geometry import (
 )
 from costingfe.types import ConfinementConcept
 
-
 # ARC-like tokamak radial build (from pyFECONs customers/ARC)
 ARC_BUILD = RadialBuild(
     axis_t=3.3,

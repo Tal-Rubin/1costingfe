@@ -1,6 +1,10 @@
 import jax
-from costingfe.layers.physics import mfe_forward_power_balance, mfe_inverse_power_balance
-from costingfe.types import Fuel, PowerTable
+
+from costingfe.layers.physics import (
+    mfe_forward_power_balance,
+    mfe_inverse_power_balance,
+)
+from costingfe.types import Fuel
 
 # CATF reference parameters (from pyFECONs customers/CATF/mfe/DefineInputs.py)
 CATF_PARAMS = dict(
@@ -84,18 +88,16 @@ def test_mfe_forward_is_differentiable():
 
 
 # Shared engineering params for inverse tests (no p_fus, no fuel)
-_ENG_PARAMS = {
-    k: v
-    for k, v in CATF_PARAMS.items()
-    if k not in ("p_fus", "fuel")
-}
+_ENG_PARAMS = {k: v for k, v in CATF_PARAMS.items() if k not in ("p_fus", "fuel")}
 
 
 def test_inverse_roundtrip():
     """Forward then inverse should recover original p_fus."""
     pt = mfe_forward_power_balance(**CATF_PARAMS)
     p_fus_recovered = mfe_inverse_power_balance(
-        p_net_target=pt.p_net, fuel=Fuel.DT, **_ENG_PARAMS,
+        p_net_target=pt.p_net,
+        fuel=Fuel.DT,
+        **_ENG_PARAMS,
     )
     assert abs(p_fus_recovered - 2600.0) < 0.1, f"Expected ~2600, got {p_fus_recovered}"
 
@@ -103,7 +105,9 @@ def test_inverse_roundtrip():
 def test_inverse_1gw_target():
     """1 GW net electric target should give a reasonable fusion power."""
     p_fus = mfe_inverse_power_balance(
-        p_net_target=1000.0, fuel=Fuel.DT, **_ENG_PARAMS,
+        p_net_target=1000.0,
+        fuel=Fuel.DT,
+        **_ENG_PARAMS,
     )
     assert p_fus > 1000  # fusion power must exceed net electric
     assert p_fus < 10000  # but not absurdly large

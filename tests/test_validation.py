@@ -1,11 +1,14 @@
 """Tests for CostingInput validation."""
 
-import pytest
 import warnings
+
+import pytest
 from pydantic import ValidationError
 
-from costingfe.validation import CostingInput
+from costingfe.adapter import FusionTeaInput, run_costing
+from costingfe.model import CostModel
 from costingfe.types import ConfinementConcept, Fuel
+from costingfe.validation import CostingInput
 
 
 class TestTier1FieldConstraints:
@@ -156,12 +159,26 @@ class TestTier2FamilyRequiredParams:
                 concept=ConfinementConcept.TOKAMAK,
                 fuel=Fuel.DT,
                 net_electric_mw=1000.0,
-                mn=1.1, eta_th=0.46, eta_p=0.5, f_sub=0.03,
-                p_pump=1.0, p_trit=10.0, p_house=4.0, p_cryo=0.5,
-                blanket_t=0.7, ht_shield_t=0.2, structure_t=0.15,
-                vessel_t=0.1, plasma_t=2.0,
-                eta_pin=0.5, eta_de=0.85, f_dec=0.0,
-                p_coils=2.0, p_cool=13.7, axis_t=6.2, elon=1.7,
+                mn=1.1,
+                eta_th=0.46,
+                eta_p=0.5,
+                f_sub=0.03,
+                p_pump=1.0,
+                p_trit=10.0,
+                p_house=4.0,
+                p_cryo=0.5,
+                blanket_t=0.7,
+                ht_shield_t=0.2,
+                structure_t=0.15,
+                vessel_t=0.1,
+                plasma_t=2.0,
+                eta_pin=0.5,
+                eta_de=0.85,
+                f_dec=0.0,
+                p_coils=2.0,
+                p_cool=13.7,
+                axis_t=6.2,
+                elon=1.7,
             )
 
     def test_ife_missing_p_implosion_rejected(self):
@@ -170,11 +187,23 @@ class TestTier2FamilyRequiredParams:
                 concept=ConfinementConcept.LASER_IFE,
                 fuel=Fuel.DT,
                 net_electric_mw=1000.0,
-                mn=1.1, eta_th=0.46, eta_p=0.5, f_sub=0.03,
-                p_pump=1.0, p_trit=10.0, p_house=4.0, p_cryo=0.5,
-                blanket_t=0.8, ht_shield_t=0.25, structure_t=0.15,
-                vessel_t=0.1, plasma_t=4.0,
-                p_ignition=0.1, eta_pin1=0.1, eta_pin2=0.1, p_target=1.0,
+                mn=1.1,
+                eta_th=0.46,
+                eta_p=0.5,
+                f_sub=0.03,
+                p_pump=1.0,
+                p_trit=10.0,
+                p_house=4.0,
+                p_cryo=0.5,
+                blanket_t=0.8,
+                ht_shield_t=0.25,
+                structure_t=0.15,
+                vessel_t=0.1,
+                plasma_t=4.0,
+                p_ignition=0.1,
+                eta_pin1=0.1,
+                eta_pin2=0.1,
+                p_target=1.0,
             )
 
     def test_mif_missing_p_driver_rejected(self):
@@ -183,11 +212,22 @@ class TestTier2FamilyRequiredParams:
                 concept=ConfinementConcept.MAG_TARGET,
                 fuel=Fuel.DT,
                 net_electric_mw=1000.0,
-                mn=1.1, eta_th=0.4, eta_p=0.5, f_sub=0.03,
-                p_pump=1.0, p_trit=10.0, p_house=4.0, p_cryo=0.2,
-                blanket_t=0.7, ht_shield_t=0.2, structure_t=0.15,
-                vessel_t=0.1, plasma_t=3.0,
-                eta_pin=0.3, p_target=2.0, p_coils=0.5,
+                mn=1.1,
+                eta_th=0.4,
+                eta_p=0.5,
+                f_sub=0.03,
+                p_pump=1.0,
+                p_trit=10.0,
+                p_house=4.0,
+                p_cryo=0.2,
+                blanket_t=0.7,
+                ht_shield_t=0.2,
+                structure_t=0.15,
+                vessel_t=0.1,
+                plasma_t=3.0,
+                eta_pin=0.3,
+                p_target=2.0,
+                p_coils=0.5,
             )
 
     def test_none_engineering_params_ok_when_template_will_fill(self):
@@ -205,12 +245,27 @@ class TestTier2FamilyRequiredParams:
             concept=ConfinementConcept.TOKAMAK,
             fuel=Fuel.DT,
             net_electric_mw=1000.0,
-            mn=1.1, eta_th=0.46, eta_p=0.5, f_sub=0.03,
-            p_pump=1.0, p_trit=10.0, p_house=4.0, p_cryo=0.5,
-            blanket_t=0.7, ht_shield_t=0.2, structure_t=0.15,
-            vessel_t=0.1, plasma_t=2.0,
-            p_input=50.0, eta_pin=0.5, eta_de=0.85, f_dec=0.0,
-            p_coils=2.0, p_cool=13.7, axis_t=6.2, elon=1.7,
+            mn=1.1,
+            eta_th=0.46,
+            eta_p=0.5,
+            f_sub=0.03,
+            p_pump=1.0,
+            p_trit=10.0,
+            p_house=4.0,
+            p_cryo=0.5,
+            blanket_t=0.7,
+            ht_shield_t=0.2,
+            structure_t=0.15,
+            vessel_t=0.1,
+            plasma_t=2.0,
+            p_input=50.0,
+            eta_pin=0.5,
+            eta_de=0.85,
+            f_dec=0.0,
+            p_coils=2.0,
+            p_cool=13.7,
+            axis_t=6.2,
+            elon=1.7,
         )
         assert inp.p_input == 50.0
 
@@ -221,14 +276,30 @@ class TestTier3PhysicsChecks:
     def _make_mfe_input(self, **overrides):
         """Helper: complete MFE tokamak input with all params."""
         defaults = dict(
-            concept=ConfinementConcept.TOKAMAK, fuel=Fuel.DT,
+            concept=ConfinementConcept.TOKAMAK,
+            fuel=Fuel.DT,
             net_electric_mw=1000.0,
-            mn=1.1, eta_th=0.46, eta_p=0.5, f_sub=0.03,
-            p_pump=1.0, p_trit=10.0, p_house=4.0, p_cryo=0.5,
-            blanket_t=0.7, ht_shield_t=0.2, structure_t=0.15,
-            vessel_t=0.1, plasma_t=2.0,
-            p_input=50.0, eta_pin=0.5, eta_de=0.85, f_dec=0.0,
-            p_coils=2.0, p_cool=13.7, axis_t=6.2, elon=1.7,
+            mn=1.1,
+            eta_th=0.46,
+            eta_p=0.5,
+            f_sub=0.03,
+            p_pump=1.0,
+            p_trit=10.0,
+            p_house=4.0,
+            p_cryo=0.5,
+            blanket_t=0.7,
+            ht_shield_t=0.2,
+            structure_t=0.15,
+            vessel_t=0.1,
+            plasma_t=2.0,
+            p_input=50.0,
+            eta_pin=0.5,
+            eta_de=0.85,
+            f_dec=0.0,
+            p_coils=2.0,
+            p_cool=13.7,
+            axis_t=6.2,
+            elon=1.7,
         )
         defaults.update(overrides)
         return CostingInput(**defaults)
@@ -286,37 +357,36 @@ class TestTier3PhysicsChecks:
             assert any("rec" in str(warning.message).lower() for warning in w)
 
 
-from costingfe.model import CostModel
-
-
 class TestForwardIntegration:
     """Validation fires when calling CostModel.forward()."""
 
     def test_forward_rejects_negative_net_electric(self):
         model = CostModel(
-            concept=ConfinementConcept.TOKAMAK, fuel=Fuel.DT,
+            concept=ConfinementConcept.TOKAMAK,
+            fuel=Fuel.DT,
         )
         with pytest.raises(ValidationError, match="net_electric_mw"):
             model.forward(net_electric_mw=-100, availability=0.85, lifetime_yr=40)
 
     def test_forward_rejects_invalid_availability(self):
         model = CostModel(
-            concept=ConfinementConcept.TOKAMAK, fuel=Fuel.DT,
+            concept=ConfinementConcept.TOKAMAK,
+            fuel=Fuel.DT,
         )
         with pytest.raises(ValidationError, match="availability"):
             model.forward(net_electric_mw=1000, availability=2.0, lifetime_yr=40)
 
     def test_forward_still_works_with_valid_input(self):
         model = CostModel(
-            concept=ConfinementConcept.TOKAMAK, fuel=Fuel.DT,
+            concept=ConfinementConcept.TOKAMAK,
+            fuel=Fuel.DT,
         )
         result = model.forward(
-            net_electric_mw=1000, availability=0.85, lifetime_yr=40,
+            net_electric_mw=1000,
+            availability=0.85,
+            lifetime_yr=40,
         )
         assert result.costs.lcoe > 0
-
-
-from costingfe.adapter import FusionTeaInput, run_costing
 
 
 class TestAdapterIntegration:
@@ -324,24 +394,33 @@ class TestAdapterIntegration:
 
     def test_adapter_rejects_negative_net_electric(self):
         inp = FusionTeaInput(
-            concept="tokamak", fuel="dt",
-            net_electric_mw=-100, availability=0.85, lifetime_yr=40,
+            concept="tokamak",
+            fuel="dt",
+            net_electric_mw=-100,
+            availability=0.85,
+            lifetime_yr=40,
         )
         with pytest.raises(ValidationError, match="net_electric_mw"):
             run_costing(inp)
 
     def test_adapter_rejects_invalid_availability(self):
         inp = FusionTeaInput(
-            concept="tokamak", fuel="dt",
-            net_electric_mw=1000, availability=2.0, lifetime_yr=40,
+            concept="tokamak",
+            fuel="dt",
+            net_electric_mw=1000,
+            availability=2.0,
+            lifetime_yr=40,
         )
         with pytest.raises(ValidationError, match="availability"):
             run_costing(inp)
 
     def test_adapter_still_works_with_valid_input(self):
         inp = FusionTeaInput(
-            concept="tokamak", fuel="dt",
-            net_electric_mw=1000, availability=0.85, lifetime_yr=40,
+            concept="tokamak",
+            fuel="dt",
+            net_electric_mw=1000,
+            availability=0.85,
+            lifetime_yr=40,
         )
         output = run_costing(inp)
         assert output.lcoe > 0

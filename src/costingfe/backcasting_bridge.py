@@ -16,7 +16,12 @@ Usage:
 """
 
 from costingfe.model import CostModel
-from costingfe.types import ConfinementConcept, Fuel, CONCEPT_TO_FAMILY, ConfinementFamily
+from costingfe.types import (
+    CONCEPT_TO_FAMILY,
+    ConfinementConcept,
+    ConfinementFamily,
+    Fuel,
+)
 
 # Map 1costingfe concepts to fusion-backcasting confinement types
 _FAMILY_TO_CONFINEMENT = {
@@ -28,7 +33,7 @@ _FAMILY_TO_CONFINEMENT = {
 # Map 1costingfe fuels to fusion-backcasting fuel types
 _FUEL_MAP = {
     Fuel.DT: "D-T",
-    Fuel.DD: "D-T",     # fusion-backcasting has no DD, closest is D-T
+    Fuel.DD: "D-T",  # fusion-backcasting has no DD, closest is D-T
     Fuel.DHE3: "D-He3",
     Fuel.PB11: "p-B11",
 }
@@ -54,8 +59,6 @@ def generate_subsystems(
     """
     concept_enum = ConfinementConcept(concept)
     fuel_enum = Fuel(fuel)
-    family = CONCEPT_TO_FAMILY[concept_enum]
-
     model = CostModel(concept=concept_enum, fuel=fuel_enum)
     result = model.forward(
         net_electric_mw=net_electric_mw,
@@ -71,9 +74,10 @@ def generate_subsystems(
     pt = result.power_table
 
     # Get CAS22 sub-account detail from a fresh call
+    from dataclasses import fields as dc_fields
+
     from costingfe.layers.cas22 import cas22_reactor_plant_equipment
     from costingfe.layers.geometry import RadialBuild, compute_geometry
-    from dataclasses import fields as dc_fields
 
     params = result.params
     rb_field_names = {f.name for f in dc_fields(RadialBuild)}
@@ -82,8 +86,15 @@ def generate_subsystems(
     geo = compute_geometry(rb, concept_enum)
 
     cas22 = cas22_reactor_plant_equipment(
-        model.cc, pt.p_net, pt.p_th, pt.p_et, pt.p_fus,
-        params["p_cryo"], n_mod, fuel_enum, True,
+        model.cc,
+        pt.p_net,
+        pt.p_th,
+        pt.p_et,
+        pt.p_fus,
+        params["p_cryo"],
+        n_mod,
+        fuel_enum,
+        True,
         blanket_vol=geo.firstwall_vol + geo.blanket_vol + geo.reflector_vol,
         shield_vol=geo.ht_shield_vol + geo.lt_shield_vol,
         structure_vol=geo.structure_vol,
@@ -93,7 +104,9 @@ def generate_subsystems(
     # O&M split: distribute CAS70 proportional to capital cost
     total_cas22 = float(cas22["C220000"])
     om_annual = float(c.cas70)
-    cas22_om_share = om_annual * (total_cas22 / float(c.total_capital)) if c.total_capital > 0 else 0
+    cas22_om_share = (
+        om_annual * (total_cas22 / float(c.total_capital)) if c.total_capital > 0 else 0
+    )
     bop_om_share = om_annual - cas22_om_share
 
     def om_frac(sub_cost):
@@ -112,7 +125,10 @@ def generate_subsystems(
             "variable_om": 0,
             "trl": 4,
             "idiot_index": 8.5,
-            "description": f"Physics-based: {concept} {fuel} blanket ({float(cas22['C220101']):.0f} M$)",
+            "description": (
+                f"Physics-based: {concept} {fuel} blanket"
+                f" ({float(cas22['C220101']):.0f} M$)"
+            ),
         },
         {
             "account": "22.1.2",
@@ -122,7 +138,7 @@ def generate_subsystems(
             "variable_om": 0,
             "trl": 5,
             "idiot_index": 3.0,
-            "description": f"Shield cost scaled by fuel neutron fraction",
+            "description": "Shield cost scaled by fuel neutron fraction",
         },
         {
             "account": "22.1.3",

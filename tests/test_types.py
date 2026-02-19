@@ -1,8 +1,8 @@
 from costingfe.types import (
-    ConfinementFamily,
-    ConfinementConcept,
-    Fuel,
     CONCEPT_TO_FAMILY,
+    ConfinementConcept,
+    ConfinementFamily,
+    Fuel,
 )
 
 

@@ -12,7 +12,7 @@ Source: pyFECONs costing/calculations/volume.py, cas220101_reactor_equipment.py
 import math
 from dataclasses import dataclass
 
-from costingfe.types import ConfinementConcept, CONCEPT_TO_FAMILY, ConfinementFamily
+from costingfe.types import CONCEPT_TO_FAMILY, ConfinementConcept, ConfinementFamily
 
 
 @dataclass(frozen=True)
@@ -20,9 +20,9 @@ class RadialBuild:
     """Input radial build thicknesses (meters), from center outward."""
 
     # Core geometry
-    axis_t: float = 6.2   # Major radius R0 (tokamak) or chamber radius (mirror/IFE)
+    axis_t: float = 6.2  # Major radius R0 (tokamak) or chamber radius (mirror/IFE)
     plasma_t: float = 2.0  # Minor radius a (tokamak) or plasma thickness
-    elon: float = 1.0      # Elongation kappa (tokamak only, 1.0 = circular)
+    elon: float = 1.0  # Elongation kappa (tokamak only, 1.0 = circular)
     chamber_length: float = 0.0  # Chamber length (mirror only)
 
     # Radial build layers (center → outboard)
@@ -34,7 +34,7 @@ class RadialBuild:
     structure_t: float = 0.15
     gap1_t: float = 0.10
     vessel_t: float = 0.10
-    coil_t: float = 0.30    # TF coil (MFE only, 0 for IFE)
+    coil_t: float = 0.30  # TF coil (MFE only, 0 for IFE)
     gap2_t: float = 0.10
     lt_shield_t: float = 0.15
     bioshield_t: float = 1.00
@@ -59,8 +59,8 @@ class Geometry:
     firstwall_area: float  # Inner surface of first wall (plasma-facing)
 
     # Key outer radii [m]
-    blanket_or: float   # Outer radius of blanket
-    vessel_or: float    # Outer radius of vessel
+    blanket_or: float  # Outer radius of blanket
+    vessel_or: float  # Outer radius of vessel
     bioshield_or: float  # Outer radius of bioshield
 
 
