@@ -18,7 +18,7 @@ def test_adapter_tokamak_dt():
     assert out.costs["CAS22"] > 0
     assert "p_fus" in out.power_table
     assert out.power_table["p_fus"] > 0
-    assert "eta_th" in out.sensitivity
+    assert "eta_th" in out.sensitivity["engineering"]
 
 
 def test_adapter_ife_pb11():

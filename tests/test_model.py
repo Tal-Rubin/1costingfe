@@ -30,13 +30,17 @@ def test_forward_pb11_cheaper_licensing():
     assert result_pb11.costs.cas10 < result_dt.costs.cas10
 
 
-def test_sensitivity_returns_gradients():
-    """Sensitivity should return per-parameter gradients."""
+def test_sensitivity_returns_categorized():
+    """Sensitivity should separate engineering from financial parameters."""
     model = CostModel(concept=ConfinementConcept.TOKAMAK, fuel=Fuel.DT)
     result = model.forward(net_electric_mw=1000.0, availability=0.85, lifetime_yr=30)
     sens = model.sensitivity(result.params)
-    assert "eta_th" in sens
-    assert sens["eta_th"] != 0  # thermal efficiency should affect LCOE
+    assert "engineering" in sens
+    assert "financial" in sens
+    assert "eta_th" in sens["engineering"]
+    assert sens["engineering"]["eta_th"] != 0
+    assert "interest_rate" in sens["financial"]
+    assert "interest_rate" not in sens["engineering"]
 
 
 def test_forward_ife_laser():
@@ -63,8 +67,8 @@ def test_sensitivity_ife():
     model = CostModel(concept=ConfinementConcept.LASER_IFE, fuel=Fuel.DT)
     result = model.forward(net_electric_mw=1000.0, availability=0.85, lifetime_yr=30)
     sens = model.sensitivity(result.params)
-    assert "eta_pin1" in sens  # IFE-specific param
-    assert "p_input" not in sens  # MFE-specific param
+    assert "eta_pin1" in sens["engineering"]  # IFE-specific param
+    assert "p_input" not in sens["engineering"]  # MFE-specific param
 
 
 def test_sensitivity_jax_grad_matches_finite_diff():
@@ -83,8 +87,8 @@ def test_sensitivity_jax_grad_matches_finite_diff():
                         eta_th=eta_th + delta)
     fd_elasticity = ((float(r2.costs.lcoe) - base_lcoe) / delta) * eta_th / base_lcoe
 
-    assert abs(sens["eta_th"] - fd_elasticity) < 0.01, (
-        f"JAX grad {sens['eta_th']:.4f} vs FD {fd_elasticity:.4f}"
+    assert abs(sens["engineering"]["eta_th"] - fd_elasticity) < 0.01, (
+        f"JAX grad {sens['engineering']['eta_th']:.4f} vs FD {fd_elasticity:.4f}"
     )
 
 

@@ -38,7 +38,7 @@ class FusionTeaOutput:
     total_capital: float         # M$
     costs: dict[str, float]      # CAS code -> M$ (e.g. "CAS10" -> 16.0)
     power_table: dict[str, float]  # Power flow values (e.g. "p_fus" -> 2300.0)
-    sensitivity: dict[str, float]  # Elasticities (e.g. "eta_th" -> -0.17)
+    sensitivity: dict[str, dict[str, float]]  # {"engineering": {...}, "financial": {...}}
 
 
 def run_costing(inp: FusionTeaInput) -> FusionTeaOutput:

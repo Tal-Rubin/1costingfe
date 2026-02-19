@@ -278,12 +278,14 @@ class CostModel:
         )
         return ForwardResult(power_table=pt, costs=costs, params=params)
 
-    def _continuous_keys(self) -> list[str]:
-        """Return the list of differentiable continuous parameter names."""
+    # Financial parameters — given by cost of capital, not engineering levers
+    _FINANCIAL_KEYS = ["interest_rate", "inflation_rate"]
+
+    def _engineering_keys(self) -> list[str]:
+        """Return engineering parameter names (things you can actually improve)."""
         common = [
             "mn", "eta_th", "eta_p", "f_sub",
             "p_pump", "p_trit", "p_house", "p_cryo",
-            "interest_rate", "inflation_rate",
         ]
         family_specific = {
             ConfinementFamily.MFE: [
@@ -299,6 +301,10 @@ class CostModel:
             ],
         }
         return common + family_specific.get(self.family, [])
+
+    def _continuous_keys(self) -> list[str]:
+        """All differentiable continuous parameter names (engineering + financial)."""
+        return self._engineering_keys() + self._FINANCIAL_KEYS
 
     def _build_lcoe_fn(self, params: dict):
         """Build a JAX-differentiable function: param_vector -> LCOE.
@@ -353,11 +359,15 @@ class CostModel:
 
         return lcoe_fn, keys, base_vals
 
-    def sensitivity(self, params: dict) -> dict[str, float]:
+    def sensitivity(self, params: dict) -> dict[str, dict[str, float]]:
         """Compute elasticity of LCOE w.r.t. each continuous parameter.
 
         Elasticity = (dLCOE/dp) * (p / LCOE) = %ΔLCOE / %Δparam.
         Dimensionless, allowing fair comparison across parameters.
+
+        Returns {"engineering": {...}, "financial": {...}} so that
+        engineering levers (things you can improve) are separated from
+        financial givens (cost of capital).
 
         Uses jax.grad for exact autodiff gradients.
         """
@@ -367,13 +377,18 @@ class CostModel:
         grad_fn = jax.grad(lcoe_fn)
         grads = grad_fn(base_vals)
 
-        elasticities = {}
+        engineering = {}
+        financial = {}
         for i, key in enumerate(keys):
             p = float(base_vals[i])
             dLCOE_dp = float(grads[i])
-            elasticities[key] = dLCOE_dp * p / base_lcoe
+            elasticity = dLCOE_dp * p / base_lcoe
+            if key in self._FINANCIAL_KEYS:
+                financial[key] = elasticity
+            else:
+                engineering[key] = elasticity
 
-        return elasticities
+        return {"engineering": engineering, "financial": financial}
 
     def batch_lcoe(self, param_sets: dict[str, list[float]], params: dict) -> list[float]:
         """Evaluate LCOE for many parameter sets using jax.vmap.
