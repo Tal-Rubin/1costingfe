@@ -18,31 +18,35 @@ from costingfe.validation import CostingInput
 class FusionTeaInput:
     """Parameters extracted from SysML model by fusion-tea."""
 
-    concept: str         # e.g. "tokamak", "laser_ife", "mag_target"
-    fuel: str            # e.g. "dt", "dd", "dhe3", "pb11"
+    concept: str  # e.g. "tokamak", "laser_ife", "mag_target"
+    fuel: str  # e.g. "dt", "dd", "dhe3", "pb11"
     net_electric_mw: float
     availability: float
     lifetime_yr: float
     n_mod: int = 1
     construction_time_yr: float = 6.0
     interest_rate: float = 0.07
-    inflation_rate: float = 0.0245
+    inflation_rate: float = 0.02
     noak: bool = True
     overrides: dict = field(default_factory=dict)
-    cost_overrides: dict[str, float] = field(default_factory=dict)      # CAS account → M$
-    costing_overrides: dict[str, float] = field(default_factory=dict)   # CostingConstants field → value
+    cost_overrides: dict[str, float] = field(default_factory=dict)  # CAS account → M$
+    costing_overrides: dict[str, float] = field(
+        default_factory=dict
+    )  # CostingConstants field → value
 
 
 @dataclass
 class FusionTeaOutput:
     """Cost breakdown in CAS-code-keyed format for fusion-tea."""
 
-    lcoe: float                  # $/MWh
-    overnight_cost: float        # $/kW
-    total_capital: float         # M$
-    costs: dict[str, float]      # CAS code -> M$ (e.g. "CAS10" -> 16.0)
+    lcoe: float  # $/MWh
+    overnight_cost: float  # $/kW
+    total_capital: float  # M$
+    costs: dict[str, float]  # CAS code -> M$ (e.g. "CAS10" -> 16.0)
     power_table: dict[str, float]  # Power flow values (e.g. "p_fus" -> 2300.0)
-    sensitivity: dict[str, dict[str, float]]  # {"engineering": {...}, "financial": {...}}
+    sensitivity: dict[
+        str, dict[str, float]
+    ]  # {"engineering": {...}, "financial": {...}}
     overridden: list[str] = field(default_factory=list)  # Keys that were overridden
 
 

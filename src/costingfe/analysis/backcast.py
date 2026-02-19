@@ -40,15 +40,24 @@ def backcast_single(
     """
     # Params that are named forward() args, not **overrides
     named_args = {
-        "net_electric_mw", "availability", "lifetime_yr", "n_mod",
-        "construction_time_yr", "interest_rate", "inflation_rate",
-        "noak", "fuel", "concept",
+        "net_electric_mw",
+        "availability",
+        "lifetime_yr",
+        "n_mod",
+        "construction_time_yr",
+        "interest_rate",
+        "inflation_rate",
+        "noak",
+        "fuel",
+        "concept",
     }
 
     if base_params is None:
         # Run once with defaults to get the full param set
         base_result = model.forward(
-            net_electric_mw=1000.0, availability=0.85, lifetime_yr=30,
+            net_electric_mw=1000.0,
+            availability=0.85,
+            lifetime_yr=30,
         )
         base_params = base_result.params
 
@@ -63,12 +72,14 @@ def backcast_single(
             n_mod=base_params.get("n_mod", 1),
             construction_time_yr=base_params.get("construction_time_yr", 6.0),
             interest_rate=(
-                val if param_name == "interest_rate"
+                val
+                if param_name == "interest_rate"
                 else base_params.get("interest_rate", 0.07)
             ),
             inflation_rate=(
-                val if param_name == "inflation_rate"
-                else base_params.get("inflation_rate", 0.0245)
+                val
+                if param_name == "inflation_rate"
+                else base_params.get("inflation_rate", 0.02)
             ),
             noak=base_params.get("noak", True),
             **eng,
@@ -111,8 +122,12 @@ def backcast_multi(
     for param_name, param_range in param_ranges.items():
         try:
             val = backcast_single(
-                model, target_lcoe, param_name, param_range,
-                base_params=base_params, tol=tol,
+                model,
+                target_lcoe,
+                param_name,
+                param_range,
+                base_params=base_params,
+                tol=tol,
             )
             results[param_name] = val
         except ValueError:

@@ -9,7 +9,6 @@ from costingfe.defaults import (
     load_engineering_defaults,
 )
 from costingfe.layers.cas22 import cas22_reactor_plant_equipment
-from costingfe.layers.geometry import RadialBuild, compute_geometry
 from costingfe.layers.costs import (
     cas10_preconstruction,
     cas21_buildings,
@@ -28,6 +27,7 @@ from costingfe.layers.costs import (
     cas90_financial,
 )
 from costingfe.layers.economics import compute_lcoe
+from costingfe.layers.geometry import RadialBuild, compute_geometry
 from costingfe.layers.physics import (
     ife_forward_power_balance,
     ife_inverse_power_balance,
@@ -187,7 +187,7 @@ class CostModel:
         n_mod: int = 1,
         construction_time_yr: float = 6.0,
         interest_rate: float = 0.07,
-        inflation_rate: float = 0.0245,
+        inflation_rate: float = 0.02,
         noak: bool = True,
         cost_overrides: dict[str, float] | None = None,
         **overrides,
@@ -226,14 +226,25 @@ class CostModel:
                 inflation_rate=inflation_rate,
                 noak=noak,
                 cost_overrides=cost_overrides or {},
-                **{k: v for k, v in params.items()
-                   if k in CostingInput.model_fields
-                   and k not in {
-                       "concept", "fuel", "net_electric_mw", "availability",
-                       "lifetime_yr", "n_mod", "construction_time_yr",
-                       "interest_rate", "inflation_rate", "noak",
-                       "cost_overrides",
-                   }},
+                **{
+                    k: v
+                    for k, v in params.items()
+                    if k in CostingInput.model_fields
+                    and k
+                    not in {
+                        "concept",
+                        "fuel",
+                        "net_electric_mw",
+                        "availability",
+                        "lifetime_yr",
+                        "n_mod",
+                        "construction_time_yr",
+                        "interest_rate",
+                        "inflation_rate",
+                        "noak",
+                        "cost_overrides",
+                    }
+                },
             )
 
         # Layer 2: Power balance (dispatched by family)
@@ -259,7 +270,9 @@ class CostModel:
         overridden = []
 
         # Compute defaults, apply CAS-level overrides
-        c10 = co.get("CAS10", cas10_preconstruction(cc, pt.p_net, n_mod, self.fuel, noak))
+        c10 = co.get(
+            "CAS10", cas10_preconstruction(cc, pt.p_net, n_mod, self.fuel, noak)
+        )
         if "CAS10" in co:
             overridden.append("CAS10")
 
@@ -269,20 +282,41 @@ class CostModel:
 
         # CAS22: compute detail, apply sub-account overrides, recompute totals
         c22_detail = cas22_reactor_plant_equipment(
-            cc, pt.p_net, pt.p_th, pt.p_et, pt.p_fus,
-            params["p_cryo"], n_mod, self.fuel, noak,
+            cc,
+            pt.p_net,
+            pt.p_th,
+            pt.p_et,
+            pt.p_fus,
+            params["p_cryo"],
+            n_mod,
+            self.fuel,
+            noak,
             blanket_vol=blanket_vol,
             shield_vol=shield_vol,
             structure_vol=structure_vol,
             vessel_vol=vessel_vol,
         )
         _PER_MODULE_KEYS = {
-            "C220101", "C220102", "C220103", "C220104", "C220105",
-            "C220106", "C220107", "C220108", "C220109", "C220111",
-            "C220112", "C220119",
+            "C220101",
+            "C220102",
+            "C220103",
+            "C220104",
+            "C220105",
+            "C220106",
+            "C220107",
+            "C220108",
+            "C220109",
+            "C220111",
+            "C220112",
+            "C220119",
         }
         _PLANT_WIDE_KEYS = {
-            "C220200", "C220300", "C220400", "C220500", "C220600", "C220700",
+            "C220200",
+            "C220300",
+            "C220400",
+            "C220500",
+            "C220600",
+            "C220700",
         }
         for key in co:
             if key in c22_detail and key != "C220000":
@@ -326,24 +360,37 @@ class CostModel:
         c20 = cas2x_pre_contingency + c29
         c30 = cas30_indirect(cc, c20, pt.p_net, construction_time_yr)
         c40 = cas40_owner(c20)
-        c50 = cas50_supplementary(
-            cc, c23 + c24 + c25 + c26 + c27 + c28, pt.p_net, noak
-        )
+        c50 = cas50_supplementary(cc, c23 + c24 + c25 + c26 + c27 + c28, pt.p_net, noak)
         c60 = cas60_idc(cc, c20, pt.p_net, construction_time_yr, self.fuel, noak)
         total_capital = c10 + c20 + c30 + c40 + c50 + c60
 
         # Layer 5: Economics
         c90 = cas90_financial(
-            cc, total_capital, interest_rate, lifetime_yr,
-            construction_time_yr, self.fuel, noak,
+            cc,
+            total_capital,
+            interest_rate,
+            lifetime_yr,
+            construction_time_yr,
+            self.fuel,
+            noak,
         )
         c70 = cas70_om(
-            cc, pt.p_net, inflation_rate,
-            construction_time_yr, self.fuel, noak,
+            cc,
+            pt.p_net,
+            inflation_rate,
+            construction_time_yr,
+            self.fuel,
+            noak,
         )
         c80 = cas80_fuel(
-            cc, pt.p_fus, n_mod, availability, inflation_rate,
-            construction_time_yr, self.fuel, noak,
+            cc,
+            pt.p_fus,
+            n_mod,
+            availability,
+            inflation_rate,
+            construction_time_yr,
+            self.fuel,
+            noak,
         )
         lcoe = compute_lcoe(c90, c70, c80, pt.p_net, n_mod, availability)
         overnight = total_capital * 1e6 / (pt.p_net * n_mod * 1e3)  # $/kW
@@ -372,7 +419,9 @@ class CostModel:
             overnight_cost=overnight,
         )
         return ForwardResult(
-            power_table=pt, costs=costs, params=params,
+            power_table=pt,
+            costs=costs,
+            params=params,
             overridden=overridden,
             cas22_detail=c22_detail,
         )
@@ -383,25 +432,46 @@ class CostModel:
     def _engineering_keys(self) -> list[str]:
         """Return engineering parameter names (things you can actually improve)."""
         common = [
-            "availability", "construction_time_yr",
-            "mn", "eta_th", "eta_p", "f_sub",
-            "p_pump", "p_trit", "p_house", "p_cryo",
+            "availability",
+            "construction_time_yr",
+            "mn",
+            "eta_th",
+            "eta_p",
+            "f_sub",
+            "p_pump",
+            "p_trit",
+            "p_house",
+            "p_cryo",
             # Geometry — radial build dimensions
-            "blanket_t", "ht_shield_t", "structure_t", "vessel_t",
+            "blanket_t",
+            "ht_shield_t",
+            "structure_t",
+            "vessel_t",
             "plasma_t",
         ]
         family_specific = {
             ConfinementFamily.MFE: [
-                "p_input", "eta_pin", "eta_de", "f_dec",
-                "p_coils", "p_cool",
-                "axis_t", "elon",  # torus geometry
+                "p_input",
+                "eta_pin",
+                "eta_de",
+                "f_dec",
+                "p_coils",
+                "p_cool",
+                "axis_t",
+                "elon",  # torus geometry
             ],
             ConfinementFamily.IFE: [
-                "p_implosion", "p_ignition", "eta_pin1", "eta_pin2",
+                "p_implosion",
+                "p_ignition",
+                "eta_pin1",
+                "eta_pin2",
                 "p_target",
             ],
             ConfinementFamily.MIF: [
-                "p_driver", "eta_pin", "p_target", "p_coils",
+                "p_driver",
+                "eta_pin",
+                "p_target",
+                "p_coils",
             ],
         }
         return common + family_specific.get(self.family, [])
@@ -410,7 +480,9 @@ class CostModel:
         """All differentiable continuous parameter names (engineering + financial)."""
         return self._engineering_keys() + self._FINANCIAL_KEYS
 
-    def _build_lcoe_fn(self, params: dict, cost_overrides: dict[str, float] | None = None):
+    def _build_lcoe_fn(
+        self, params: dict, cost_overrides: dict[str, float] | None = None
+    ):
         """Build a JAX-differentiable function: param_vector -> LCOE.
 
         Fuel, concept, CostingConstants, and discrete params are closed
@@ -426,14 +498,22 @@ class CostModel:
 
         # Named args passed to forward() directly
         named_args = {
-            "net_electric_mw", "availability", "lifetime_yr", "n_mod",
-            "construction_time_yr", "interest_rate", "inflation_rate",
-            "noak", "fuel", "concept",
+            "net_electric_mw",
+            "availability",
+            "lifetime_yr",
+            "n_mod",
+            "construction_time_yr",
+            "interest_rate",
+            "inflation_rate",
+            "noak",
+            "fuel",
+            "concept",
         }
 
         # Static params (closed over, not traced)
-        static_eng = {k: v for k, v in params.items()
-                      if k not in named_args and k not in keys}
+        static_eng = {
+            k: v for k, v in params.items() if k not in named_args and k not in keys
+        }
         net_mw = params["net_electric_mw"]
         avail = params["availability"]
         life = params["lifetime_yr"]
@@ -449,7 +529,7 @@ class CostModel:
 
             # Extract named args from traced vector if present
             ir = eng.pop("interest_rate", params.get("interest_rate", 0.07))
-            inf = eng.pop("inflation_rate", params.get("inflation_rate", 0.0245))
+            inf = eng.pop("inflation_rate", params.get("inflation_rate", 0.02))
             av = eng.pop("availability", avail)
             ct_val = eng.pop("construction_time_yr", ct)
 
@@ -470,7 +550,9 @@ class CostModel:
         return lcoe_fn, keys, base_vals
 
     def sensitivity(
-        self, params: dict, cost_overrides: dict[str, float] | None = None,
+        self,
+        params: dict,
+        cost_overrides: dict[str, float] | None = None,
     ) -> dict[str, dict[str, float]]:
         """Compute elasticity of LCOE w.r.t. each continuous parameter.
 
@@ -505,7 +587,9 @@ class CostModel:
         return {"engineering": engineering, "financial": financial}
 
     def batch_lcoe(
-        self, param_sets: dict[str, list[float]], params: dict,
+        self,
+        param_sets: dict[str, list[float]],
+        params: dict,
         cost_overrides: dict[str, float] | None = None,
     ) -> list[float]:
         """Evaluate LCOE for many parameter sets using jax.vmap.

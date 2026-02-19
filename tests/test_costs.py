@@ -6,12 +6,6 @@ from costingfe.layers.costs import (
     cas24_electrical,
     cas25_misc,
     cas26_heat_rejection,
-    cas28_digital_twin,
-    cas29_contingency,
-    cas30_indirect,
-    cas40_owner,
-    cas50_supplementary,
-    cas60_idc,
     cas70_om,
     cas80_fuel,
     cas90_financial,
@@ -29,9 +23,7 @@ def test_cas10_dt_licensing():
 
 def test_cas10_pb11_cheaper_licensing():
     """pB11 licensing should be cheaper than DT."""
-    cost_dt = cas10_preconstruction(
-        CC, p_net=1000.0, n_mod=1, fuel=Fuel.DT, noak=True
-    )
+    cost_dt = cas10_preconstruction(CC, p_net=1000.0, n_mod=1, fuel=Fuel.DT, noak=True)
     cost_pb11 = cas10_preconstruction(
         CC, p_net=1000.0, n_mod=1, fuel=Fuel.PB11, noak=True
     )
@@ -76,12 +68,22 @@ def test_lcoe_end_to_end_sanity():
 
     c90 = cas90_financial(CC, 5000.0, 0.07, 30, 6, Fuel.DT, True)
     c70 = cas70_om(
-        CC, p_net=1000.0, inflation_rate=0.0245,
-        construction_time=6, fuel=Fuel.DT, noak=True,
+        CC,
+        p_net=1000.0,
+        inflation_rate=0.02,
+        construction_time=6,
+        fuel=Fuel.DT,
+        noak=True,
     )
     c80 = cas80_fuel(
-        CC, p_fus=2600.0, n_mod=1, availability=0.85,
-        inflation_rate=0.0245, construction_time=6, fuel=Fuel.DT, noak=True,
+        CC,
+        p_fus=2600.0,
+        n_mod=1,
+        availability=0.85,
+        inflation_rate=0.02,
+        construction_time=6,
+        fuel=Fuel.DT,
+        noak=True,
     )
     lcoe = compute_lcoe(c90, c70, c80, p_net=1000.0, n_mod=1, availability=0.85)
     assert 10 < lcoe < 500, f"LCOE {lcoe} $/MWh out of expected range"
