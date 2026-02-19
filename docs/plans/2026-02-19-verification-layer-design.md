@@ -57,7 +57,7 @@ Type checking, range constraints via `Field()`. Fires automatically on construct
 `@model_validator(mode='after')` checks that all required engineering params for the given confinement family are present (not None) after YAML template merge.
 
 Family-required maps:
-- MFE: p_input, eta_pin, eta_de, f_dec, p_coils, p_cool
+- MFE: p_input, eta_pin, eta_de, f_dec, p_coils, p_cool, axis_t, elon
 - IFE: p_implosion, p_ignition, eta_pin1, eta_pin2, p_target
 - MIF: p_driver, eta_pin, p_target, p_coils
 
@@ -67,8 +67,8 @@ Family-required maps:
 
 | Check | Severity | Condition |
 |-------|----------|-----------|
-| p_net < 0 | error | Plant consumes more than it produces |
-| Q_sci < 1 | warning | Fusion power < injected heating |
+| p_fus <= 0 or rec_frac > 0.95 | error | Plant consumes more than it produces |
+| Q_sci < 2 | warning | Low fusion gain relative to injected heating |
 | Recirculating fraction > 0.5 | warning | Excessive parasitic load |
 | eta_th > 0.65 | warning | Unusually high thermal efficiency |
 | eta_p > 0.95 | warning | Unusually high pumping efficiency |
@@ -87,11 +87,15 @@ Keeps current kwargs signature. Internally:
 3. Construct `CostingInput(**merged)` — pydantic validates
 4. Proceed with costing
 
+**JAX tracer guard:** When `forward()` is called via `jax.grad` or `jax.vmap`, parameters are JAX `Tracer` objects that pydantic cannot validate. The guard detects tracers and skips validation — the initial (non-traced) call already validated.
+
 ### run_costing(FusionTeaInput)
 
-1. Convert FusionTeaInput fields to dict
-2. Construct `CostingInput(**dict)` — validates
-3. Pass to CostModel.forward()
+1. Parse enum strings to `ConfinementConcept` / `Fuel`
+2. Construct `CostingInput` with customer-level inputs only — validates early
+3. Pass to `CostModel.forward()`, which does full validation after template merge
+
+**Note:** Engineering overrides from `FusionTeaInput.overrides` are not passed to the early `CostingInput` check because partial overrides would trigger Tier 2 failures. Full engineering validation happens inside `forward()` after YAML template defaults are merged.
 
 ### Direct construction
 
@@ -105,11 +109,11 @@ inp = CostingInput(concept="tokamak", fuel="dt", net_electric_mw=1000)
 ```
 src/costingfe/
   validation.py      # NEW — CostingInput pydantic model + all validators
-  exceptions.py      # NEW — FieldError, ValidationWarning
+  __init__.py        # MODIFIED — exports CostingInput
   model.py           # MODIFIED — construct CostingInput inside forward()
   adapter.py         # MODIFIED — construct CostingInput inside run_costing()
 tests/
-  test_validation.py # NEW — validation-specific tests
+  test_validation.py # NEW — validation-specific tests (33 tests)
 ```
 
 ## Dependencies
