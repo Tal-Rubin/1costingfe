@@ -88,3 +88,48 @@ class CostingInput(BaseModel):
     Z_eff: Optional[float] = None
     plasma_volume: Optional[float] = None
     B: Optional[float] = None
+
+    # --- Tier 2: family-required parameter lists ---
+    _COMMON_REQUIRED = [
+        "mn", "eta_th", "eta_p", "f_sub",
+        "p_pump", "p_trit", "p_house", "p_cryo",
+        "blanket_t", "ht_shield_t", "structure_t", "vessel_t", "plasma_t",
+    ]
+    _MFE_REQUIRED = [
+        "p_input", "eta_pin", "eta_de", "f_dec",
+        "p_coils", "p_cool", "axis_t", "elon",
+    ]
+    _IFE_REQUIRED = [
+        "p_implosion", "p_ignition", "eta_pin1", "eta_pin2", "p_target",
+    ]
+    _MIF_REQUIRED = [
+        "p_driver", "eta_pin", "p_target", "p_coils",
+    ]
+
+    @model_validator(mode="after")
+    def check_family_required_params(self):
+        """Tier 2: If any engineering param is set, all family-required params must be present."""
+        family = CONCEPT_TO_FAMILY[self.concept]
+
+        all_eng = (
+            self._COMMON_REQUIRED
+            + self._MFE_REQUIRED + self._IFE_REQUIRED + self._MIF_REQUIRED
+        )
+        any_set = any(getattr(self, k) is not None for k in all_eng)
+        if not any_set:
+            return self
+
+        family_required = {
+            ConfinementFamily.MFE: self._MFE_REQUIRED,
+            ConfinementFamily.IFE: self._IFE_REQUIRED,
+            ConfinementFamily.MIF: self._MIF_REQUIRED,
+        }
+        required = self._COMMON_REQUIRED + family_required.get(family, [])
+
+        missing = [k for k in required if getattr(self, k) is None]
+        if missing:
+            raise ValueError(
+                f"Missing required engineering parameters for "
+                f"{family.value}: {', '.join(missing)}"
+            )
+        return self

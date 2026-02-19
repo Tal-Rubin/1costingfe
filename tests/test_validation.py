@@ -144,3 +144,72 @@ class TestTier1FieldConstraints:
         assert inp.noak is True
         assert inp.cost_overrides == {}
         assert inp.costing_overrides == {}
+
+
+class TestTier2FamilyRequiredParams:
+    """Tier 2: After template merge, all family-required params must be present."""
+
+    def test_mfe_missing_p_input_rejected(self):
+        """MFE requires p_input — should fail if None after merge."""
+        with pytest.raises(ValidationError, match="p_input"):
+            CostingInput(
+                concept=ConfinementConcept.TOKAMAK,
+                fuel=Fuel.DT,
+                net_electric_mw=1000.0,
+                mn=1.1, eta_th=0.46, eta_p=0.5, f_sub=0.03,
+                p_pump=1.0, p_trit=10.0, p_house=4.0, p_cryo=0.5,
+                blanket_t=0.7, ht_shield_t=0.2, structure_t=0.15,
+                vessel_t=0.1, plasma_t=2.0,
+                eta_pin=0.5, eta_de=0.85, f_dec=0.0,
+                p_coils=2.0, p_cool=13.7, axis_t=6.2, elon=1.7,
+            )
+
+    def test_ife_missing_p_implosion_rejected(self):
+        with pytest.raises(ValidationError, match="p_implosion"):
+            CostingInput(
+                concept=ConfinementConcept.LASER_IFE,
+                fuel=Fuel.DT,
+                net_electric_mw=1000.0,
+                mn=1.1, eta_th=0.46, eta_p=0.5, f_sub=0.03,
+                p_pump=1.0, p_trit=10.0, p_house=4.0, p_cryo=0.5,
+                blanket_t=0.8, ht_shield_t=0.25, structure_t=0.15,
+                vessel_t=0.1, plasma_t=4.0,
+                p_ignition=0.1, eta_pin1=0.1, eta_pin2=0.1, p_target=1.0,
+            )
+
+    def test_mif_missing_p_driver_rejected(self):
+        with pytest.raises(ValidationError, match="p_driver"):
+            CostingInput(
+                concept=ConfinementConcept.MAG_TARGET,
+                fuel=Fuel.DT,
+                net_electric_mw=1000.0,
+                mn=1.1, eta_th=0.4, eta_p=0.5, f_sub=0.03,
+                p_pump=1.0, p_trit=10.0, p_house=4.0, p_cryo=0.2,
+                blanket_t=0.7, ht_shield_t=0.2, structure_t=0.15,
+                vessel_t=0.1, plasma_t=3.0,
+                eta_pin=0.3, p_target=2.0, p_coils=0.5,
+            )
+
+    def test_none_engineering_params_ok_when_template_will_fill(self):
+        """When no engineering params given (all None), Tier 2 is skipped."""
+        inp = CostingInput(
+            concept=ConfinementConcept.TOKAMAK,
+            fuel=Fuel.DT,
+            net_electric_mw=1000.0,
+        )
+        assert inp.mn is None
+
+    def test_mfe_complete_params_accepted(self):
+        """All MFE params provided — should pass."""
+        inp = CostingInput(
+            concept=ConfinementConcept.TOKAMAK,
+            fuel=Fuel.DT,
+            net_electric_mw=1000.0,
+            mn=1.1, eta_th=0.46, eta_p=0.5, f_sub=0.03,
+            p_pump=1.0, p_trit=10.0, p_house=4.0, p_cryo=0.5,
+            blanket_t=0.7, ht_shield_t=0.2, structure_t=0.15,
+            vessel_t=0.1, plasma_t=2.0,
+            p_input=50.0, eta_pin=0.5, eta_de=0.85, f_dec=0.0,
+            p_coils=2.0, p_cool=13.7, axis_t=6.2, elon=1.7,
+        )
+        assert inp.p_input == 50.0
