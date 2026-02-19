@@ -308,7 +308,6 @@ class CostModel:
             "C220109",
             "C220111",
             "C220112",
-            "C220119",
         }
         _PLANT_WIDE_KEYS = {
             "C220200",
@@ -374,13 +373,20 @@ class CostModel:
             self.fuel,
             noak,
         )
-        c70 = cas70_om(
+        c70, c71, c72 = cas70_om(
             cc,
-            pt.p_net,
-            inflation_rate,
-            construction_time_yr,
-            self.fuel,
-            noak,
+            cas22_detail=c22_detail,
+            replaceable_accounts=cc.replaceable_accounts,
+            n_mod=n_mod,
+            p_net=pt.p_net,
+            availability=availability,
+            inflation_rate=inflation_rate,
+            interest_rate=interest_rate,
+            lifetime_yr=lifetime_yr,
+            core_lifetime=cc.core_lifetime(self.fuel),
+            construction_time=construction_time_yr,
+            fuel=self.fuel,
+            noak=noak,
         )
         c80 = cas80_fuel(
             cc,
@@ -412,6 +418,8 @@ class CostModel:
             cas50=c50,
             cas60=c60,
             cas70=c70,
+            cas71=c71,
+            cas72=c72,
             cas80=c80,
             cas90=c90,
             total_capital=total_capital,

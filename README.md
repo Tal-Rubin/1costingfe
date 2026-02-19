@@ -109,7 +109,9 @@ print(result.cas22_detail["C220000"])  # Recomputed total
 
 Available CAS-level keys: `CAS10`, `CAS21`-`CAS28`.
 
-Available CAS22 sub-account keys: `C220101` (blanket), `C220102` (shield), `C220103` (coils), `C220104` (heating), `C220105` (structure), `C220106` (vacuum), `C220107` (power supplies), `C220108` (divertor), `C220109` (DEC), `C220111` (installation), `C220112` (isotope sep), `C220119` (replacement), `C220200` (coolant), `C220300` (aux cooling), `C220400` (rad waste), `C220500` (fuel handling), `C220600` (other equipment), `C220700` (I&C).
+Available CAS22 sub-account keys: `C220101` (blanket), `C220102` (shield), `C220103` (coils), `C220104` (heating), `C220105` (structure), `C220106` (vacuum), `C220107` (power supplies), `C220108` (divertor), `C220109` (DEC), `C220111` (installation), `C220112` (isotope sep), `C220200` (coolant), `C220300` (aux cooling), `C220400` (rad waste), `C220500` (fuel handling), `C220600` (other equipment), `C220700` (I&C).
+
+CAS70 sub-accounts: `CAS71` (annual O&M), `CAS72` (annualized scheduled replacement — blanket/FW + divertor, PV-discounted at interest rate).
 
 Sensitivity analysis works with overrides -- overridden accounts become constants with zero gradient:
 

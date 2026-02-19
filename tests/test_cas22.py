@@ -19,8 +19,15 @@ def _make_cas22(fuel=Fuel.DT, n_mod=1, blanket_t=0.70):
     rb = RadialBuild(axis_t=6.2, plasma_t=2.0, elon=1.7, blanket_t=blanket_t)
     geo = compute_geometry(rb, ConfinementConcept.TOKAMAK)
     return cas22_reactor_plant_equipment(
-        CC, p_net=1000.0, p_th=2500.0, p_et=1100.0, p_fus=2300.0,
-        p_cryo=0.5, n_mod=n_mod, fuel=fuel, noak=True,
+        CC,
+        p_net=1000.0,
+        p_th=2500.0,
+        p_et=1100.0,
+        p_fus=2300.0,
+        p_cryo=0.5,
+        n_mod=n_mod,
+        fuel=fuel,
+        noak=True,
         blanket_vol=geo.firstwall_vol + geo.blanket_vol + geo.reflector_vol,
         shield_vol=geo.ht_shield_vol + geo.lt_shield_vol,
         structure_vol=geo.structure_vol,
@@ -66,17 +73,33 @@ def test_cas22_scales_with_n_mod():
 
 
 def test_cas22_all_subaccounts_present():
-    """Result should contain all expected sub-account keys."""
+    """Result should contain all expected sub-account keys (no C220119)."""
     result = _make_cas22()
     expected_keys = [
-        "C220101", "C220102", "C220103", "C220104", "C220105",
-        "C220106", "C220107", "C220108", "C220109", "C220111",
-        "C220112", "C220119", "C220200", "C220300", "C220400",
-        "C220500", "C220600", "C220700", "C220000",
+        "C220101",
+        "C220102",
+        "C220103",
+        "C220104",
+        "C220105",
+        "C220106",
+        "C220107",
+        "C220108",
+        "C220109",
+        "C220111",
+        "C220112",
+        "C220200",
+        "C220300",
+        "C220400",
+        "C220500",
+        "C220600",
+        "C220700",
+        "C220000",
     ]
     for key in expected_keys:
         assert key in result, f"Missing sub-account {key}"
         assert result[key] >= 0, f"Sub-account {key} is negative"
+    # C220119 removed — replacement is now CAS72 (annualized, not capital)
+    assert "C220119" not in result
 
 
 def test_cas22_blanket_scales_with_thickness():

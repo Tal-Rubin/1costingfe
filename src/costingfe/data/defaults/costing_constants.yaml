@@ -48,11 +48,18 @@ he3_extraction_base: 0.0     # Lunar mining not viable
 protium_purification_base: 5.0
 b11_enrichment_base: 20.0
 
-# 220119: Scheduled Replacement (fraction of reactor subtotal)
-replacement_frac_dt: 0.05
-replacement_frac_dd: 0.03
-replacement_frac_dhe3: 0.02
-replacement_frac_pb11: 0.01
+# Core component lifetime (FPY — full power years between replacements)
+# Source: 20260208-fusion-reactor-subsystems-by-fuel-type.md
+core_lifetime_dt: 5.0     # 5-10 FPY, ~20 dpa/yr
+core_lifetime_dd: 10.0    # 10-15 FPY, ~7 dpa/yr
+core_lifetime_dhe3: 30.0  # 30+ FPY, ~1 dpa/yr
+core_lifetime_pb11: 50.0  # 50+ FPY, ~0.1 dpa/yr
+
+# CAS22 sub-accounts that need periodic replacement
+# Default: blanket/FW + divertor. Extend to "C220103" for thin-shield designs.
+replaceable_accounts:
+  - C220101
+  - C220108
 
 # 220500: Fuel Handling (M$ at 1 GWe reference)
 fuel_handling_dt_base: 120.0   # Full tritium processing + containment

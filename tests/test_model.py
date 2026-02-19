@@ -1,4 +1,4 @@
-from costingfe import CostModel, ConfinementConcept, Fuel
+from costingfe import ConfinementConcept, CostModel, Fuel
 
 
 def test_forward_basic():
@@ -50,7 +50,7 @@ def test_forward_ife_laser():
     assert result.costs.lcoe > 0
     assert result.power_table.p_net > 0
     assert result.power_table.p_coils == 0.0  # No magnets in IFE
-    assert result.power_table.p_target > 0    # Has target factory
+    assert result.power_table.p_target > 0  # Has target factory
 
 
 def test_forward_mif_mag_target():
@@ -83,13 +83,14 @@ def test_sensitivity_jax_grad_matches_finite_diff():
     base_lcoe = float(result.costs.lcoe)
     eta_th = result.params["eta_th"]
     delta = eta_th * 0.01
-    r2 = model.forward(net_electric_mw=1000.0, availability=0.85, lifetime_yr=30,
-                        eta_th=eta_th + delta)
+    r2 = model.forward(
+        net_electric_mw=1000.0, availability=0.85, lifetime_yr=30, eta_th=eta_th + delta
+    )
     fd_elasticity = ((float(r2.costs.lcoe) - base_lcoe) / delta) * eta_th / base_lcoe
 
-    assert abs(sens["engineering"]["eta_th"] - fd_elasticity) < 0.01, (
-        f"JAX grad {sens['engineering']['eta_th']:.4f} vs FD {fd_elasticity:.4f}"
-    )
+    assert (
+        abs(sens["engineering"]["eta_th"] - fd_elasticity) < 0.01
+    ), f"JAX grad {sens['engineering']['eta_th']:.4f} vs FD {fd_elasticity:.4f}"
 
 
 def test_batch_lcoe_vmap():
@@ -105,7 +106,7 @@ def test_batch_lcoe_vmap():
     # Higher eta_th should give lower LCOE
     assert lcoes[0] > lcoes[-1]
     # All should be positive
-    assert all(l > 0 for l in lcoes)
+    assert all(v > 0 for v in lcoes)
 
 
 def test_compare_all_returns_ranking():
@@ -127,7 +128,9 @@ def test_cost_override_cas21_propagates():
     model = CostModel(concept=ConfinementConcept.TOKAMAK, fuel=Fuel.DT)
     base = model.forward(net_electric_mw=1000.0, availability=0.85, lifetime_yr=30)
     overridden = model.forward(
-        net_electric_mw=1000.0, availability=0.85, lifetime_yr=30,
+        net_electric_mw=1000.0,
+        availability=0.85,
+        lifetime_yr=30,
         cost_overrides={"CAS21": 50.0},
     )
     assert overridden.costs.cas21 == 50.0
@@ -145,7 +148,9 @@ def test_cost_override_cas22_subaccount():
     model = CostModel(concept=ConfinementConcept.TOKAMAK, fuel=Fuel.DT)
     base = model.forward(net_electric_mw=1000.0, availability=0.85, lifetime_yr=30)
     overridden = model.forward(
-        net_electric_mw=1000.0, availability=0.85, lifetime_yr=30,
+        net_electric_mw=1000.0,
+        availability=0.85,
+        lifetime_yr=30,
         cost_overrides={"C220103": 300.0},
     )
     # CAS22 total should change
@@ -161,7 +166,9 @@ def test_cost_override_no_overrides_unchanged():
     model = CostModel(concept=ConfinementConcept.TOKAMAK, fuel=Fuel.DT)
     base = model.forward(net_electric_mw=1000.0, availability=0.85, lifetime_yr=30)
     with_empty = model.forward(
-        net_electric_mw=1000.0, availability=0.85, lifetime_yr=30,
+        net_electric_mw=1000.0,
+        availability=0.85,
+        lifetime_yr=30,
         cost_overrides={},
     )
     assert base.costs.lcoe == with_empty.costs.lcoe
@@ -172,7 +179,9 @@ def test_cost_override_overridden_list():
     """Overridden list should contain exactly the applied keys."""
     model = CostModel(concept=ConfinementConcept.TOKAMAK, fuel=Fuel.DT)
     result = model.forward(
-        net_electric_mw=1000.0, availability=0.85, lifetime_yr=30,
+        net_electric_mw=1000.0,
+        availability=0.85,
+        lifetime_yr=30,
         cost_overrides={"CAS10": 5.0, "CAS21": 50.0, "C220103": 300.0},
     )
     assert set(result.overridden) == {"CAS10", "CAS21", "C220103"}
@@ -186,3 +195,50 @@ def test_cas22_detail_in_result():
     assert "C220103" in result.cas22_detail
     assert "C220000" in result.cas22_detail
     assert result.cas22_detail["C220000"] == result.costs.cas22
+
+
+# ---- CAS71/CAS72 sub-account tests ----
+
+
+def test_cas70_has_subaccounts():
+    """CostResult should have cas71 and cas72, summing to cas70."""
+    model = CostModel(concept=ConfinementConcept.TOKAMAK, fuel=Fuel.DT)
+    result = model.forward(net_electric_mw=1000.0, availability=0.85, lifetime_yr=30)
+    assert result.costs.cas71 > 0, "CAS71 (O&M) should be positive"
+    assert result.costs.cas72 > 0, "CAS72 (replacement) should be positive for DT"
+    assert abs(result.costs.cas70 - (result.costs.cas71 + result.costs.cas72)) < 0.001
+
+
+def test_cas72_zero_for_pb11_30yr():
+    """pB11 with 50 FPY core life, 30yr plant -> CAS72 = 0."""
+    model = CostModel(concept=ConfinementConcept.TOKAMAK, fuel=Fuel.PB11)
+    result = model.forward(net_electric_mw=1000.0, availability=0.85, lifetime_yr=30)
+    assert result.costs.cas72 == 0.0
+
+
+def test_cas72_increases_with_lifetime():
+    """Longer plant life -> more replacement events -> higher CAS72."""
+    model = CostModel(concept=ConfinementConcept.TOKAMAK, fuel=Fuel.DT)
+    r20 = model.forward(net_electric_mw=1000.0, availability=0.85, lifetime_yr=20)
+    r40 = model.forward(net_electric_mw=1000.0, availability=0.85, lifetime_yr=40)
+    assert r40.costs.cas72 > r20.costs.cas72
+
+
+def test_cas22_no_c220119():
+    """CAS22 detail should not contain C220119 (moved to CAS72)."""
+    model = CostModel(concept=ConfinementConcept.TOKAMAK, fuel=Fuel.DT)
+    result = model.forward(net_electric_mw=1000.0, availability=0.85, lifetime_yr=30)
+    assert "C220119" not in result.cas22_detail
+
+
+def test_cas72_uses_cost_overrides():
+    """Overriding C220101 should affect CAS72 replacement cost."""
+    model = CostModel(concept=ConfinementConcept.TOKAMAK, fuel=Fuel.DT)
+    base = model.forward(net_electric_mw=1000.0, availability=0.85, lifetime_yr=30)
+    expensive = model.forward(
+        net_electric_mw=1000.0,
+        availability=0.85,
+        lifetime_yr=30,
+        cost_overrides={"C220101": base.cas22_detail["C220101"] * 5},
+    )
+    assert expensive.costs.cas72 > base.costs.cas72

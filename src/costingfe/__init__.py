@@ -1,14 +1,28 @@
+import os as _os
+
+# Default to CPU — suppresses "NVIDIA GPU may be present" warning.
+# Users with CUDA-enabled jaxlib can set JAX_PLATFORMS=cuda to override.
+_os.environ.setdefault("JAX_PLATFORMS", "cpu")
+
 from dataclasses import dataclass
 
 from costingfe.model import CostModel
 from costingfe.types import (
-    CONCEPT_TO_FAMILY,
+    CONCEPT_TO_FAMILY as CONCEPT_TO_FAMILY,
+)
+from costingfe.types import (
     ConfinementConcept,
-    ConfinementFamily,
-    CostResult,
     ForwardResult,
     Fuel,
-    PowerTable,
+)
+from costingfe.types import (
+    ConfinementFamily as ConfinementFamily,
+)
+from costingfe.types import (
+    CostResult as CostResult,
+)
+from costingfe.types import (
+    PowerTable as PowerTable,
 )
 from costingfe.validation import CostingInput as CostingInput
 

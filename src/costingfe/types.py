@@ -1,5 +1,5 @@
-from enum import Enum
 from dataclasses import dataclass, field
+from enum import Enum
 
 
 class ConfinementFamily(Enum):
@@ -85,7 +85,9 @@ class CostResult:
     cas40: float = 0.0  # Owner's costs
     cas50: float = 0.0  # Supplementary costs
     cas60: float = 0.0  # Capitalized financial costs
-    cas70: float = 0.0  # Annualized O&M
+    cas70: float = 0.0  # Annualized O&M + replacement (CAS71 + CAS72)
+    cas71: float = 0.0  # Annualized O&M
+    cas72: float = 0.0  # Annualized scheduled replacement
     cas80: float = 0.0  # Annualized fuel
     cas90: float = 0.0  # Annualized financial (capital)
     total_capital: float = 0.0  # CAS10-60 sum

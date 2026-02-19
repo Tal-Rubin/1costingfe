@@ -9,8 +9,13 @@ Source: pyFECONs costing/calculations/cas*.py
 
 import math
 
-from costingfe.defaults import CostingConstants
-from costingfe.layers.economics import compute_effective_crf, levelized_annual_cost
+import jax.numpy as jnp
+
+from costingfe.layers.economics import (
+    compute_crf,
+    compute_effective_crf,
+    levelized_annual_cost,
+)
 from costingfe.layers.physics import M_DEUTERIUM_KG, MEV_TO_JOULES, Q_DT
 from costingfe.types import Fuel
 
@@ -94,9 +99,7 @@ def cas29_contingency(cc, cas2x_total, noak):
 def cas30_indirect(cc, cas20, p_net, construction_time):
     """CAS30: Indirect service costs. Returns M$."""
     power_scale = (p_net / cc.indirect_ref_power) ** -0.5
-    field = (
-        power_scale * p_net * cc.field_indirect_coeff * construction_time / 1e3
-    )
+    field = power_scale * p_net * cc.field_indirect_coeff * construction_time / 1e3
     supervision = (
         power_scale
         * p_net
@@ -104,9 +107,7 @@ def cas30_indirect(cc, cas20, p_net, construction_time):
         * construction_time
         / 1e3
     )
-    design = (
-        power_scale * p_net * cc.design_services_coeff * construction_time / 1e3
-    )
+    design = power_scale * p_net * cc.design_services_coeff * construction_time / 1e3
     return field + supervision + design
 
 
@@ -137,15 +138,54 @@ def cas60_idc(cc, cas20, p_net, construction_time, fuel, noak):
     return p_net * cc.idc_coeff * t_project / 1e3
 
 
-def cas70_om(cc, p_net, inflation_rate, construction_time, fuel, noak):
-    """CAS70: Annualized O&M costs (today's $ inflated to operation start). Returns M$."""
+def cas70_om(
+    cc,
+    cas22_detail,
+    replaceable_accounts,
+    n_mod,
+    p_net,
+    availability,
+    inflation_rate,
+    interest_rate,
+    lifetime_yr,
+    core_lifetime,
+    construction_time,
+    fuel,
+    noak,
+):
+    """CAS70: Annualized O&M + scheduled replacement. Returns (total, cas71, cas72).
+
+    CAS71: Annual O&M (today's $ inflated to operation start).
+    CAS72: Annualized scheduled replacement (PV-discounted at interest rate,
+           annualized via CRF). core_lifetime is in FPY, converted to calendar
+           years via availability.
+    """
+    # CAS71: Annual O&M
     annual_om = cc.om_cost_per_mw_yr * p_net * 1000 / 1e6  # M$
     t_project = _total_project_time(cc, construction_time, fuel, noak)
-    return levelized_annual_cost(annual_om, inflation_rate, t_project)
+    cas71 = levelized_annual_cost(annual_om, inflation_rate, t_project)
+
+    # CAS72: Annualized scheduled replacement
+    core_lifetime_cal = core_lifetime / availability  # FPY → calendar years
+    n_rep = jnp.maximum(0.0, jnp.ceil(lifetime_yr / core_lifetime_cal) - 1.0)
+    cost_per_event = sum(cas22_detail[k] for k in replaceable_accounts) * n_mod
+    # Sum PV of each replacement event, using jnp.where for JAX traceability.
+    # Max replacements bounded by lifetime/core_lifetime; 20 covers all cases
+    # (e.g., 60yr plant / 3yr core = 19 replacements).
+    MAX_REP = 20
+    pv = 0.0
+    for k in range(1, MAX_REP + 1):
+        discount = (1 + interest_rate) ** (k * core_lifetime_cal)
+        pv = pv + jnp.where(k <= n_rep, cost_per_event / discount, 0.0)
+    crf = compute_crf(interest_rate, lifetime_yr)
+    cas72 = pv * crf
+
+    return cas71 + cas72, cas71, cas72
 
 
-def cas80_fuel(cc, p_fus, n_mod, availability, inflation_rate,
-               construction_time, fuel, noak):
+def cas80_fuel(
+    cc, p_fus, n_mod, availability, inflation_rate, construction_time, fuel, noak
+):
     """CAS80: Annualized fuel cost. Architecture-agnostic — depends on
     fusion power and fuel type, not confinement concept. Returns M$."""
     c_f = (
@@ -164,8 +204,9 @@ def cas80_fuel(cc, p_fus, n_mod, availability, inflation_rate,
     return levelized_annual_cost(annual_fuel_musd, inflation_rate, t_project)
 
 
-def cas90_financial(cc, total_capital, interest_rate, plant_lifetime,
-                    construction_time, fuel, noak):
+def cas90_financial(
+    cc, total_capital, interest_rate, plant_lifetime, construction_time, fuel, noak
+):
     """CAS90: Annualized financial (capital) costs. Returns M$."""
     t_project = _total_project_time(cc, construction_time, fuel, noak)
     eff_crf = compute_effective_crf(interest_rate, plant_lifetime, t_project)

@@ -114,6 +114,8 @@ def run_costing(inp: FusionTeaInput) -> FusionTeaOutput:
         "CAS50": float(c.cas50),
         "CAS60": float(c.cas60),
         "CAS70": float(c.cas70),
+        "CAS71": float(c.cas71),
+        "CAS72": float(c.cas72),
         "CAS80": float(c.cas80),
         "CAS90": float(c.cas90),
     }

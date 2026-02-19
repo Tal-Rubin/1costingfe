@@ -62,12 +62,14 @@ def cas22_reactor_plant_equipment(
     # Source: pyFECONs cas220102_shield.py
     # -----------------------------------------------------------------------
     shield_scale = {
-        Fuel.DT: 1.0,      # Heavy shield (14.1 MeV neutrons)
-        Fuel.DD: 0.7,       # Mixed (2.45 MeV neutrons)
-        Fuel.DHE3: 0.3,     # Light (~5% neutron fraction)
-        Fuel.PB11: 0.1,     # Minimal (aneutronic)
+        Fuel.DT: 1.0,  # Heavy shield (14.1 MeV neutrons)
+        Fuel.DD: 0.7,  # Mixed (2.45 MeV neutrons)
+        Fuel.DHE3: 0.3,  # Light (~5% neutron fraction)
+        Fuel.PB11: 0.1,  # Minimal (aneutronic)
     }
-    c220102 = cc.shield_unit_cost * shield_vol * shield_scale[fuel] * (p_th / P_TH_REF) ** 0.6
+    c220102 = (
+        cc.shield_unit_cost * shield_vol * shield_scale[fuel] * (p_th / P_TH_REF) ** 0.6
+    )
 
     # -----------------------------------------------------------------------
     # 220103: Coils (MFE tokamak: TF + CS + PF + shim + structure + cooling)
@@ -117,8 +119,15 @@ def cas22_reactor_plant_equipment(
     # Source: pyFECONs cas220111_installation.py
     # -----------------------------------------------------------------------
     reactor_subtotal = (
-        c220101 + c220102 + c220103 + c220104 + c220105
-        + c220106 + c220107 + c220108 + c220109
+        c220101
+        + c220102
+        + c220103
+        + c220104
+        + c220105
+        + c220106
+        + c220107
+        + c220108
+        + c220109
     )
     c220111 = cc.installation_frac * reactor_subtotal
 
@@ -128,7 +137,7 @@ def cas22_reactor_plant_equipment(
     # Source: pyFECONs cas220112_isotope_separation.py
     # -----------------------------------------------------------------------
     p_gwe = p_net / 1000.0
-    scale_06 = p_gwe ** 0.6
+    scale_06 = p_gwe**0.6
 
     if fuel == Fuel.DT:
         c220112 = (cc.deuterium_extraction_base + cc.li6_enrichment_base) * scale_06
@@ -142,31 +151,19 @@ def cas22_reactor_plant_equipment(
         c220112 = 0.0
 
     # -----------------------------------------------------------------------
-    # 220119: Scheduled Replacement (fraction of reactor subtotal)
-    # Source: pyFECONs cas220119_replacement.py
-    # -----------------------------------------------------------------------
-    replacement_frac = {
-        Fuel.DT: cc.replacement_frac_dt,
-        Fuel.DD: cc.replacement_frac_dd,
-        Fuel.DHE3: cc.replacement_frac_dhe3,
-        Fuel.PB11: cc.replacement_frac_pb11,
-    }
-    c220119 = replacement_frac[fuel] * reactor_subtotal
-
-    # -----------------------------------------------------------------------
     # 220200: Main & Secondary Coolant
     # Source: pyFECONs cas220200_coolant.py
     # -----------------------------------------------------------------------
     c220201 = 166.0 * (n_mod * p_net / 1000.0)  # Primary coolant
-    c220202 = 40.6 * (p_th / 3500.0) ** 0.55     # Intermediate coolant
+    c220202 = 40.6 * (p_th / 3500.0) ** 0.55  # Intermediate coolant
     c220200 = c220201 + c220202
 
     # -----------------------------------------------------------------------
     # 220300: Auxiliary Cooling + Cryoplant
     # Source: pyFECONs cas220300_auxilary_cooling.py
     # -----------------------------------------------------------------------
-    c220301 = 1.10e-3 * n_mod * p_th              # Aux coolant
-    c220302 = 200.0 * (p_cryo / 30.0) ** 0.7      # Cryoplant (ref: $200M @ 30MW)
+    c220301 = 1.10e-3 * n_mod * p_th  # Aux coolant
+    c220302 = 200.0 * (p_cryo / 30.0) ** 0.7  # Cryoplant (ref: $200M @ 30MW)
     c220300 = c220301 + c220302
 
     # -----------------------------------------------------------------------
@@ -207,9 +204,17 @@ def cas22_reactor_plant_equipment(
     # Total CAS22 (per module, then multiply)
     # -----------------------------------------------------------------------
     per_module = (
-        c220101 + c220102 + c220103 + c220104 + c220105
-        + c220106 + c220107 + c220108 + c220109 + c220111
-        + c220112 + c220119
+        c220101
+        + c220102
+        + c220103
+        + c220104
+        + c220105
+        + c220106
+        + c220107
+        + c220108
+        + c220109
+        + c220111
+        + c220112
     )
     plant_wide = c220200 + c220300 + c220400 + c220500 + c220600 + c220700
     c220000 = per_module * n_mod + plant_wide
@@ -226,7 +231,6 @@ def cas22_reactor_plant_equipment(
         "C220109": c220109,
         "C220111": c220111,
         "C220112": c220112,
-        "C220119": c220119,
         "C220200": c220200,
         "C220300": c220300,
         "C220400": c220400,
