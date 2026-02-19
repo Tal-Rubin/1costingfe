@@ -209,3 +209,90 @@ def test_cas72_uses_overridden_component_costs():
     _, _, cas72_base = cas70_om(CC, cas22_detail=base_detail, **kwargs)
     _, _, cas72_exp = cas70_om(CC, cas22_detail=expensive_detail, **kwargs)
     assert cas72_exp > cas72_base
+
+
+# ---- CAS80 fuel-specific tests ----
+
+_CAS80_KWARGS = dict(
+    p_fus=2600.0,
+    n_mod=1,
+    availability=0.85,
+    inflation_rate=0.02,
+    construction_time=6,
+    noak=True,
+)
+
+
+def test_cas80_scales_with_p_fus():
+    """Higher fusion power should produce higher fuel cost."""
+    low = cas80_fuel(
+        CC,
+        p_fus=1000.0,
+        n_mod=1,
+        availability=0.85,
+        inflation_rate=0.02,
+        construction_time=6,
+        fuel=Fuel.DT,
+        noak=True,
+    )
+    high = cas80_fuel(
+        CC,
+        p_fus=3000.0,
+        n_mod=1,
+        availability=0.85,
+        inflation_rate=0.02,
+        construction_time=6,
+        fuel=Fuel.DT,
+        noak=True,
+    )
+    assert high > low
+
+
+def test_cas80_linear_in_p_fus():
+    """Doubling fusion power should double fuel cost (linear relationship)."""
+    kwargs = {k: v for k, v in _CAS80_KWARGS.items() if k != "p_fus"}
+    for fuel in Fuel:
+        c1 = cas80_fuel(CC, p_fus=1000.0, fuel=fuel, **kwargs)
+        c2 = cas80_fuel(CC, p_fus=2000.0, fuel=fuel, **kwargs)
+        ratio = float(c2) / float(c1)
+        assert abs(ratio - 2.0) < 1e-10, f"{fuel}: expected ratio 2.0, got {ratio}"
+
+
+def test_cas80_dt_includes_li6():
+    """DT cost should include Li-6 (higher than D-only)."""
+    dt_cost = cas80_fuel(CC, fuel=Fuel.DT, **_CAS80_KWARGS)
+    # D-only cost: temporarily zero out Li-6
+    cc_no_li6 = CC.replace(u_li6=0.0)
+    d_only = cas80_fuel(cc_no_li6, fuel=Fuel.DT, **_CAS80_KWARGS)
+    assert dt_cost > d_only, "DT should include Li-6 cost beyond deuterium"
+
+
+def test_cas80_dd_deuterium_only():
+    """DD fuel cost should depend only on deuterium price."""
+    dd_cost = cas80_fuel(CC, fuel=Fuel.DD, **_CAS80_KWARGS)
+    assert dd_cost > 0
+    # Changing Li-6 price should not affect DD
+    cc_expensive_li6 = CC.replace(u_li6=1e6)
+    dd_cost2 = cas80_fuel(cc_expensive_li6, fuel=Fuel.DD, **_CAS80_KWARGS)
+    assert abs(dd_cost - dd_cost2) < 1e-10
+
+
+def test_cas80_pb11_b11_dominates():
+    """pB11 feedstock should be more expensive than DT feedstock."""
+    dt_cost = cas80_fuel(CC, fuel=Fuel.DT, **_CAS80_KWARGS)
+    pb11_cost = cas80_fuel(CC, fuel=Fuel.PB11, **_CAS80_KWARGS)
+    assert pb11_cost > dt_cost
+
+
+def test_cas80_dhe3_most_expensive():
+    """DHe3 should have highest fuel cost (He-3 at $2M/kg)."""
+    dhe3_cost = cas80_fuel(CC, fuel=Fuel.DHE3, **_CAS80_KWARGS)
+    for other_fuel in [Fuel.DT, Fuel.DD, Fuel.PB11]:
+        other = cas80_fuel(CC, fuel=other_fuel, **_CAS80_KWARGS)
+        assert dhe3_cost > other, f"DHe3 should be more expensive than {other_fuel}"
+
+
+def test_cas80_fuel_cost_order():
+    """Fuel cost ordering: DHe3 > pB11 > DD > DT."""
+    costs = {f: float(cas80_fuel(CC, fuel=f, **_CAS80_KWARGS)) for f in Fuel}
+    assert costs[Fuel.DHE3] > costs[Fuel.PB11] > costs[Fuel.DD] > costs[Fuel.DT]

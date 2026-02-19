@@ -14,7 +14,7 @@ All costs in M$. Source: pyFECONs costing/calculations/cas22/
 """
 
 from costingfe.defaults import CostingConstants
-from costingfe.types import Fuel
+from costingfe.types import ConfinementFamily, Fuel
 
 
 def cas22_reactor_plant_equipment(
@@ -31,6 +31,7 @@ def cas22_reactor_plant_equipment(
     shield_vol: float = 0.0,
     structure_vol: float = 0.0,
     vessel_vol: float = 0.0,
+    family: ConfinementFamily = ConfinementFamily.MFE,
 ) -> dict[str, float]:
     """Compute all CAS22 sub-accounts. Returns dict of account_code -> M$.
 
@@ -103,10 +104,13 @@ def cas22_reactor_plant_equipment(
     c220107 = cc.power_supplies_base * (p_et / 1000.0) ** 0.7
 
     # -----------------------------------------------------------------------
-    # 220108: Divertor (MFE tokamak)
+    # 220108: Divertor (MFE) or Target Factory (IFE/MIF)
     # Source: pyFECONs cas220108_divertor.py
     # -----------------------------------------------------------------------
-    c220108 = cc.divertor_base * (p_th / 1000.0) ** 0.5
+    if family == ConfinementFamily.MFE:
+        c220108 = cc.divertor_base * (p_th / 1000.0) ** 0.5
+    else:  # IFE or MIF — target factory
+        c220108 = cc.target_factory_base * (p_et / 1000.0) ** 0.7
 
     # -----------------------------------------------------------------------
     # 220109: Direct Energy Converter (optional, zero by default)

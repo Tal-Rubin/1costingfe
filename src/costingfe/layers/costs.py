@@ -16,7 +16,21 @@ from costingfe.layers.economics import (
     compute_effective_crf,
     levelized_annual_cost,
 )
-from costingfe.layers.physics import M_DEUTERIUM_KG, MEV_TO_JOULES, Q_DT
+from costingfe.layers.physics import (
+    DD_F_HE3_DEFAULT,
+    DD_F_T_DEFAULT,
+    M_B11_KG,
+    M_DEUTERIUM_KG,
+    M_HE3_KG,
+    M_LI6_KG,
+    M_PROTON_KG,
+    MEV_TO_JOULES,
+    Q_DD_NHE3,
+    Q_DD_PT,
+    Q_DHE3,
+    Q_DT,
+    Q_PB11,
+)
 from costingfe.types import Fuel
 
 
@@ -31,6 +45,7 @@ def _total_project_time(cc, construction_time, fuel, noak):
 # ---------------------------------------------------------------------------
 
 
+# REQUIRES CHECKING
 def cas10_preconstruction(cc, p_net, n_mod, fuel, noak):
     """CAS10: Pre-construction costs. Returns M$."""
     land = cc.land_intensity * p_net * math.sqrt(n_mod) * cc.land_cost / 1e6
@@ -49,6 +64,7 @@ def cas10_preconstruction(cc, p_net, n_mod, fuel, noak):
     return subtotal + contingency
 
 
+# REQUIRES CHECKING
 def cas21_buildings(cc, p_et, fuel, noak):
     """CAS21: Buildings. Scales with gross electric. Returns M$."""
     fuel_scale = 1.0 if fuel == Fuel.DT else 0.5
@@ -66,36 +82,43 @@ def cas21_buildings(cc, p_et, fuel, noak):
     return total + contingency
 
 
+# REQUIRES CHECKING
 def cas23_turbine(cc, p_et, n_mod):
     """CAS23: Turbine plant equipment. Returns M$."""
     return n_mod * p_et * cc.turbine_per_mw
 
 
+# REQUIRES CHECKING
 def cas24_electrical(cc, p_et, n_mod):
     """CAS24: Electric plant equipment. Returns M$."""
     return n_mod * p_et * cc.electric_per_mw
 
 
+# REQUIRES CHECKING
 def cas25_misc(cc, p_et, n_mod):
     """CAS25: Miscellaneous plant equipment. Returns M$."""
     return n_mod * p_et * cc.misc_per_mw
 
 
+# REQUIRES CHECKING
 def cas26_heat_rejection(cc, p_et, n_mod):
     """CAS26: Heat rejection. Returns M$."""
     return n_mod * p_et * cc.heat_rej_per_mw
 
 
+# REQUIRES CHECKING
 def cas28_digital_twin(cc):
     """CAS28: Digital twin. Returns M$."""
     return cc.digital_twin
 
 
+# REQUIRES CHECKING
 def cas29_contingency(cc, cas2x_total, noak):
     """CAS29: Contingency on direct costs. Returns M$."""
     return cc.contingency_rate(noak) * cas2x_total
 
 
+# REQUIRES CHECKING
 def cas30_indirect(cc, cas20, p_net, construction_time):
     """CAS30: Indirect service costs. Returns M$."""
     power_scale = (p_net / cc.indirect_ref_power) ** -0.5
@@ -111,11 +134,13 @@ def cas30_indirect(cc, cas20, p_net, construction_time):
     return field + supervision + design
 
 
+# REQUIRES CHECKING
 def cas40_owner(cas20):
     """CAS40: Owner's costs (~5% of direct). Returns M$."""
     return 0.05 * cas20
 
 
+# REQUIRES CHECKING
 def cas50_supplementary(cc, cas23_to_28_total, p_net, noak):
     """CAS50: Supplementary costs. Returns M$."""
     spare_parts = cc.spare_parts_frac * cas23_to_28_total
@@ -132,6 +157,7 @@ def cas50_supplementary(cc, cas23_to_28_total, p_net, noak):
     return subtotal + contingency
 
 
+# REQUIRES CHECKING
 def cas60_idc(cc, cas20, p_net, construction_time, fuel, noak):
     """CAS60: Interest during construction. Returns M$."""
     t_project = _total_project_time(cc, construction_time, fuel, noak)
@@ -161,6 +187,7 @@ def cas70_om(
            years via availability.
     """
     # CAS71: Annual O&M
+    # REQUIRES CHECKING
     annual_om = cc.om_cost_per_mw_yr * p_net * 1000 / 1e6  # M$
     t_project = _total_project_time(cc, construction_time, fuel, noak)
     cas71 = levelized_annual_cost(annual_om, inflation_rate, t_project)
@@ -184,26 +211,60 @@ def cas70_om(
 
 
 def cas80_fuel(
-    cc, p_fus, n_mod, availability, inflation_rate, construction_time, fuel, noak
+    cc,
+    p_fus,
+    n_mod,
+    availability,
+    inflation_rate,
+    construction_time,
+    fuel,
+    noak,
+    dd_f_T=DD_F_T_DEFAULT,
+    dd_f_He3=DD_F_HE3_DEFAULT,
 ):
-    """CAS80: Annualized fuel cost. Architecture-agnostic — depends on
-    fusion power and fuel type, not confinement concept. Returns M$."""
-    c_f = (
+    """CAS80: Annualized fuel cost. Fuel-specific consumable costs.
+
+    Each fuel cycle has different consumables, Q-values, and costs per reaction.
+    The 1e6 (MW->W) and /1e6 ($->M$) cancel, giving a clean formula.
+    Returns M$.
+    """
+    SECONDS_PER_YR = 3600.0 * 8760.0
+
+    if fuel == Fuel.DT:
+        cost_per_rxn = M_DEUTERIUM_KG * cc.u_deuterium + M_LI6_KG * cc.u_li6
+        q_eff = Q_DT
+    elif fuel == Fuel.DD:
+        q_eff = (
+            0.5 * Q_DD_PT
+            + 0.5 * Q_DD_NHE3
+            + 0.5 * dd_f_T * Q_DT
+            + 0.5 * dd_f_He3 * Q_DHE3
+        )
+        d_per_event = 2 + 0.5 * dd_f_T + 0.5 * dd_f_He3
+        cost_per_rxn = d_per_event * M_DEUTERIUM_KG * cc.u_deuterium
+    elif fuel == Fuel.DHE3:
+        cost_per_rxn = M_DEUTERIUM_KG * cc.u_deuterium + M_HE3_KG * cc.u_he3
+        q_eff = Q_DHE3
+    elif fuel == Fuel.PB11:
+        cost_per_rxn = M_PROTON_KG * cc.u_protium + M_B11_KG * cc.u_b11
+        q_eff = Q_PB11
+    else:
+        cost_per_rxn = 0.0
+        q_eff = Q_DT
+
+    annual_musd = (
         n_mod
         * p_fus
-        * 1e6
-        * 3600
-        * 8760
-        * cc.u_deuterium
-        * M_DEUTERIUM_KG
+        * SECONDS_PER_YR
         * availability
-        / (Q_DT * MEV_TO_JOULES)
+        * cost_per_rxn
+        / (q_eff * MEV_TO_JOULES)
     )
-    annual_fuel_musd = c_f / 1e6
     t_project = _total_project_time(cc, construction_time, fuel, noak)
-    return levelized_annual_cost(annual_fuel_musd, inflation_rate, t_project)
+    return levelized_annual_cost(annual_musd, inflation_rate, t_project)
 
 
+# REQUIRES CHECKING
 def cas90_financial(
     cc, total_capital, interest_rate, plant_lifetime, construction_time, fuel, noak
 ):

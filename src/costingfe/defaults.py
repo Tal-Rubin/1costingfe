@@ -52,6 +52,8 @@ class CostingConstants:
     vessel_unit_cost: float = 0.72  # Calibrated at ~148 m³
     power_supplies_base: float = 80.0
     divertor_base: float = 60.0
+    # IFE/MIF target factory capital (M$ at 1 GWe reference)
+    target_factory_base: float = 244.0
 
     # 220111: Installation labor (fraction of reactor subtotal)
     installation_frac: float = 0.14
@@ -116,8 +118,13 @@ class CostingConstants:
     # CAS70
     om_cost_per_mw_yr: float = 60.0
 
-    # CAS80 — STARFIRE (1980) inflation-adjusted via GDP IPD. Range: $1,500-3,500/kg.
+    # CAS80 — fuel isotope unit costs ($/kg)
+    # STARFIRE (1980) inflation-adjusted via GDP IPD. Range: $1,500-3,500/kg.
     u_deuterium: float = 2175.0  # $/kg
+    u_li6: float = 1000.0  # $/kg, enriched Li-6 (90%) for breeding blanket
+    u_he3: float = 2_000_000.0  # $/kg, He-3 ($2,000/g — optimistic self-production)
+    u_protium: float = 5.0  # $/kg, commodity H2
+    u_b11: float = 10_000.0  # $/kg, enriched B-11 (>95%, $10/g, tails from B-10)
 
     def replace(self, **kwargs):
         return replace(self, **kwargs)

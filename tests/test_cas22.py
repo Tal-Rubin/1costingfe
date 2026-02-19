@@ -1,7 +1,7 @@
 from costingfe.defaults import load_costing_constants
 from costingfe.layers.cas22 import cas22_reactor_plant_equipment
 from costingfe.layers.geometry import RadialBuild, compute_geometry
-from costingfe.types import ConfinementConcept, Fuel
+from costingfe.types import ConfinementConcept, ConfinementFamily, Fuel
 
 CC = load_costing_constants()
 
@@ -122,3 +122,43 @@ def test_cas22_structure_volume_based():
     result = _make_cas22()
     expected = CC.structure_unit_cost * STRUCTURE_VOL
     assert abs(result["C220105"] - expected) < 0.1
+
+
+# ---- CAS220108: Divertor vs Target Factory ----
+
+
+def _make_cas22_with_family(family=ConfinementFamily.MFE):
+    """Helper to compute CAS22 with a specific confinement family."""
+    return cas22_reactor_plant_equipment(
+        CC,
+        p_net=1000.0,
+        p_th=2500.0,
+        p_et=1100.0,
+        p_fus=2300.0,
+        p_cryo=0.5,
+        n_mod=1,
+        fuel=Fuel.DT,
+        noak=True,
+        blanket_vol=BLANKET_VOL,
+        shield_vol=SHIELD_VOL,
+        structure_vol=STRUCTURE_VOL,
+        vessel_vol=VESSEL_VOL,
+        family=family,
+    )
+
+
+def test_cas220108_mfe_uses_divertor():
+    """MFE should use divertor_base for CAS220108."""
+    result = _make_cas22_with_family(ConfinementFamily.MFE)
+    expected = CC.divertor_base * (2500.0 / 1000.0) ** 0.5
+    assert abs(result["C220108"] - expected) < 0.01
+
+
+def test_cas220108_ife_uses_target_factory():
+    """IFE should use target_factory_base (larger than divertor)."""
+    mfe = _make_cas22_with_family(ConfinementFamily.MFE)
+    ife = _make_cas22_with_family(ConfinementFamily.IFE)
+    msg = "Target factory should cost more than divertor"
+    assert ife["C220108"] > mfe["C220108"], msg
+    expected = CC.target_factory_base * (1100.0 / 1000.0) ** 0.7
+    assert abs(ife["C220108"] - expected) < 0.01

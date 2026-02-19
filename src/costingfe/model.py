@@ -295,6 +295,7 @@ class CostModel:
             shield_vol=shield_vol,
             structure_vol=structure_vol,
             vessel_vol=vessel_vol,
+            family=self.family,
         )
         _PER_MODULE_KEYS = {
             "C220101",

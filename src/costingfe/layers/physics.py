@@ -1,7 +1,5 @@
 """Layer 2: Physics — fuel physics, power balance (forward + inverse)."""
 
-from typing import Optional
-
 import jax.numpy as jnp
 from scipy import constants as sc
 
@@ -12,6 +10,14 @@ from costingfe.types import Fuel, PowerTable
 # ---------------------------------------------------------------------------
 MEV_TO_JOULES = sc.eV * 1e6  # 1 MeV in J
 M_DEUTERIUM_KG = sc.physical_constants["deuteron mass"][0]  # kg
+M_PROTON_KG = sc.physical_constants["proton mass"][0]  # kg
+M_HE3_KG = sc.physical_constants["helion mass"][0]  # kg (helion = He-3 nucleus)
+M_LI6_KG = 6.015122795 * sc.atomic_mass  # kg (not in scipy CODATA)
+M_B11_KG = 11.0093054 * sc.atomic_mass  # kg (not in scipy CODATA)
+
+# DD burn fraction defaults (T=50 keV, tau_p=5 s)
+DD_F_T_DEFAULT = 0.969  # DD tritium burn fraction
+DD_F_HE3_DEFAULT = 0.689  # DD He-3 burn fraction
 
 # ---------------------------------------------------------------------------
 # Fusion Q-values and product energies (MeV) — nuclear reaction data
@@ -47,8 +53,8 @@ _E_TOTAL_PRIMARY_DD = 0.5 * Q_DD_PT + 0.5 * Q_DD_NHE3  # ~3.65
 def ash_neutron_split(
     p_fus: float,
     fuel: Fuel,
-    dd_f_T: float = 0.969,
-    dd_f_He3: float = 0.689,
+    dd_f_T: float = DD_F_T_DEFAULT,
+    dd_f_He3: float = DD_F_HE3_DEFAULT,
     dhe3_dd_frac: float = 0.07,
     dhe3_f_T: float = 0.97,
 ) -> tuple[float, float]:
@@ -62,13 +68,9 @@ def ash_neutron_split(
         ash_frac = E_ALPHA_DT / Q_DT
     elif fuel == Fuel.DD:
         E_charged = (
-            _E_CHARGED_PRIMARY_DD
-            + 0.5 * dd_f_T * E_ALPHA_DT
-            + 0.5 * dd_f_He3 * Q_DHE3
+            _E_CHARGED_PRIMARY_DD + 0.5 * dd_f_T * E_ALPHA_DT + 0.5 * dd_f_He3 * Q_DHE3
         )
-        E_total = (
-            _E_TOTAL_PRIMARY_DD + 0.5 * dd_f_T * Q_DT + 0.5 * dd_f_He3 * Q_DHE3
-        )
+        E_total = _E_TOTAL_PRIMARY_DD + 0.5 * dd_f_T * Q_DT + 0.5 * dd_f_He3 * Q_DHE3
         ash_frac = E_charged / E_total
     elif fuel == Fuel.DHE3:
         E_n_dd = _E_NEUTRON_PRIMARY_DD + 0.5 * dhe3_f_T * E_N_DT
@@ -125,9 +127,9 @@ def mfe_forward_power_balance(
     Z_eff: float = 1.5,
     plasma_volume: float = 500.0,
     B: float = 5.0,
-    p_rad_override: Optional[float] = None,
-    dd_f_T: float = 0.969,
-    dd_f_He3: float = 0.689,
+    p_rad_override: float | None = None,
+    dd_f_T: float = DD_F_T_DEFAULT,
+    dd_f_He3: float = DD_F_HE3_DEFAULT,
     dhe3_dd_frac: float = 0.07,
     dhe3_f_T: float = 0.97,
 ) -> PowerTable:
@@ -234,9 +236,9 @@ def mfe_inverse_power_balance(
     Z_eff: float = 1.5,
     plasma_volume: float = 500.0,
     B: float = 5.0,
-    p_rad_override: Optional[float] = None,
-    dd_f_T: float = 0.969,
-    dd_f_He3: float = 0.689,
+    p_rad_override: float | None = None,
+    dd_f_T: float = DD_F_T_DEFAULT,
+    dd_f_He3: float = DD_F_HE3_DEFAULT,
     dhe3_dd_frac: float = 0.07,
     dhe3_f_T: float = 0.97,
 ) -> float:
@@ -311,8 +313,8 @@ def ife_forward_power_balance(
     p_house: float,
     p_cryo: float,
     p_target: float,
-    dd_f_T: float = 0.969,
-    dd_f_He3: float = 0.689,
+    dd_f_T: float = DD_F_T_DEFAULT,
+    dd_f_He3: float = DD_F_HE3_DEFAULT,
     dhe3_dd_frac: float = 0.07,
     dhe3_f_T: float = 0.97,
 ) -> PowerTable:
@@ -362,8 +364,13 @@ def ife_forward_power_balance(
 
     # Step 10: Engineering Q — split driver efficiencies
     recirculating = (
-        p_target + p_pump + p_sub + p_aux + p_cryo
-        + p_implosion / eta_pin1 + p_ignition / eta_pin2
+        p_target
+        + p_pump
+        + p_sub
+        + p_aux
+        + p_cryo
+        + p_implosion / eta_pin1
+        + p_ignition / eta_pin2
     )
     q_eng = p_et / recirculating
 
@@ -413,8 +420,8 @@ def ife_inverse_power_balance(
     p_house: float,
     p_cryo: float,
     p_target: float,
-    dd_f_T: float = 0.969,
-    dd_f_He3: float = 0.689,
+    dd_f_T: float = DD_F_T_DEFAULT,
+    dd_f_He3: float = DD_F_HE3_DEFAULT,
     dhe3_dd_frac: float = 0.07,
     dhe3_f_T: float = 0.97,
 ) -> float:
@@ -442,8 +449,13 @@ def ife_inverse_power_balance(
     # Recirculating (constant loads)
     p_aux = p_trit + p_house
     c_den0 = (
-        p_target + p_pump + f_sub * c_et0 + p_aux + p_cryo
-        + p_implosion / eta_pin1 + p_ignition / eta_pin2
+        p_target
+        + p_pump
+        + f_sub * c_et0
+        + p_aux
+        + p_cryo
+        + p_implosion / eta_pin1
+        + p_ignition / eta_pin2
     )
 
     p_fus = (p_net_target - c_et0 + c_den0) / (c_et - c_den)
@@ -470,8 +482,8 @@ def mif_forward_power_balance(
     p_cryo: float,
     p_target: float,
     p_coils: float = 0.0,
-    dd_f_T: float = 0.969,
-    dd_f_He3: float = 0.689,
+    dd_f_T: float = DD_F_T_DEFAULT,
+    dd_f_He3: float = DD_F_HE3_DEFAULT,
     dhe3_dd_frac: float = 0.07,
     dhe3_f_T: float = 0.97,
 ) -> PowerTable:
@@ -518,8 +530,7 @@ def mif_forward_power_balance(
 
     # Step 10: Engineering Q
     recirculating = (
-        p_target + p_coils + p_pump + p_sub + p_aux + p_cryo
-        + p_driver / eta_pin
+        p_target + p_coils + p_pump + p_sub + p_aux + p_cryo + p_driver / eta_pin
     )
     q_eng = p_et / recirculating
 
@@ -568,8 +579,8 @@ def mif_inverse_power_balance(
     p_cryo: float,
     p_target: float,
     p_coils: float = 0.0,
-    dd_f_T: float = 0.969,
-    dd_f_He3: float = 0.689,
+    dd_f_T: float = DD_F_T_DEFAULT,
+    dd_f_He3: float = DD_F_HE3_DEFAULT,
     dhe3_dd_frac: float = 0.07,
     dhe3_f_T: float = 0.97,
 ) -> float:
@@ -594,7 +605,12 @@ def mif_inverse_power_balance(
 
     p_aux = p_trit + p_house
     c_den0 = (
-        p_target + p_coils + p_pump + f_sub * c_et0 + p_aux + p_cryo
+        p_target
+        + p_coils
+        + p_pump
+        + f_sub * c_et0
+        + p_aux
+        + p_cryo
         + p_driver / eta_pin
     )
 
