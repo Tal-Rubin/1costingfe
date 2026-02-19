@@ -213,3 +213,74 @@ class TestTier2FamilyRequiredParams:
             p_coils=2.0, p_cool=13.7, axis_t=6.2, elon=1.7,
         )
         assert inp.p_input == 50.0
+
+
+class TestTier3PhysicsChecks:
+    """Tier 3: Cross-field and physics validation."""
+
+    def _make_mfe_input(self, **overrides):
+        """Helper: complete MFE tokamak input with all params."""
+        defaults = dict(
+            concept=ConfinementConcept.TOKAMAK, fuel=Fuel.DT,
+            net_electric_mw=1000.0,
+            mn=1.1, eta_th=0.46, eta_p=0.5, f_sub=0.03,
+            p_pump=1.0, p_trit=10.0, p_house=4.0, p_cryo=0.5,
+            blanket_t=0.7, ht_shield_t=0.2, structure_t=0.15,
+            vessel_t=0.1, plasma_t=2.0,
+            p_input=50.0, eta_pin=0.5, eta_de=0.85, f_dec=0.0,
+            p_coils=2.0, p_cool=13.7, axis_t=6.2, elon=1.7,
+        )
+        defaults.update(overrides)
+        return CostingInput(**defaults)
+
+    def test_eta_th_warning_when_high(self):
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            self._make_mfe_input(eta_th=0.70)
+            assert any("eta_th" in str(warning.message) for warning in w)
+
+    def test_eta_th_no_warning_when_normal(self):
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            self._make_mfe_input(eta_th=0.46)
+            assert not any("eta_th" in str(warning.message) for warning in w)
+
+    def test_eta_p_warning_when_high(self):
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            self._make_mfe_input(eta_p=0.98)
+            assert any("eta_p" in str(warning.message) for warning in w)
+
+    def test_mn_warning_when_outside_range(self):
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            self._make_mfe_input(mn=2.0)
+            assert any("mn" in str(warning.message) for warning in w)
+
+    def test_f_sub_warning_when_high(self):
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            self._make_mfe_input(f_sub=0.35)
+            assert any("f_sub" in str(warning.message) for warning in w)
+
+    def test_p_net_negative_raises_error(self):
+        """p_net < 0 is a hard error — plant consumes more than it produces."""
+        with pytest.raises(ValidationError, match="p_net"):
+            self._make_mfe_input(
+                net_electric_mw=1.0,
+                p_input=500.0,
+                eta_pin=0.1,
+            )
+
+    def test_q_sci_warning_when_low(self):
+        """Q_sci < 2 means fusion power is low relative to injected heating."""
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            self._make_mfe_input(p_input=5000.0, eta_pin=0.9)
+            assert any("Q_sci" in str(warning.message) for warning in w)
+
+    def test_rec_frac_warning_when_high(self):
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            self._make_mfe_input(eta_pin=0.05)
+            assert any("rec" in str(warning.message).lower() for warning in w)

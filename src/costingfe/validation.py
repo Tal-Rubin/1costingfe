@@ -133,3 +133,159 @@ class CostingInput(BaseModel):
                 f"{family.value}: {', '.join(missing)}"
             )
         return self
+
+    @model_validator(mode="after")
+    def check_physics(self):
+        """Tier 3: Cross-field physics checks (warnings + errors).
+
+        Only runs when all engineering params are present (not None).
+        """
+        family = CONCEPT_TO_FAMILY[self.concept]
+
+        # --- Simple field warnings (no computation needed) ---
+        if self.eta_th is not None and self.eta_th > 0.65:
+            warnings.warn(
+                f"eta_th = {self.eta_th} is unusually high (> 0.65)",
+                stacklevel=2,
+            )
+        if self.eta_p is not None and self.eta_p > 0.95:
+            warnings.warn(
+                f"eta_p = {self.eta_p} is unusually high (> 0.95)",
+                stacklevel=2,
+            )
+        if self.mn is not None and not (1.0 <= self.mn <= 1.5):
+            warnings.warn(
+                f"mn = {self.mn} is outside typical range [1.0, 1.5]",
+                stacklevel=2,
+            )
+        if self.f_sub is not None and self.f_sub > 0.3:
+            warnings.warn(
+                f"f_sub = {self.f_sub} is unusually high (> 0.3)",
+                stacklevel=2,
+            )
+
+        # --- Physics checks requiring power balance computation ---
+        if any(getattr(self, k) is None for k in self._COMMON_REQUIRED):
+            return self
+
+        if family == ConfinementFamily.MFE:
+            self._check_mfe_physics()
+        elif family == ConfinementFamily.IFE:
+            self._check_ife_physics()
+        elif family == ConfinementFamily.MIF:
+            self._check_mif_physics()
+
+        return self
+
+    def _check_mfe_physics(self):
+        from costingfe.layers.physics import (
+            mfe_inverse_power_balance,
+            mfe_forward_power_balance,
+        )
+
+        mfe_params = [self.p_input, self.eta_pin, self.eta_de, self.f_dec,
+                      self.p_coils, self.p_cool]
+        if any(v is None for v in mfe_params):
+            return
+
+        p_net_per_mod = self.net_electric_mw / self.n_mod
+        p_fus = mfe_inverse_power_balance(
+            p_net_target=p_net_per_mod, fuel=self.fuel,
+            p_input=self.p_input, mn=self.mn, eta_th=self.eta_th,
+            eta_p=self.eta_p, eta_pin=self.eta_pin, eta_de=self.eta_de,
+            f_sub=self.f_sub, f_dec=self.f_dec, p_coils=self.p_coils,
+            p_cool=self.p_cool, p_pump=self.p_pump, p_trit=self.p_trit,
+            p_house=self.p_house, p_cryo=self.p_cryo,
+        )
+        pt = mfe_forward_power_balance(
+            p_fus=p_fus, fuel=self.fuel,
+            p_input=self.p_input, mn=self.mn, eta_th=self.eta_th,
+            eta_p=self.eta_p, eta_pin=self.eta_pin, eta_de=self.eta_de,
+            f_sub=self.f_sub, f_dec=self.f_dec, p_coils=self.p_coils,
+            p_cool=self.p_cool, p_pump=self.p_pump, p_trit=self.p_trit,
+            p_house=self.p_house, p_cryo=self.p_cryo,
+        )
+        self._check_power_table(pt, p_fus)
+
+    def _check_ife_physics(self):
+        from costingfe.layers.physics import (
+            ife_inverse_power_balance,
+            ife_forward_power_balance,
+        )
+
+        ife_params = [self.p_implosion, self.p_ignition,
+                      self.eta_pin1, self.eta_pin2, self.p_target]
+        if any(v is None for v in ife_params):
+            return
+
+        p_net_per_mod = self.net_electric_mw / self.n_mod
+        p_fus = ife_inverse_power_balance(
+            p_net_target=p_net_per_mod, fuel=self.fuel,
+            p_implosion=self.p_implosion, p_ignition=self.p_ignition,
+            mn=self.mn, eta_th=self.eta_th, eta_p=self.eta_p,
+            eta_pin1=self.eta_pin1, eta_pin2=self.eta_pin2,
+            f_sub=self.f_sub, p_pump=self.p_pump, p_trit=self.p_trit,
+            p_house=self.p_house, p_cryo=self.p_cryo, p_target=self.p_target,
+        )
+        pt = ife_forward_power_balance(
+            p_fus=p_fus, fuel=self.fuel,
+            p_implosion=self.p_implosion, p_ignition=self.p_ignition,
+            mn=self.mn, eta_th=self.eta_th, eta_p=self.eta_p,
+            eta_pin1=self.eta_pin1, eta_pin2=self.eta_pin2,
+            f_sub=self.f_sub, p_pump=self.p_pump, p_trit=self.p_trit,
+            p_house=self.p_house, p_cryo=self.p_cryo, p_target=self.p_target,
+        )
+        self._check_power_table(pt, p_fus)
+
+    def _check_mif_physics(self):
+        from costingfe.layers.physics import (
+            mif_inverse_power_balance,
+            mif_forward_power_balance,
+        )
+
+        mif_params = [self.p_driver, self.eta_pin, self.p_target]
+        if any(v is None for v in mif_params):
+            return
+
+        p_net_per_mod = self.net_electric_mw / self.n_mod
+        p_fus = mif_inverse_power_balance(
+            p_net_target=p_net_per_mod, fuel=self.fuel,
+            p_driver=self.p_driver, mn=self.mn, eta_th=self.eta_th,
+            eta_p=self.eta_p, eta_pin=self.eta_pin, f_sub=self.f_sub,
+            p_pump=self.p_pump, p_trit=self.p_trit, p_house=self.p_house,
+            p_cryo=self.p_cryo, p_target=self.p_target,
+            p_coils=self.p_coils or 0.0,
+        )
+        pt = mif_forward_power_balance(
+            p_fus=p_fus, fuel=self.fuel,
+            p_driver=self.p_driver, mn=self.mn, eta_th=self.eta_th,
+            eta_p=self.eta_p, eta_pin=self.eta_pin, f_sub=self.f_sub,
+            p_pump=self.p_pump, p_trit=self.p_trit, p_house=self.p_house,
+            p_cryo=self.p_cryo, p_target=self.p_target,
+            p_coils=self.p_coils or 0.0,
+        )
+        self._check_power_table(pt, p_fus)
+
+    def _check_power_table(self, pt, p_fus):
+        """Check derived physics values from power balance."""
+        rec_frac = float(pt.rec_frac)
+        q_sci = float(pt.q_sci)
+
+        if float(p_fus) <= 0 or rec_frac > 0.95:
+            raise ValueError(
+                f"p_net is effectively non-positive (rec_frac = "
+                f"{rec_frac:.3f}, p_fus = {float(p_fus):.1f} MW) — "
+                f"plant consumes more power than it produces"
+            )
+        if q_sci < 2:
+            warnings.warn(
+                f"Q_sci = {q_sci:.3f} < 2 — "
+                f"fusion power is low relative to injected heating",
+                stacklevel=4,
+            )
+        if rec_frac > 0.5:
+            warnings.warn(
+                f"Recirculating fraction = {rec_frac:.3f} > 0.5 — "
+                f"excessive parasitic power load",
+                stacklevel=4,
+            )
