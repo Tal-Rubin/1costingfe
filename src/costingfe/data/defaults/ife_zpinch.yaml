@@ -1,0 +1,16 @@
+# Default engineering parameters for IFE z-pinch
+# Z-pinch: pulsed power driver, similar to IFE target model
+
+p_implosion: 20.0    # Pulsed power driver output [MW]
+p_ignition: 0.0      # No separate ignition driver
+mn: 1.1              # Neutron energy multiplier
+eta_th: 0.40         # Thermal conversion efficiency
+eta_p: 0.5           # Pumping efficiency
+eta_pin1: 0.15       # Pulsed power wall-plug efficiency
+eta_pin2: 1.0        # No ignition driver (set to 1 to avoid div-by-zero)
+f_sub: 0.03          # Subsystem power fraction
+p_pump: 1.0          # Pumping power [MW]
+p_trit: 10.0         # Tritium processing power [MW]
+p_house: 4.0         # Housekeeping power [MW]
+p_cryo: 0.3          # Cryogenic power [MW]
+p_target: 1.5        # Target/liner factory power [MW]

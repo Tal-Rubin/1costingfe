@@ -32,8 +32,13 @@ def compare_all(
     if concepts is None:
         concepts = [
             ConfinementConcept.TOKAMAK,
+            ConfinementConcept.STELLARATOR,
+            ConfinementConcept.MIRROR,
             ConfinementConcept.LASER_IFE,
+            ConfinementConcept.ZPINCH,
+            ConfinementConcept.HEAVY_ION,
             ConfinementConcept.MAG_TARGET,
+            ConfinementConcept.PLASMA_JET,
         ]
     if fuels is None:
         fuels = list(Fuel)
