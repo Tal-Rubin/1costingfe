@@ -26,6 +26,7 @@ print(
     f"{'Concept':<16} {'LCOE':>8} {'Capital':>10} {'Overnight':>10} "
     f"{'Q_eng':>8} {'Recirc':>8}"
 )
+print(f"{'':16} {'$/MWh':>8} {'M$':>10} {'$/kW':>10} {'':>8} {'%':>8}")
 print("-" * 64)
 
 for concept in ConfinementConcept:
@@ -44,6 +45,7 @@ print(
     f"{'#':>3} {'Concept':<16} {'Fuel':<6} {'LCOE':>8} "
     f"{'Capital':>10} {'Overnight':>10}"
 )
+print(f"{'':>3} {'':16} {'':6} {'$/MWh':>8} {'M$':>10} {'$/kW':>10}")
 print("-" * 56)
 
 results = compare_all(net_electric_mw=1000.0, availability=0.85, lifetime_yr=30)
