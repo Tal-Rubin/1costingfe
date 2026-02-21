@@ -16,6 +16,7 @@ for n in [1, 2, 4]:
         net_electric_mw=1000.0,
         availability=0.85,
         lifetime_yr=30,
+        inflation_rate=0.0245,
         n_mod=n,
     )
     # Sum per-module sub-accounts (C2201xx) to get per-module CAS22 contribution

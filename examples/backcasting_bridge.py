@@ -15,6 +15,7 @@ subsystems, financial = generate_subsystems(
     net_electric_mw=1000.0,
     availability=0.85,
     lifetime_yr=30,
+    inflation_rate=0.0245,
 )
 
 print("fusion-backcasting Subsystems (from 1costingfe physics model)")
@@ -45,7 +46,11 @@ print("-" * 60)
 
 fuel_data = {}
 for fuel in ["dt", "dd", "dhe3", "pb11"]:
-    subs, _ = generate_subsystems(concept="tokamak", fuel=fuel)
+    subs, _ = generate_subsystems(
+        concept="tokamak",
+        fuel=fuel,
+        inflation_rate=0.0245,
+    )
     fuel_data[fuel] = {s["account"]: s["absolute_capital_cost"] for s in subs}
 
 accounts = [(s["account"], s["name"]) for s in subsystems]

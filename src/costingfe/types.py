@@ -31,6 +31,26 @@ CONCEPT_TO_FAMILY = {
 }
 
 
+class CoilMaterial(Enum):
+    REBCO_HTS = "rebco_hts"
+    NB3SN = "nb3sn"
+    NBTI = "nbti"
+    COPPER = "copper"
+
+    @property
+    def default_cost_per_kAm(self) -> float:
+        """Default conductor cost in $/kAm."""
+        return _COIL_MATERIAL_COST[self]
+
+
+_COIL_MATERIAL_COST = {
+    CoilMaterial.REBCO_HTS: 50.0,
+    CoilMaterial.NB3SN: 7.0,
+    CoilMaterial.NBTI: 7.0,
+    CoilMaterial.COPPER: 1.0,
+}
+
+
 class Fuel(Enum):
     DT = "dt"
     DD = "dd"

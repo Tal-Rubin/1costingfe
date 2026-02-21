@@ -44,9 +44,16 @@ class CostingConstants:
     # Calibrated at reference shield volume ~516 m³
     shield_unit_cost: float = 0.74  # M$/m³, DT reference
 
-    # 220103-220108: Reactor components (M$ at 1 GWe reference, power-scaled)
-    coils_base: float = 500.0  # TF + CS + PF + structure
-    heating_base: float = 150.0  # NBI + ICRF + ECRH
+    # 220103-220108: Reactor components
+    coils_base: float = (
+        500.0  # TF + CS + PF + structure (legacy, superseded by conductor scaling)
+    )
+    # 220104: Supplementary Heating — per-MW linear costs (M$/MW, 2023$)
+    # Source: pyFECONs cas220104 / ARIES + ITER average costs
+    heating_nbi_per_mw: float = 7.0642  # Neutral Beam Injection
+    heating_icrf_per_mw: float = 4.1494  # Ion Cyclotron Resonance Frequency
+    heating_ecrh_per_mw: float = 5.0  # Electron Cyclotron Resonance Heating (gyrotrons)
+    heating_lhcd_per_mw: float = 4.0  # Lower Hybrid Current Drive (klystrons)
     # 220105: Primary Structure — volume-based (M$/m³)
     structure_unit_cost: float = 0.15  # Calibrated at ~208 m³
     # 220106: Vacuum System — volume-based (M$/m³)
@@ -58,13 +65,6 @@ class CostingConstants:
 
     # 220111: Installation labor (fraction of reactor subtotal)
     installation_frac: float = 0.14
-
-    # 220112: Isotope Separation (M$ at 1 GWe reference)
-    deuterium_extraction_base: float = 15.0
-    li6_enrichment_base: float = 25.0
-    he3_extraction_base: float = 0.0  # Lunar mining not viable
-    protium_purification_base: float = 5.0
-    b11_enrichment_base: float = 20.0
 
     # Core component lifetime (FPY — full power years between replacements)
     # Source: 20260208-fusion-reactor-subsystems-by-fuel-type.md
@@ -120,7 +120,10 @@ class CostingConstants:
     u_li6: float = 1000.0  # $/kg, enriched Li-6 (90%) for breeding blanket
     u_he3: float = 2_000_000.0  # $/kg, He-3 ($2,000/g — optimistic self-production)
     u_protium: float = 5.0  # $/kg, commodity H2
-    u_b11: float = 10_000.0  # $/kg, enriched B-11 (>95%, $10/g, tails from B-10)
+    u_b11: float = 10_000.0  # $/kg, FOAK enriched B-11 (no industrial supply)
+    u_b11_noak: float = (
+        75.0  # $/kg, NOAK B-11 (industrial chemical exchange distillation)
+    )
 
     def replace(self, **kwargs):
         return replace(self, **kwargs)

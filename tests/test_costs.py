@@ -430,10 +430,11 @@ def test_cas80_dd_deuterium_only():
     assert abs(dd_cost - dd_cost2) < 1e-10
 
 
-def test_cas80_pb11_b11_dominates():
-    """pB11 feedstock should be more expensive than DT feedstock."""
-    dt_cost = cas80_fuel(CC, fuel=Fuel.DT, **_CAS80_KWARGS)
-    pb11_cost = cas80_fuel(CC, fuel=Fuel.PB11, **_CAS80_KWARGS)
+def test_cas80_pb11_foak_b11_dominates():
+    """FOAK pB11 feedstock ($10,000/kg B-11) should exceed DT feedstock."""
+    kwargs = {**_CAS80_KWARGS, "noak": False}
+    dt_cost = cas80_fuel(CC, fuel=Fuel.DT, **kwargs)
+    pb11_cost = cas80_fuel(CC, fuel=Fuel.PB11, **kwargs)
     assert pb11_cost > dt_cost
 
 
@@ -445,7 +446,45 @@ def test_cas80_dhe3_most_expensive():
         assert dhe3_cost > other, f"DHe3 should be more expensive than {other_fuel}"
 
 
-def test_cas80_fuel_cost_order():
-    """Fuel cost ordering: DHe3 > pB11 > DD > DT."""
-    costs = {f: float(cas80_fuel(CC, fuel=f, **_CAS80_KWARGS)) for f in Fuel}
+def test_cas80_fuel_cost_order_foak():
+    """FOAK fuel cost ordering: DHe3 > pB11 > DD > DT."""
+    kwargs = {**_CAS80_KWARGS, "noak": False}
+    costs = {f: float(cas80_fuel(CC, fuel=f, **kwargs)) for f in Fuel}
     assert costs[Fuel.DHE3] > costs[Fuel.PB11] > costs[Fuel.DD] > costs[Fuel.DT]
+
+
+def test_cas80_fuel_cost_order_noak():
+    """NOAK fuel cost ordering: DHe3 > DD > DT > pB11 (cheap industrial B-11).
+
+    DD is more expensive than DT because each primary DD reaction consumes
+    2 deuterium nuclei plus secondary burn-up (~2.85 D per effective event),
+    while DT consumes only 1 D per reaction.
+    """
+    costs = {f: float(cas80_fuel(CC, fuel=f, **_CAS80_KWARGS)) for f in Fuel}
+    assert costs[Fuel.DHE3] > costs[Fuel.DD] > costs[Fuel.DT] > costs[Fuel.PB11]
+
+
+def test_cas80_pb11_noak_cheaper_than_foak():
+    """NOAK pB11 should use industrial B-11 price (~$75/kg), not FOAK ($10,000/kg)."""
+    kwargs_no_noak = {k: v for k, v in _CAS80_KWARGS.items() if k != "noak"}
+    foak = cas80_fuel(CC, fuel=Fuel.PB11, noak=False, **kwargs_no_noak)
+    noak = cas80_fuel(CC, fuel=Fuel.PB11, noak=True, **kwargs_no_noak)
+    assert noak < foak, "NOAK B-11 should be much cheaper than FOAK"
+    # FOAK uses u_b11 ($10,000/kg), NOAK uses u_b11_noak ($75/kg)
+    # Ratio should reflect ~133x price difference (protium cost is negligible)
+    assert foak / noak > 50
+
+
+def test_cas80_dd_unaffected_by_noak_unit_cost():
+    """DD fuel unit cost should not change between FOAK and NOAK.
+
+    DD is only affected by noak through project timeline (licensing time),
+    not through fuel unit price. With zero licensing time difference,
+    costs should be identical.
+    """
+    # Use pB11-zero licensing time to isolate unit cost effect
+    cc_no_lic = CC.replace(licensing_time_dd=0.0)
+    kwargs_no_noak = {k: v for k, v in _CAS80_KWARGS.items() if k != "noak"}
+    foak = cas80_fuel(cc_no_lic, fuel=Fuel.DD, noak=False, **kwargs_no_noak)
+    noak = cas80_fuel(cc_no_lic, fuel=Fuel.DD, noak=True, **kwargs_no_noak)
+    assert abs(foak - noak) < 1e-10

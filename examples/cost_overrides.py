@@ -5,7 +5,12 @@ from costingfe import ConfinementConcept, CostModel, Fuel
 model = CostModel(concept=ConfinementConcept.TOKAMAK, fuel=Fuel.DT)
 
 # ── Baseline ──────────────────────────────────────────────────────
-base = model.forward(net_electric_mw=1000.0, availability=0.85, lifetime_yr=30)
+base = model.forward(
+    net_electric_mw=1000.0,
+    availability=0.85,
+    lifetime_yr=30,
+    inflation_rate=0.0245,
+)
 
 # ── With vendor quotes ────────────────────────────────────────────
 # Suppose a coil vendor quotes 20% below our default C220103,
@@ -17,6 +22,7 @@ override = model.forward(
     net_electric_mw=1000.0,
     availability=0.85,
     lifetime_yr=30,
+    inflation_rate=0.0245,
     cost_overrides={"C220103": coil_quote, "CAS21": building_quote},
 )
 

@@ -3,7 +3,12 @@
 from costingfe import ConfinementConcept, CostModel, Fuel
 
 model = CostModel(concept=ConfinementConcept.TOKAMAK, fuel=Fuel.DT)
-base = model.forward(net_electric_mw=1000.0, availability=0.85, lifetime_yr=30)
+base = model.forward(
+    net_electric_mw=1000.0,
+    availability=0.85,
+    lifetime_yr=30,
+    inflation_rate=0.0245,
+)
 base_lcoe = base.costs.lcoe
 
 # ── Availability sweep (0.70 → 0.95) ─────────────────────────────

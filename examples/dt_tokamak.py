@@ -1,15 +1,51 @@
-"""Example: DT Tokamak — cost breakdown and sensitivity analysis."""
+"""Example: DT Tokamak — cost breakdown and sensitivity analysis.
+
+Reference case matches the CATF spherical-tokamak configuration used in
+pyfecons (customers/CATF/mfe/DefineInputs.py) for cross-validation.
+"""
 
 from costingfe import ConfinementConcept, CostModel, Fuel
 
 model = CostModel(concept=ConfinementConcept.TOKAMAK, fuel=Fuel.DT)
-result = model.forward(net_electric_mw=1000.0, availability=0.85, lifetime_yr=30)
+result = model.forward(
+    net_electric_mw=1000.0,
+    availability=0.85,
+    lifetime_yr=30,
+    n_mod=1,
+    construction_time_yr=6.0,
+    interest_rate=0.07,
+    inflation_rate=0.0245,
+    noak=True,
+    # CATF spherical-tokamak geometry
+    axis_t=3.0,
+    elon=3.0,
+    plasma_t=1.1,
+    blanket_t=0.8,
+    ht_shield_t=0.2,
+    structure_t=0.2,
+    vessel_t=0.2,
+    # CATF power balance
+    p_input=50.0,
+    mn=1.1,
+    eta_th=0.46,
+    eta_p=0.5,
+    eta_pin=0.5,
+    eta_de=0.85,
+    f_sub=0.03,
+    f_dec=0.0,
+    p_coils=2.0,
+    p_cool=13.7,
+    p_pump=1.0,
+    p_trit=10.0,
+    p_house=4.0,
+    p_cryo=0.5,
+)
 
 # ── Cost Results by CAS ─────────────────────────────────────────────
 c = result.costs
 pt = result.power_table
 
-print("DT Tokamak — 1 GWe, 85% availability, 30 yr lifetime")
+print("DT Tokamak (CATF ref) — 1 GWe, 85% availability, 30 yr lifetime")
 print(f"LCOE: {c.lcoe:.1f} $/MWh | Overnight: {c.overnight_cost:.0f} $/kW")
 print(f"Fusion: {pt.p_fus:.0f} MW | Net: {pt.p_net:.0f} MW | Q_eng: {pt.q_eng:.1f}")
 print()

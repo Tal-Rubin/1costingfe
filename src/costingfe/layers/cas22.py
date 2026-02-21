@@ -13,8 +13,41 @@ Fuel-dependent config for blanket, isotope sep, fuel handling.
 All costs in M$. Source: pyFECONs costing/calculations/cas22/
 """
 
+import math
+
 from costingfe.defaults import CostingConstants
-from costingfe.types import ConfinementFamily, Fuel
+from costingfe.types import CoilMaterial, ConfinementConcept, ConfinementFamily, Fuel
+
+# Concept-dependent coil defaults (from pyFECONs cas220103_coils.py)
+# markup: manufacturing complexity multiplier over raw conductor cost
+# path_factor: extra coil path length for 3D geometries (stellarator)
+_COIL_DEFAULTS = {
+    ConfinementConcept.TOKAMAK: {"markup": 8.0, "path_factor": 1.0},
+    ConfinementConcept.STELLARATOR: {"markup": 12.0, "path_factor": 2.0},
+    ConfinementConcept.MIRROR: {"markup": 2.5, "path_factor": 1.0},
+}
+
+_MU0 = 4 * math.pi * 1e-7  # Vacuum permeability (T·m/A)
+
+
+def _compute_geometry_factor(
+    concept: ConfinementConcept,
+    path_factor: float,
+) -> float:
+    """Geometry factor G for conductor quantity scaling.
+
+    total_kAm = G * B * R^2 / (mu_0 * 1000)
+
+    Tokamak: G = 4pi^2 — empirical total-system (TF+CS+PF) scaling.
+    Mirror:  G = 4 * 4*pi — 4 independent solenoid coils.
+    Stellarator: G = 4*pi^2 * path_factor — 3D coil paths ~2x longer.
+    """
+    if concept == ConfinementConcept.MIRROR:
+        return 4 * 4 * math.pi  # n_coils=4 for mirror
+    elif concept == ConfinementConcept.STELLARATOR:
+        return 4 * math.pi**2 * path_factor
+    else:  # tokamak (default)
+        return 4 * math.pi**2
 
 
 def cas22_reactor_plant_equipment(
@@ -32,6 +65,14 @@ def cas22_reactor_plant_equipment(
     structure_vol: float = 0.0,
     vessel_vol: float = 0.0,
     family: ConfinementFamily = ConfinementFamily.MFE,
+    concept: ConfinementConcept = ConfinementConcept.TOKAMAK,
+    b_max: float = 12.0,
+    r_coil: float = 1.85,
+    coil_material: CoilMaterial = CoilMaterial.REBCO_HTS,
+    p_nbi: float = 50.0,
+    p_icrf: float = 0.0,
+    p_ecrh: float = 0.0,
+    p_lhcd: float = 0.0,
 ) -> dict[str, float]:
     """Compute all CAS22 sub-accounts. Returns dict of account_code -> M$.
 
@@ -73,17 +114,31 @@ def cas22_reactor_plant_equipment(
     )
 
     # -----------------------------------------------------------------------
-    # 220103: Coils (MFE tokamak: TF + CS + PF + shim + structure + cooling)
-    # Power-scaled (coil cost depends on B-field and current, not simple volume)
-    # Source: pyFECONs cas220103_coils.py
+    # 220103: Coils — conductor scaling law (simplified model)
+    # cost = total_kAm * $/kAm * markup / 1e6
+    # total_kAm = G * B_max * R_coil^2 / (mu_0 * 1000)
+    # G depends on confinement concept (tokamak/stellarator/mirror)
+    # Source: pyFECONs cas220103_coils.py (cas_220103_coils_simplified)
     # -----------------------------------------------------------------------
-    c220103 = cc.coils_base * (p_et / 1000.0) ** 0.7
+    defaults = _COIL_DEFAULTS.get(concept, _COIL_DEFAULTS[ConfinementConcept.TOKAMAK])
+    coil_markup = defaults["markup"]
+    path_factor = defaults["path_factor"]
+    G = _compute_geometry_factor(concept, path_factor)
+    total_kAm = G * b_max * r_coil**2 / (_MU0 * 1000)
+    conductor_cost = total_kAm * coil_material.default_cost_per_kAm / 1e6
+    c220103 = conductor_cost * coil_markup
 
     # -----------------------------------------------------------------------
-    # 220104: Supplementary Heating (NBI + ICRF + ECRH + LHCD)
+    # 220104: Supplementary Heating — per-MW linear costs
+    # cost = cost_per_MW * power_MW for each type (NBI, ICRF, ECRH, LHCD)
     # Source: pyFECONs cas220104_supplementary_heating.py
     # -----------------------------------------------------------------------
-    c220104 = cc.heating_base * (p_et / 1000.0) ** 0.8
+    c220104 = (
+        cc.heating_nbi_per_mw * p_nbi
+        + cc.heating_icrf_per_mw * p_icrf
+        + cc.heating_ecrh_per_mw * p_ecrh
+        + cc.heating_lhcd_per_mw * p_lhcd
+    )
 
     # -----------------------------------------------------------------------
     # 220105: Primary Structure
@@ -136,37 +191,31 @@ def cas22_reactor_plant_equipment(
     c220111 = cc.installation_frac * reactor_subtotal
 
     # -----------------------------------------------------------------------
-    # 220112: Isotope Separation Plant
-    # Fuel-dependent: D extraction, Li-6 enrichment, He-3, B-11
-    # Source: pyFECONs cas220112_isotope_separation.py
+    # 220112: Isotope Separation Plant — zeroed
+    # No on-site separation plant. All isotope procurement is modeled as
+    # market purchase in CAS80 (enriched $/kg prices). The separation
+    # plant capital is embedded in the market price.
+    # See: docs/account_justification/CAS220112_isotope_separation.md
     # -----------------------------------------------------------------------
-    p_gwe = p_net / 1000.0
-    scale_06 = p_gwe**0.6
-
-    if fuel == Fuel.DT:
-        c220112 = (cc.deuterium_extraction_base + cc.li6_enrichment_base) * scale_06
-    elif fuel == Fuel.DD:
-        c220112 = cc.deuterium_extraction_base * scale_06
-    elif fuel == Fuel.DHE3:
-        c220112 = (cc.deuterium_extraction_base + cc.he3_extraction_base) * scale_06
-    elif fuel == Fuel.PB11:
-        c220112 = (cc.protium_purification_base + cc.b11_enrichment_base) * scale_06
-    else:
-        c220112 = 0.0
+    c220112 = 0.0
 
     # -----------------------------------------------------------------------
     # 220200: Main & Secondary Coolant
     # Source: pyFECONs cas220200_coolant.py
     # -----------------------------------------------------------------------
-    c220201 = 166.0 * (n_mod * p_net / 1000.0)  # Primary coolant
-    c220202 = 40.6 * (p_th / 3500.0) ** 0.55  # Intermediate coolant
+    # Plant-wide accounts use total plant power (n_mod * per-module)
+    p_th_total = n_mod * p_th
+    p_net_total = n_mod * p_net
+
+    c220201 = 166.0 * (p_net_total / 1000.0)  # Primary coolant
+    c220202 = 40.6 * (p_th_total / 3500.0) ** 0.55  # Intermediate coolant
     c220200 = c220201 + c220202
 
     # -----------------------------------------------------------------------
     # 220300: Auxiliary Cooling + Cryoplant
     # Source: pyFECONs cas220300_auxilary_cooling.py
     # -----------------------------------------------------------------------
-    c220301 = 1.10e-3 * n_mod * p_th  # Aux coolant
+    c220301 = 1.10e-3 * p_th_total  # Aux coolant
     c220302 = 200.0 * (p_cryo / 30.0) ** 0.7  # Cryoplant (ref: $200M @ 30MW)
     c220300 = c220301 + c220302
 
@@ -174,7 +223,7 @@ def cas22_reactor_plant_equipment(
     # 220400: Radioactive Waste Management
     # Source: pyFECONs cas220400_rad_waste.py
     # -----------------------------------------------------------------------
-    c220400 = 1.96 * (p_th / 1000.0)
+    c220400 = 1.96 * (p_th_total / 1000.0)
 
     # -----------------------------------------------------------------------
     # 220500: Fuel Handling & Storage
@@ -190,19 +239,19 @@ def cas22_reactor_plant_equipment(
         Fuel.DHE3: cc.fuel_handling_dhe3_base,
         Fuel.PB11: cc.fuel_handling_pb11_base,
     }
-    c220500 = fuel_handling_base[fuel] * (p_net / 1000.0) ** 0.7
+    c220500 = fuel_handling_base[fuel] * (p_net_total / 1000.0) ** 0.7
 
     # -----------------------------------------------------------------------
     # 220600: Other Reactor Plant Equipment
     # Source: pyFECONs cas220600_other_plant_equipment.py
     # -----------------------------------------------------------------------
-    c220600 = 11.5 * (p_net / 1000.0) ** 0.8
+    c220600 = 11.5 * (p_net_total / 1000.0) ** 0.8
 
     # -----------------------------------------------------------------------
     # 220700: Instrumentation & Control
     # Source: pyFECONs cas220700_instrumentation_and_control.py
     # -----------------------------------------------------------------------
-    c220700 = 85.0 * (p_th / 3500.0) ** 0.65
+    c220700 = 85.0 * (p_th_total / 3500.0) ** 0.65
 
     # -----------------------------------------------------------------------
     # Total CAS22 (per module, then multiply)

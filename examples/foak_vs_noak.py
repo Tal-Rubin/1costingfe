@@ -10,10 +10,18 @@ def run_pair(label, concept, fuel):
     """Run FOAK and NOAK side-by-side for one concept/fuel."""
     model = CostModel(concept=concept, fuel=fuel)
     foak = model.forward(
-        net_electric_mw=1000.0, availability=0.85, lifetime_yr=30, noak=False
+        net_electric_mw=1000.0,
+        availability=0.85,
+        lifetime_yr=30,
+        inflation_rate=0.0245,
+        noak=False,
     )
     noak = model.forward(
-        net_electric_mw=1000.0, availability=0.85, lifetime_yr=30, noak=True
+        net_electric_mw=1000.0,
+        availability=0.85,
+        lifetime_yr=30,
+        inflation_rate=0.0245,
+        noak=True,
     )
 
     lic_time = cc.licensing_time(fuel)

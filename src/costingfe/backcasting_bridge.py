@@ -203,12 +203,12 @@ def generate_subsystems(
         {
             "account": "22.5",
             "name": "Fuel Handling",
-            "absolute_capital_cost": float(cas22["C220500"]) + float(cas22["C220112"]),
-            "absolute_fixed_om": om_frac(cas22["C220500"]) + om_frac(cas22["C220112"]),
+            "absolute_capital_cost": float(cas22["C220500"]),
+            "absolute_fixed_om": om_frac(cas22["C220500"]),
             "variable_om": 0,
             "trl": 5,
             "idiot_index": 10.0,
-            "description": f"Fuel handling + isotope separation ({fuel})",
+            "description": f"Fuel handling ({fuel})",
         },
         {
             "account": "23",

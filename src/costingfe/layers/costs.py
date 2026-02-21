@@ -255,7 +255,8 @@ def cas80_fuel(
         cost_per_rxn = M_DEUTERIUM_KG * cc.u_deuterium + M_HE3_KG * cc.u_he3
         q_eff = Q_DHE3
     elif fuel == Fuel.PB11:
-        cost_per_rxn = M_PROTON_KG * cc.u_protium + M_B11_KG * cc.u_b11
+        b11_price = cc.u_b11_noak if noak else cc.u_b11
+        cost_per_rxn = M_PROTON_KG * cc.u_protium + M_B11_KG * b11_price
         q_eff = Q_PB11
     else:
         cost_per_rxn = 0.0

@@ -13,7 +13,12 @@ print("-" * 58)
 
 for fuel in Fuel:
     m = CostModel(concept=ConfinementConcept.TOKAMAK, fuel=fuel)
-    r = m.forward(net_electric_mw=1000.0, availability=0.85, lifetime_yr=30)
+    r = m.forward(
+        net_electric_mw=1000.0,
+        availability=0.85,
+        lifetime_yr=30,
+        inflation_rate=0.0245,
+    )
     c = r.costs
     print(
         f"{fuel.value:<8} {c.lcoe:>8.1f} {c.total_capital:>10.0f} "
@@ -31,7 +36,12 @@ print("-" * 64)
 
 for concept in ConfinementConcept:
     m = CostModel(concept=concept, fuel=Fuel.DT)
-    r = m.forward(net_electric_mw=1000.0, availability=0.85, lifetime_yr=30)
+    r = m.forward(
+        net_electric_mw=1000.0,
+        availability=0.85,
+        lifetime_yr=30,
+        inflation_rate=0.0245,
+    )
     c = r.costs
     pt = r.power_table
     print(
@@ -48,7 +58,12 @@ print(
 print(f"{'':>3} {'':16} {'':6} {'$/MWh':>8} {'M$':>10} {'$/kW':>10}")
 print("-" * 56)
 
-results = compare_all(net_electric_mw=1000.0, availability=0.85, lifetime_yr=30)
+results = compare_all(
+    net_electric_mw=1000.0,
+    availability=0.85,
+    lifetime_yr=30,
+    inflation_rate=0.0245,
+)
 for i, r in enumerate(results[:15]):
     c = r.result.costs
     print(

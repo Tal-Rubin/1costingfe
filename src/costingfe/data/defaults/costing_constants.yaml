@@ -42,13 +42,6 @@ target_factory_base: 244.0   # M$ at 1 GWe ref (IFE/MIF target factory capital)
 # 220111: Installation labor
 installation_frac: 0.14      # Fraction of reactor subtotal
 
-# 220112: Isotope Separation (M$ at 1 GWe reference)
-deuterium_extraction_base: 15.0
-li6_enrichment_base: 25.0
-he3_extraction_base: 0.0     # Lunar mining not viable
-protium_purification_base: 5.0
-b11_enrichment_base: 20.0
-
 # Core component lifetime (FPY — full power years between replacements)
 # Source: 20260208-fusion-reactor-subsystems-by-fuel-type.md
 core_lifetime_dt: 5.0     # 5-10 FPY, ~20 dpa/yr
@@ -87,7 +80,6 @@ building_costs_per_kw:
   cryogenics: 15
   security: 8
   ventilation_stack: 9.2
-  isotope_separation: 40
   assembly_hall: 20
   direct_energy_building: 5
 
@@ -128,4 +120,5 @@ u_deuterium: 2175.0          # $/kg
 u_li6: 1000.0                # $/kg, enriched Li-6 (90%) for breeding blanket
 u_he3: 2000000.0             # $/kg, He-3 ($2,000/g — optimistic self-production)
 u_protium: 5.0               # $/kg, commodity H2
-u_b11: 10000.0               # $/kg, enriched B-11 (>95%, $10/g, tails from B-10)
+u_b11: 10000.0               # $/kg, FOAK enriched B-11 (no industrial supply)
+u_b11_noak: 75.0             # $/kg, NOAK B-11 (industrial chemical exchange distillation)
