@@ -1,6 +1,5 @@
 from costingfe.layers.economics import (
     compute_crf,
-    compute_effective_crf,
     compute_lcoe,
     levelized_annual_cost,
 )
@@ -16,15 +15,6 @@ def test_crf_high_rate():
     """CRF at 10% for 20 years should be ~0.1175."""
     crf = compute_crf(0.10, 20)
     assert abs(crf - 0.1175) < 0.001
-
-
-def test_effective_crf():
-    """Effective CRF accounts for construction time."""
-    crf = compute_crf(0.07, 30)
-    eff_crf = compute_effective_crf(0.07, 30, 6)
-    assert eff_crf > crf  # construction time increases effective CRF
-    expected = crf * (1.07**6)
-    assert abs(eff_crf - expected) < 0.0001
 
 
 def test_levelized_annual_cost_zero_inflation():

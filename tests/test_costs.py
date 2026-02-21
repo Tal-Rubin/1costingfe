@@ -7,10 +7,12 @@ from costingfe.layers.costs import (
     cas25_misc,
     cas26_heat_rejection,
     cas30_indirect,
+    cas60_idc,
     cas70_om,
     cas80_fuel,
     cas90_financial,
 )
+from costingfe.layers.economics import compute_crf
 from costingfe.types import Fuel
 
 CC = load_costing_constants()
@@ -101,17 +103,73 @@ def test_cas23_to_26_scale_with_power():
         assert c > 0
 
 
+# ---- CAS60 interest during construction tests ----
+
+
+def test_cas60_reference_case():
+    """At 7% WACC, 6yr construction, $5B overnight: f_IDC ≈ 0.1922, IDC ≈ $961M."""
+    idc = cas60_idc(interest_rate=0.07, overnight_cost=5000.0, construction_time=6.0)
+    # f_IDC = ((1.07^6 - 1) / (0.07 * 6)) - 1 = 0.19221...
+    expected = 0.19221 * 5000.0
+    assert abs(idc - expected) < 1.0
+
+
+def test_cas60_scales_linearly_with_overnight_cost():
+    """Doubling overnight cost should double IDC."""
+    idc_low = cas60_idc(0.07, 2500.0, 6.0)
+    idc_high = cas60_idc(0.07, 5000.0, 6.0)
+    assert abs(idc_high / idc_low - 2.0) < 1e-10
+
+
+def test_cas60_increases_with_construction_time():
+    """Longer construction should produce more IDC."""
+    idc_6 = cas60_idc(0.07, 5000.0, 6.0)
+    idc_8 = cas60_idc(0.07, 5000.0, 8.0)
+    assert idc_8 > idc_6
+
+
+def test_cas60_increases_with_interest_rate():
+    """Higher interest rate should produce more IDC."""
+    idc_5pct = cas60_idc(0.05, 5000.0, 6.0)
+    idc_10pct = cas60_idc(0.10, 5000.0, 6.0)
+    assert idc_10pct > idc_5pct
+
+
+def test_cas60_5pct_6yr():
+    """At 5% WACC, 6yr: f_IDC = ((1.05^6-1)/(0.05*6))-1 ≈ 0.1337.
+
+    Discrete end-of-year convention. ARIES continuous table gives 0.163;
+    difference is the compounding convention, not an error.
+    """
+    idc = cas60_idc(0.05, 1000.0, 6.0)
+    f_idc = idc / 1000.0
+    # (1.05^6 - 1) / (0.05 * 6) - 1 = 0.13365...
+    assert abs(f_idc - 0.13365) < 0.001
+
+
+# ---- CAS90 annualized financial cost tests ----
+
+
+def test_cas90_equals_crf_times_total_capital():
+    """CAS90 should be plain CRF * total_capital (no effective CRF)."""
+    total_capital = 5000.0
+    crf = compute_crf(0.07, 30)
+    c90 = cas90_financial(total_capital, interest_rate=0.07, plant_lifetime=30)
+    assert abs(c90 - crf * total_capital) < 0.01
+
+
+def test_cas90_no_construction_time_dependence():
+    """CAS90 should NOT depend on construction time (IDC handled by CAS60)."""
+    c90 = cas90_financial(5000.0, 0.07, 30)
+    # Function should not accept construction_time at all — the signature
+    # is (total_capital, interest_rate, plant_lifetime).
+    assert c90 > 0
+    assert c90 < 5000
+
+
 def test_cas90_annualizes_capital():
     """CAS90 should be CRF * total capital."""
-    c90 = cas90_financial(
-        CC,
-        total_capital=5000.0,
-        interest_rate=0.07,
-        plant_lifetime=30,
-        construction_time=6,
-        fuel=Fuel.DT,
-        noak=True,
-    )
+    c90 = cas90_financial(5000.0, interest_rate=0.07, plant_lifetime=30)
     assert c90 > 0
     assert c90 < 5000  # annualized should be less than total
 
@@ -123,7 +181,7 @@ def test_lcoe_end_to_end_sanity():
     # Minimal cas22_detail for cas70_om (only replaceable accounts needed)
     cas22_detail = {"C220101": 100.0, "C220108": 30.0}
 
-    c90 = cas90_financial(CC, 5000.0, 0.07, 30, 6, Fuel.DT, True)
+    c90 = cas90_financial(5000.0, 0.07, 30)
     c70, c71, c72 = cas70_om(
         CC,
         cas22_detail=cas22_detail,

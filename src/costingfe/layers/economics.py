@@ -8,16 +8,6 @@ def compute_crf(interest_rate: float, plant_lifetime: float) -> float:
     return (i * (1 + i) ** n) / (((1 + i) ** n) - 1)
 
 
-def compute_effective_crf(
-    interest_rate: float,
-    plant_lifetime: float,
-    construction_time: float,
-) -> float:
-    """CRF adjusted for construction time: CRF * (1+i)^Tc."""
-    crf = compute_crf(interest_rate, plant_lifetime)
-    return crf * (1 + interest_rate) ** construction_time
-
-
 def levelized_annual_cost(
     annual_cost: float,
     inflation_rate: float,

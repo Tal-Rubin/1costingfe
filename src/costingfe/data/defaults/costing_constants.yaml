@@ -116,9 +116,6 @@ taxes: 0.5                   # M$
 insurance_cost: 0.5          # M$
 decommissioning: 5.0         # M$
 
-# CAS60
-idc_coeff: 0.05
-
 # CAS70
 om_cost_per_mw_yr: 60.0     # $/MW/yr
 

@@ -13,7 +13,6 @@ import jax.numpy as jnp
 
 from costingfe.layers.economics import (
     compute_crf,
-    compute_effective_crf,
     levelized_annual_cost,
 )
 from costingfe.layers.physics import (
@@ -157,11 +156,18 @@ def cas50_supplementary(cc, cas23_to_28_total, p_net, noak):
     return subtotal + contingency
 
 
-# REQUIRES CHECKING
-def cas60_idc(cc, cas20, p_net, construction_time, fuel, noak):
-    """CAS60: Interest during construction. Returns M$."""
-    t_project = _total_project_time(cc, construction_time, fuel, noak)
-    return p_net * cc.idc_coeff * t_project / 1e3
+def cas60_idc(interest_rate, overnight_cost, construction_time):
+    """CAS60: Interest during construction. Returns M$.
+
+    Assumes uniform capital spending over the construction period.
+    f_IDC = ((1+i)^T - 1) / (i*T) - 1
+
+    See docs/account_justification/CAS60_interest_during_construction.md
+    """
+    i = interest_rate
+    T = construction_time
+    f_idc = ((1 + i) ** T - 1) / (i * T) - 1
+    return f_idc * overnight_cost
 
 
 def cas70_om(
@@ -264,11 +270,13 @@ def cas80_fuel(
     return levelized_annual_cost(annual_musd, inflation_rate, t_project)
 
 
-# REQUIRES CHECKING
-def cas90_financial(
-    cc, total_capital, interest_rate, plant_lifetime, construction_time, fuel, noak
-):
-    """CAS90: Annualized financial (capital) costs. Returns M$."""
-    t_project = _total_project_time(cc, construction_time, fuel, noak)
-    eff_crf = compute_effective_crf(interest_rate, plant_lifetime, t_project)
-    return eff_crf * total_capital
+def cas90_financial(total_capital, interest_rate, plant_lifetime):
+    """CAS90: Annualized financial (capital) costs. Returns M$.
+
+    Plain CRF * total_capital. Construction-period financing is handled
+    by CAS60 (IDC), so no effective CRF adjustment here.
+
+    See docs/account_justification/CAS90_annualized_financial_costs.md
+    """
+    crf = compute_crf(interest_rate, plant_lifetime)
+    return crf * total_capital

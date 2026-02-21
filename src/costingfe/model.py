@@ -361,19 +361,12 @@ class CostModel:
         c30 = cas30_indirect(cc, c20, construction_time_yr)
         c40 = cas40_owner(c20)
         c50 = cas50_supplementary(cc, c23 + c24 + c25 + c26 + c27 + c28, pt.p_net, noak)
-        c60 = cas60_idc(cc, c20, pt.p_net, construction_time_yr, self.fuel, noak)
-        total_capital = c10 + c20 + c30 + c40 + c50 + c60
+        overnight_cost = c10 + c20 + c30 + c40 + c50
+        c60 = cas60_idc(interest_rate, overnight_cost, construction_time_yr)
+        total_capital = overnight_cost + c60
 
         # Layer 5: Economics
-        c90 = cas90_financial(
-            cc,
-            total_capital,
-            interest_rate,
-            lifetime_yr,
-            construction_time_yr,
-            self.fuel,
-            noak,
-        )
+        c90 = cas90_financial(total_capital, interest_rate, lifetime_yr)
         c70, c71, c72 = cas70_om(
             cc,
             cas22_detail=c22_detail,

@@ -110,9 +110,6 @@ class CostingConstants:
     insurance_cost: float = 0.5
     decommissioning: float = 5.0
 
-    # CAS60
-    idc_coeff: float = 0.05
-
     # CAS70
     om_cost_per_mw_yr: float = 60.0
 
