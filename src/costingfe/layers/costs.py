@@ -44,7 +44,6 @@ def _total_project_time(cc, construction_time, fuel, noak):
 # ---------------------------------------------------------------------------
 
 
-# REQUIRES CHECKING
 def cas10_preconstruction(cc, p_net, n_mod, fuel, noak):
     """CAS10: Pre-construction costs. Returns M$."""
     land = cc.land_intensity * p_net * math.sqrt(n_mod) * cc.land_cost / 1e6
@@ -196,7 +195,9 @@ def cas70_om(
     # REQUIRES CHECKING
     annual_om = cc.om_cost_per_mw_yr * p_net * 1000 / 1e6  # M$
     t_project = _total_project_time(cc, construction_time, fuel, noak)
-    cas71 = levelized_annual_cost(annual_om, inflation_rate, t_project)
+    cas71 = levelized_annual_cost(
+        annual_om, interest_rate, inflation_rate, lifetime_yr, t_project
+    )
 
     # CAS72: Annualized scheduled replacement
     core_lifetime_cal = core_lifetime / availability  # FPY → calendar years
@@ -222,6 +223,8 @@ def cas80_fuel(
     n_mod,
     availability,
     inflation_rate,
+    interest_rate,
+    lifetime_yr,
     construction_time,
     fuel,
     noak,
@@ -267,7 +270,9 @@ def cas80_fuel(
         / (q_eff * MEV_TO_JOULES)
     )
     t_project = _total_project_time(cc, construction_time, fuel, noak)
-    return levelized_annual_cost(annual_musd, inflation_rate, t_project)
+    return levelized_annual_cost(
+        annual_musd, interest_rate, inflation_rate, lifetime_yr, t_project
+    )
 
 
 def cas90_financial(total_capital, interest_rate, plant_lifetime):

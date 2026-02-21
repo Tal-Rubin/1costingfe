@@ -1,5 +1,7 @@
 """Layer 5: Economics — CRF, levelized costs, LCOE."""
 
+import jax.numpy as jnp
+
 
 def compute_crf(interest_rate: float, plant_lifetime: float) -> float:
     """Capital Recovery Factor: CRF = i*(1+i)^n / ((1+i)^n - 1)."""
@@ -10,16 +12,42 @@ def compute_crf(interest_rate: float, plant_lifetime: float) -> float:
 
 def levelized_annual_cost(
     annual_cost: float,
+    interest_rate: float,
     inflation_rate: float,
+    plant_lifetime: float,
     construction_time: float,
 ) -> float:
-    """Adjust an annual cost from today's dollars to operation-start dollars.
+    """Levelized annual cost of a nominally-growing cost stream.
 
-    annual_cost is in today's dollars. Inflation shifts it forward to the
-    dollar-year when operation begins (after construction):
-      annual_cost_at_operation = annual_cost * (1 + inflation)^construction_time
+    Converts an annual cost (in today's dollars) into a level annual
+    payment over the plant lifetime, accounting for:
+    1. Inflation during construction (shifts to first-year-of-operation $)
+    2. Continued inflation over the operating lifetime (growing annuity)
+    3. Discounting at the nominal interest rate (time value of money)
+    4. Annualization via CRF
+
+    Formula:
+      A_1 = annual_cost * (1 + g)^Tc          (first-year cost)
+      PV  = A_1 * (1 - ((1+g)/(1+i))^n) / (i - g)  (growing annuity PV)
+      levelized = CRF(i, n) * PV
+
+    When i == g (L'Hopital limit): PV = A_1 * n / (1 + i)
+
+    See docs/account_justification/CAS70_levelized_annual_cost.md
     """
-    return annual_cost * (1 + inflation_rate) ** construction_time
+    i = interest_rate
+    g = inflation_rate
+    n = plant_lifetime
+    # Inflate to first-year-of-operation dollars
+    a1 = annual_cost * (1 + g) ** construction_time
+    # PV of growing annuity discounted at nominal rate
+    # Use jnp.where for JAX traceability (both branches always evaluated)
+    pv_normal = a1 * (1 - ((1 + g) / (1 + i)) ** n) / (i - g + 1e-30)
+    pv_equal = a1 * n / (1 + i)
+    pv = jnp.where(jnp.abs(i - g) < 1e-9, pv_equal, pv_normal)
+    # Annualize with plain CRF
+    crf = compute_crf(i, n)
+    return crf * pv
 
 
 def compute_lcoe(

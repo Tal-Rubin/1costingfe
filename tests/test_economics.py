@@ -17,29 +17,74 @@ def test_crf_high_rate():
     assert abs(crf - 0.1175) < 0.001
 
 
-def test_levelized_annual_cost_zero_inflation():
-    """With zero inflation, cost is unchanged."""
+# ---- levelized_annual_cost tests ----
+
+
+def test_levelized_zero_inflation_equals_annual_cost():
+    """With zero inflation, levelized cost equals the annual cost.
+
+    PV of flat annuity at rate i = A/CRF, so CRF * PV = A.
+    """
     result = levelized_annual_cost(
         annual_cost=10.0,
+        interest_rate=0.07,
         inflation_rate=0.0,
+        plant_lifetime=30,
         construction_time=6,
     )
-    assert abs(result - 10.0) < 0.001
+    assert abs(result - 10.0) < 0.01
 
 
-def test_levelized_annual_cost_inflation_scales():
-    """Higher inflation should increase levelized cost."""
-    low = levelized_annual_cost(
-        annual_cost=10.0,
+def test_levelized_reference_case():
+    """At 7% nominal, 2% inflation, 30yr life, 6yr construction.
+
+    A_1 = 100 * 1.02^6 = 112.616
+    PV = 112.616 * (1 - (1.02/1.07)^30) / (0.07 - 0.02) = 1716.5
+    CRF(0.07, 30) = 0.08059
+    levelized = 0.08059 * 1716.5 = 138.35
+    """
+    result = levelized_annual_cost(
+        annual_cost=100.0,
+        interest_rate=0.07,
         inflation_rate=0.02,
+        plant_lifetime=30,
         construction_time=6,
     )
-    high = levelized_annual_cost(
-        annual_cost=10.0,
-        inflation_rate=0.05,
-        construction_time=6,
-    )
+    assert abs(result - 138.35) < 1.0
+
+
+def test_levelized_higher_than_simple_inflation():
+    """Proper levelization should exceed the old cost * (1+g)^Tc approach.
+
+    The growing annuity over 30 years adds ~23% vs just inflating to year 1.
+    """
+    simple = 100.0 * (1.02**6)  # old approach: ~112.6
+    levelized = levelized_annual_cost(100.0, 0.07, 0.02, 30, 6)
+    assert levelized > simple
+
+
+def test_levelized_scales_linearly():
+    """Doubling annual cost should double the levelized result."""
+    low = levelized_annual_cost(50.0, 0.07, 0.02, 30, 6)
+    high = levelized_annual_cost(100.0, 0.07, 0.02, 30, 6)
+    assert abs(high / low - 2.0) < 1e-10
+
+
+def test_levelized_inflation_increases_cost():
+    """Higher inflation should produce higher levelized cost."""
+    low = levelized_annual_cost(100.0, 0.07, 0.01, 30, 6)
+    high = levelized_annual_cost(100.0, 0.07, 0.04, 30, 6)
     assert high > low
+
+
+def test_levelized_i_equals_g():
+    """Edge case: when interest rate equals inflation rate.
+
+    PV = A_1 * n / (1+i) (L'Hopital limit). Should not crash.
+    """
+    result = levelized_annual_cost(100.0, 0.05, 0.05, 30, 6)
+    assert result > 0
+    assert result > 100.0  # inflation over 6yr + 30yr effect
 
 
 def test_lcoe_sanity():

@@ -19,16 +19,17 @@ class CostingConstants:
     plant_permits: float = 2.0
     plant_reports: float = 1.0
     other_precon: float = 1.0
-    land_intensity: float = 0.001
-    land_cost: float = 10000.0
+    land_intensity: float = 0.25  # acres/MWe (CFS ARC: 100 acres / 400 MWe)
+    land_cost: float = 10000.0  # $/acre (industrial-zoned US average)
     licensing_cost_dt: float = 5.0
     licensing_cost_dd: float = 3.0
     licensing_cost_dhe3: float = 1.0
     licensing_cost_pb11: float = 0.1
-    licensing_time_dt: float = 5.0
-    licensing_time_dd: float = 3.0
-    licensing_time_dhe3: float = 2.0
-    licensing_time_pb11: float = 1.0
+    # Licensing times per DI-015/016 regulatory framework research
+    licensing_time_dt: float = 2.0  # Part 30, 1-2yr range
+    licensing_time_dd: float = 1.5  # Reduced tritium, 6-18mo range
+    licensing_time_dhe3: float = 0.75  # Minimal radioactivity, 6-12mo
+    licensing_time_pb11: float = 0.0  # No NRC jurisdiction
 
     # CAS22 — Reactor Plant Equipment
     # 220101: First Wall + Blanket — volume-based unit costs (M$/m³)

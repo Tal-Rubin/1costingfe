@@ -71,6 +71,15 @@ def test_cas30_1gwe_reference_case():
     assert 700 < result < 900
 
 
+def test_cas10_land_cost_1gwe():
+    """Land at 1GWe: 0.25 acres/MWe * 1000 MWe * $10,000/acre = $2.5M."""
+    # Land is computed inside cas10_preconstruction; verify via defaults
+    assert CC.land_intensity == 0.25
+    assert CC.land_cost == 10_000.0
+    land = CC.land_intensity * 1000.0 * 1 * CC.land_cost / 1e6  # n_mod=1
+    assert abs(land - 2.5) < 0.01
+
+
 def test_cas10_dt_licensing():
     """DT licensing should be $5M."""
     cost = cas10_preconstruction(CC, p_net=1000.0, n_mod=1, fuel=Fuel.DT, noak=True)
@@ -84,6 +93,30 @@ def test_cas10_pb11_cheaper_licensing():
         CC, p_net=1000.0, n_mod=1, fuel=Fuel.PB11, noak=True
     )
     assert cost_pb11 < cost_dt
+
+
+def test_licensing_times_match_research():
+    """Licensing times per DI-015/016 regulatory framework research.
+
+    DT: 1-2yr (Part 30) → 2.0yr
+    DD: 6-18mo → 1.5yr
+    DHe3: 6-12mo → 0.75yr
+    PB11: ~0yr (no NRC) → 0.0yr
+    """
+    assert CC.licensing_time_dt == 2.0
+    assert CC.licensing_time_dd == 1.5
+    assert CC.licensing_time_dhe3 == 0.75
+    assert CC.licensing_time_pb11 == 0.0
+
+
+def test_licensing_time_ordering():
+    """More radioactive fuels should have longer licensing times."""
+    assert (
+        CC.licensing_time_dt
+        > CC.licensing_time_dd
+        > CC.licensing_time_dhe3
+        >= CC.licensing_time_pb11
+    )
 
 
 def test_cas21_scales_with_power():
@@ -203,6 +236,8 @@ def test_lcoe_end_to_end_sanity():
         n_mod=1,
         availability=0.85,
         inflation_rate=0.02,
+        interest_rate=0.07,
+        lifetime_yr=30,
         construction_time=6,
         fuel=Fuel.DT,
         noak=True,
@@ -330,6 +365,8 @@ _CAS80_KWARGS = dict(
     n_mod=1,
     availability=0.85,
     inflation_rate=0.02,
+    interest_rate=0.07,
+    lifetime_yr=30,
     construction_time=6,
     noak=True,
 )
@@ -343,6 +380,8 @@ def test_cas80_scales_with_p_fus():
         n_mod=1,
         availability=0.85,
         inflation_rate=0.02,
+        interest_rate=0.07,
+        lifetime_yr=30,
         construction_time=6,
         fuel=Fuel.DT,
         noak=True,
@@ -353,6 +392,8 @@ def test_cas80_scales_with_p_fus():
         n_mod=1,
         availability=0.85,
         inflation_rate=0.02,
+        interest_rate=0.07,
+        lifetime_yr=30,
         construction_time=6,
         fuel=Fuel.DT,
         noak=True,

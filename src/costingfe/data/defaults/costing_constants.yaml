@@ -7,16 +7,16 @@ plant_studies_noak: 4.0     # M$
 plant_permits: 2.0          # M$
 plant_reports: 1.0          # M$
 other_precon: 1.0           # M$
-land_intensity: 0.001       # acres per MWe
-land_cost: 10000.0          # $/acre
+land_intensity: 0.25        # acres per MWe (CFS ARC: 100 acres / 400 MWe)
+land_cost: 10000.0          # $/acre (industrial-zoned US average)
 licensing_cost_dt: 5.0      # M$
 licensing_cost_dd: 3.0
 licensing_cost_dhe3: 1.0
 licensing_cost_pb11: 0.1
-licensing_time_dt: 5.0      # years
-licensing_time_dd: 3.0
-licensing_time_dhe3: 2.0
-licensing_time_pb11: 1.0
+licensing_time_dt: 2.0      # years — Part 30, 1-2yr range (DI-015)
+licensing_time_dd: 1.5      # 6-18 months (DI-015)
+licensing_time_dhe3: 0.75   # 6-12 months (DI-016)
+licensing_time_pb11: 0.0    # no NRC jurisdiction (DI-016)
 
 # CAS22 — Reactor Plant Equipment
 # Source: pyFECONs costing/calculations/cas22/, calibrated to volume-based

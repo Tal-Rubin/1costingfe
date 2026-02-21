@@ -388,6 +388,8 @@ class CostModel:
             n_mod,
             availability,
             inflation_rate,
+            interest_rate,
+            lifetime_yr,
             construction_time_yr,
             self.fuel,
             noak,
