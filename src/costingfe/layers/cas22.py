@@ -97,6 +97,9 @@ def cas22_reactor_plant_equipment(
         Fuel.DHE3: cc.blanket_unit_cost_dhe3,
         Fuel.PB11: cc.blanket_unit_cost_pb11,
     }
+    # TODO: incorporate wall_material cost multiplier into C220101
+    # (W tiles vs flowing Li systems vs SiC composites have very different
+    # fabrication costs — requires dedicated research)
     c220101 = blanket_unit[fuel] * blanket_vol * (p_th / P_TH_REF) ** 0.6
 
     # -----------------------------------------------------------------------

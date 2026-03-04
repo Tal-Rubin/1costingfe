@@ -31,6 +31,23 @@ CONCEPT_TO_FAMILY = {
 }
 
 
+class WallMaterial(Enum):
+    TUNGSTEN = "W"
+    CARBON = "C"
+    BERYLLIUM = "Be"
+    MOLYBDENUM = "Mo"
+    SIC = "SiC"
+    LITHIUM = "Li"
+
+
+@dataclass
+class ImpurityMix:
+    """Impurity species and concentrations (f_z = n_z/n_e)."""
+
+    wall_derived: dict[str, float]
+    seeded: dict[str, float]
+
+
 class CoilMaterial(Enum):
     REBCO_HTS = "rebco_hts"
     NB3SN = "nb3sn"

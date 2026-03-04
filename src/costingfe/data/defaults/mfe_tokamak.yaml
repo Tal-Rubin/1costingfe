@@ -34,6 +34,13 @@ Z_eff: 1.5          # Effective charge
 plasma_volume: 500.0 # Plasma volume [m^3]
 B: 5.0              # Magnetic field [T]
 
+# Impurity model
+wall_material: null    # Wall material: W, C, Be, Mo, SiC, Li (null = no line radiation)
+T_edge: 0.05           # Edge ion temperature at wall [keV] (50 eV, detached divertor)
+f_screen: 0.01         # SOL screening factor for wall impurities
+tau_ratio: 3.0         # Impurity confinement time / energy confinement time
+seeded_impurities: {}  # Deliberate impurities, e.g. {Ar: 0.002}
+
 # Disruption model (active when use_0d_model=true)
 disruption_rate_base: 0.1   # Baseline disruptions/FPY far from limits
 disruption_steepness: 15.0  # Exponential steepness parameter

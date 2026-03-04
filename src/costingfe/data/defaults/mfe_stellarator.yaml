@@ -28,6 +28,13 @@ vessel_t: 0.10       # Vacuum vessel
 # Construction
 construction_time_yr: 8.0  # Years (complex 3D coils, harder assembly)
 
+# Impurity model
+wall_material: null    # Wall material: W, C, Be, Mo, SiC, Li (null = no line radiation)
+T_edge: 0.05           # Edge ion temperature at wall [keV] (50 eV, island divertor)
+f_screen: 0.01         # SOL screening factor for wall impurities
+tau_ratio: 3.0         # Impurity confinement time / energy confinement time
+seeded_impurities: {}  # Deliberate impurities, e.g. {Ar: 0.002}
+
 # Plasma parameters for radiation calculation
 n_e: 1.0e20         # Electron density [m^-3]
 T_e: 12.0           # Electron temperature [keV]

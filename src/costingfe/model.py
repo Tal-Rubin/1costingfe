@@ -50,6 +50,7 @@ from costingfe.types import (
     CostResult,
     ForwardResult,
     Fuel,
+    WallMaterial,
 )
 from costingfe.validation import CostingInput
 
@@ -79,6 +80,20 @@ class CostModel:
             return self._power_balance_0d(params, n_mod)
 
         if self.family == ConfinementFamily.MFE:
+            # Parse impurity model params
+            wm_raw = params.get("wall_material")
+            wall_mat = None
+            if wm_raw is not None:
+                wall_mat = WallMaterial(wm_raw) if isinstance(wm_raw, str) else wm_raw
+            impurity_kw = dict(
+                wall_material=wall_mat,
+                seeded_impurities=params.get("seeded_impurities") or None,
+                T_edge=params.get("T_edge", 0.05),
+                f_screen=params.get("f_screen", 0.01),
+                tau_ratio=params.get("tau_ratio", 3.0),
+                fw_area=params.get("fw_area", 0.0),
+            )
+
             p_fus = mfe_inverse_power_balance(
                 p_net_target=p_net_per_mod,
                 fuel=self.fuel,
@@ -96,6 +111,7 @@ class CostModel:
                 p_trit=params["p_trit"],
                 p_house=params["p_house"],
                 p_cryo=params["p_cryo"],
+                **impurity_kw,
             )
             pt = mfe_forward_power_balance(
                 p_fus=p_fus,
@@ -114,6 +130,7 @@ class CostModel:
                 p_trit=params["p_trit"],
                 p_house=params["p_house"],
                 p_cryo=params["p_cryo"],
+                **impurity_kw,
             )
 
         elif self.family == ConfinementFamily.IFE:
@@ -201,6 +218,20 @@ class CostModel:
         q95 = params["q95"]
         f_GW = params["f_GW"]
 
+        # Parse impurity model params
+        wm_raw = params.get("wall_material")
+        wall_mat = None
+        if wm_raw is not None:
+            wall_mat = WallMaterial(wm_raw) if isinstance(wm_raw, str) else wm_raw
+        impurity_kw = dict(
+            wall_material=wall_mat,
+            seeded_impurities=params.get("seeded_impurities") or None,
+            T_edge=params.get("T_edge", 0.05),
+            f_screen=params.get("f_screen", 0.01),
+            tau_ratio=params.get("tau_ratio", 3.0),
+            fw_area=params.get("fw_area", 0.0),
+        )
+
         if mode == "forward":
             plasma_state = tokamak_0d_forward(
                 R=R,
@@ -238,6 +269,7 @@ class CostModel:
                 Z_eff=params.get("Z_eff", 1.5),
                 plasma_volume=plasma_state.V_plasma,
                 B=B,
+                **impurity_kw,
             )
         else:
             # Inverse mode (default): find T_e that produces required p_fus
