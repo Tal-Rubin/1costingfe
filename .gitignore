@@ -6,3 +6,11 @@ __pycache__/
 .ruff_cache/
 dist/
 build/
+
+# LaTeX build artifacts
+tex/*.aux
+tex/*.bbl
+tex/*.blg
+tex/*.log
+tex/*.out
+tex/*.pdf
