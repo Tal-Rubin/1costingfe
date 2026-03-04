@@ -124,3 +124,4 @@ class ForwardResult:
     params: dict  # All input params (for sensitivity analysis)
     overridden: list[str] = field(default_factory=list)  # Keys that were overridden
     cas22_detail: dict[str, float] = field(default_factory=dict)  # CAS22 sub-accounts
+    plasma_state: object = None  # PlasmaState when 0D model is active

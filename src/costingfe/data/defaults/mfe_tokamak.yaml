@@ -33,3 +33,16 @@ T_e: 15.0           # Electron temperature [keV]
 Z_eff: 1.5          # Effective charge
 plasma_volume: 500.0 # Plasma volume [m^3]
 B: 5.0              # Magnetic field [T]
+
+# Disruption model (active when use_0d_model=true)
+disruption_rate_base: 0.1   # Baseline disruptions/FPY far from limits
+disruption_steepness: 15.0  # Exponential steepness parameter
+disruption_damage: 0.02     # Fraction of component life per disruption
+disruption_downtime: 72.0   # Hours of downtime per disruption
+
+# 0D plasma model (tokamak only)
+use_0d_model: false  # Enable 0D plasma physics model
+q95: 3.5             # Safety factor at 95% flux surface
+f_GW: 0.85           # Greenwald density fraction
+M_ion: 2.5           # Average ion mass [AMU]
+lambda_q: 0.002      # SOL power width at midplane [m]

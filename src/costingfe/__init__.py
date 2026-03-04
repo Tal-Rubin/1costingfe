@@ -6,6 +6,7 @@ _os.environ.setdefault("JAX_PLATFORMS", "cpu")
 
 from dataclasses import dataclass
 
+from costingfe.layers.tokamak import PlasmaState as PlasmaState
 from costingfe.model import CostModel
 from costingfe.types import (
     CONCEPT_TO_FAMILY as CONCEPT_TO_FAMILY,

@@ -17,6 +17,8 @@ from costingfe.types import (
     Fuel,
 )
 
+_PLASMA_0D_FIELDS = ["q95", "f_GW", "M_ion", "lambda_q", "use_0d_model"]
+
 
 class CostingInput(BaseModel):
     """Validated input for the costing model.
@@ -88,6 +90,13 @@ class CostingInput(BaseModel):
     plasma_volume: float | None = None
     B: float | None = None
 
+    # 0D plasma model (tokamak only)
+    use_0d_model: bool = False
+    q95: float | None = None
+    f_GW: float | None = None
+    M_ion: float | None = None
+    lambda_q: float | None = None
+
     # --- Tier 2: family-required parameter lists ---
     _COMMON_REQUIRED = [
         "mn",
@@ -156,6 +165,19 @@ class CostingInput(BaseModel):
                 f"Missing required engineering parameters for "
                 f"{family.value}: {', '.join(missing)}"
             )
+
+        # 0D model requires q95 and f_GW
+        if self.use_0d_model:
+            if self.concept != ConfinementConcept.TOKAMAK:
+                raise ValueError("use_0d_model is only supported for TOKAMAK concept")
+            od_missing = []
+            if self.q95 is None:
+                od_missing.append("q95")
+            if self.f_GW is None:
+                od_missing.append("f_GW")
+            if od_missing:
+                raise ValueError(f"0D model requires: {', '.join(od_missing)}")
+
         return self
 
     @model_validator(mode="after")

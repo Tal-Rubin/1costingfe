@@ -36,6 +36,13 @@ from costingfe.layers.physics import (
     mif_forward_power_balance,
     mif_inverse_power_balance,
 )
+from costingfe.layers.tokamak import (
+    DisruptionModel,
+    apply_disruption_penalty,
+    derive_radial_build,
+    tokamak_0d_forward,
+    tokamak_0d_inverse,
+)
 from costingfe.types import (
     CONCEPT_TO_FAMILY,
     ConfinementConcept,
@@ -65,6 +72,11 @@ class CostModel:
     def _power_balance(self, params, n_mod):
         """Dispatch power balance based on confinement family."""
         p_net_per_mod = params["net_electric_mw"] / n_mod
+
+        # 0D tokamak branch
+        use_0d = params.get("use_0d_model", False)
+        if use_0d and self.concept == ConfinementConcept.TOKAMAK:
+            return self._power_balance_0d(params, n_mod)
 
         if self.family == ConfinementFamily.MFE:
             p_fus = mfe_inverse_power_balance(
@@ -179,6 +191,88 @@ class CostModel:
 
         return pt
 
+    def _power_balance_0d(self, params, n_mod):
+        """0D tokamak power balance: derives p_fus from plasma physics."""
+        mode = params.get("0d_mode", "inverse")
+        R = params["axis_t"]
+        a = params["plasma_t"]
+        kappa = params["elon"]
+        B = params["B"]
+        q95 = params["q95"]
+        f_GW = params["f_GW"]
+
+        if mode == "forward":
+            plasma_state = tokamak_0d_forward(
+                R=R,
+                a=a,
+                kappa=kappa,
+                B=B,
+                q95=q95,
+                f_GW=f_GW,
+                T_e=params["T_e"],
+                p_input=params["p_input"],
+                fuel=self.fuel,
+                M_ion=params.get("M_ion", 2.5),
+                Z_eff=params.get("Z_eff", 1.5),
+                lambda_q=params.get("lambda_q", 0.002),
+            )
+            pt = mfe_forward_power_balance(
+                p_fus=plasma_state.p_fus,
+                fuel=self.fuel,
+                p_input=params["p_input"],
+                mn=params["mn"],
+                eta_th=params["eta_th"],
+                eta_p=params["eta_p"],
+                eta_pin=params["eta_pin"],
+                eta_de=params["eta_de"],
+                f_sub=params["f_sub"],
+                f_dec=params["f_dec"],
+                p_coils=params["p_coils"],
+                p_cool=params["p_cool"],
+                p_pump=params["p_pump"],
+                p_trit=params["p_trit"],
+                p_house=params["p_house"],
+                p_cryo=params["p_cryo"],
+                n_e=plasma_state.n_e,
+                T_e=plasma_state.T_e,
+                Z_eff=params.get("Z_eff", 1.5),
+                plasma_volume=plasma_state.V_plasma,
+                B=B,
+            )
+        else:
+            # Inverse mode (default): find T_e that produces required p_fus
+            plasma_state, pt = tokamak_0d_inverse(
+                p_net_target=params["net_electric_mw"],
+                R=R,
+                a=a,
+                kappa=kappa,
+                B=B,
+                q95=q95,
+                f_GW=f_GW,
+                fuel=self.fuel,
+                M_ion=params.get("M_ion", 2.5),
+                Z_eff=params.get("Z_eff", 1.5),
+                lambda_q=params.get("lambda_q", 0.002),
+                p_input=params["p_input"],
+                mn=params["mn"],
+                eta_th=params["eta_th"],
+                eta_p=params["eta_p"],
+                eta_pin=params["eta_pin"],
+                eta_de=params["eta_de"],
+                f_sub=params["f_sub"],
+                f_dec=params["f_dec"],
+                p_coils=params["p_coils"],
+                p_cool=params["p_cool"],
+                p_pump=params["p_pump"],
+                p_trit=params["p_trit"],
+                p_house=params["p_house"],
+                p_cryo=params["p_cryo"],
+                n_mod=n_mod,
+            )
+
+        self._plasma_state = plasma_state
+        return pt
+
     def forward(
         self,
         net_electric_mw: float,
@@ -246,6 +340,21 @@ class CostModel:
                     }
                 },
             )
+
+        # 0D radial build: derive thicknesses from fuel before geometry
+        self._plasma_state = None
+        use_0d = params.get("use_0d_model", False)
+        if use_0d and self.concept == ConfinementConcept.TOKAMAK:
+            rb_derived = derive_radial_build(
+                self.fuel,
+                blanket_t=overrides.get("blanket_t"),
+                ht_shield_t=overrides.get("ht_shield_t"),
+                structure_t=overrides.get("structure_t"),
+                vessel_t=overrides.get("vessel_t"),
+            )
+            for k, v in rb_derived.items():
+                if k not in overrides:
+                    params[k] = v
 
         # Layer 2: Power balance (dispatched by family)
         pt = self._power_balance(params, n_mod)
@@ -366,6 +475,23 @@ class CostModel:
         total_capital = overnight_cost + c60
 
         # Layer 5: Economics
+        # Apply disruption penalty when 0D model is active
+        core_lt = cc.core_lifetime(self.fuel)
+        avail_eff = availability
+        if self._plasma_state is not None:
+            dm = DisruptionModel(
+                rate_base=params.get("disruption_rate_base", 0.1),
+                steepness=params.get("disruption_steepness", 15.0),
+                damage_per_disruption=params.get("disruption_damage", 0.02),
+                downtime_per_disruption=params.get("disruption_downtime", 72.0),
+            )
+            core_lt, avail_eff = apply_disruption_penalty(
+                core_lt,
+                availability,
+                self._plasma_state.disruption_rate,
+                dm,
+            )
+
         c90 = cas90_financial(total_capital, interest_rate, lifetime_yr)
         c70, c71, c72 = cas70_om(
             cc,
@@ -373,11 +499,11 @@ class CostModel:
             replaceable_accounts=cc.replaceable_accounts,
             n_mod=n_mod,
             p_net=pt.p_net,
-            availability=availability,
+            availability=avail_eff,
             inflation_rate=inflation_rate,
             interest_rate=interest_rate,
             lifetime_yr=lifetime_yr,
-            core_lifetime=cc.core_lifetime(self.fuel),
+            core_lifetime=core_lt,
             construction_time=construction_time_yr,
             fuel=self.fuel,
             noak=noak,
@@ -386,7 +512,7 @@ class CostModel:
             cc,
             pt.p_fus,
             n_mod,
-            availability,
+            avail_eff,
             inflation_rate,
             interest_rate,
             lifetime_yr,
@@ -394,7 +520,7 @@ class CostModel:
             self.fuel,
             noak,
         )
-        lcoe = compute_lcoe(c90, c70, c80, pt.p_net, n_mod, availability)
+        lcoe = compute_lcoe(c90, c70, c80, pt.p_net, n_mod, avail_eff)
         overnight = total_capital * 1e6 / (pt.p_net * n_mod * 1e3)  # $/kW
 
         costs = CostResult(
@@ -428,6 +554,7 @@ class CostModel:
             params=params,
             overridden=overridden,
             cas22_detail=c22_detail,
+            plasma_state=self._plasma_state,
         )
 
     # Financial parameters — given by cost of capital, not engineering levers
@@ -463,6 +590,10 @@ class CostModel:
                 "p_cool",
                 "axis_t",
                 "elon",  # torus geometry
+                "q95",
+                "f_GW",
+                "B",
+                "T_e",
             ],
             ConfinementFamily.IFE: [
                 "p_implosion",
