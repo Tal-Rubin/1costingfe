@@ -1170,12 +1170,56 @@ CAS70 comprises two sub-accounts:
 
 \begin{itemize}
 \item \textbf{CAS71} --- Annual operations and maintenance, scaled from
-  a base cost per MW of net electric capacity (\$60k/MW/yr default).
+  a fuel-dependent base cost per MW of net electric capacity.
 \item \textbf{CAS72} --- Annualized scheduled component replacement.
   Replacement costs are discounted to present value at the time of
   each replacement event and annualized via the CRF.
 \end{itemize}
 
+\paragraph{CAS71: Staffing-based O\&M.}
+The CAS71 O\&M coefficient is derived from a bottom-up staffing model
+that estimates headcount and compensation by division (operations,
+maintenance, administration, technical, offsite) for each fuel type,
+then adds non-labor costs (maintenance materials, insurance, supplies,
+regulatory fees, waste treatment, and general overhead). The staffing
+model is grounded in two reference datasets: the S-PRISM sodium fast
+reactor staffing estimate \citep{boardman2000} (494~staff for a
+1,520~MWe fission plant) and INL's first-principles SFR cost
+estimation \citep{prosser2024}, which scales the S-PRISM baseline to
+different plant sizes. Conventional gas CCGT staffing data (25--35
+staff for $\sim$1~GWe) anchors the lower bound.
+
+The key differentiator between fuels is neutron-related operational
+overhead. All fusion machines are regulated under 10~CFR~Part~30
+(byproduct material), not Part~50 (reactor licensing), eliminating
+the armed security force, licensed operator requirements, emergency
+planning zones, and nuclear QA programs that drive fission plant
+staffing. However, fuels with higher neutron production require
+radiation protection programs, radwaste management, and
+radiation-controlled maintenance --- costs that scale roughly with
+neutron flux. The resulting fuel-dependent coefficients are:
+
+\begin{center}
+\begin{tabular}{lrrrl}
+\toprule
+Fuel & Staff & O\&M (M\$/yr) & O\&M (k\$/MW/yr) & Key drivers \\
+\midrule
+DT   & 117 & 52.0 & 52 & Tritium systems, HP dept, radwaste, remote handling \\
+DD   &  94 & 38.7 & 39 & Reduced neutron flux ($\sim\!\tfrac{1}{3}$ DT), smaller T inventory \\
+DHe3 &  69 & 26.0 & 26 & $\sim$5\% neutron fraction, minimal tritium \\
+pB11 &  59 & 23.6 & 24 & Aneutronic, no tritium, RSO only \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent All values are at a 1~GWe reference in 2023~USD. For
+comparison, S-PRISM fission O\&M is \$50k/MW/yr and modern gas CCGT
+is $\sim$\$12k/MW/yr. The pB11 estimate (\$24k/MW/yr) sits at roughly
+twice the conventional CCGT level, reflecting fusion-specific system
+complexity (vacuum, magnets, plasma-facing components) rather than
+regulatory burden.
+
+\paragraph{Levelization.}
 Both sub-accounts are levelized using the growing-annuity procedure
 described in \cref{sec:lac}, which accounts for nominal cost escalation
 over the full plant lifetime. A simpler approach that inflates costs

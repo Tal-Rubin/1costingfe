@@ -191,9 +191,9 @@ def cas70_om(
            annualized via CRF). core_lifetime is in FPY, converted to calendar
            years via availability.
     """
-    # CAS71: Annual O&M
-    # REQUIRES CHECKING
-    annual_om = cc.om_cost_per_mw_yr * p_net * 1000 / 1e6  # M$
+    # CAS71: Annual O&M — fuel-dependent staffing-based coefficient
+    # Source: docs/account_justification/CAS71_73_staffing.md
+    annual_om = cc.om_cost(fuel) * p_net * 1000 / 1e6  # M$
     t_project = _total_project_time(cc, construction_time, fuel, noak)
     cas71 = levelized_annual_cost(
         annual_om, interest_rate, inflation_rate, lifetime_yr, t_project

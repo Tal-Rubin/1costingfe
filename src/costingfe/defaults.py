@@ -111,8 +111,12 @@ class CostingConstants:
     insurance_cost: float = 0.5
     decommissioning: float = 5.0
 
-    # CAS70
-    om_cost_per_mw_yr: float = 60.0
+    # CAS70 — Annual O&M cost (k$/MW/yr at 1 GWe reference, 2023$)
+    # Source: CAS71_73_staffing.md — staffing-based build-up by fuel type
+    om_cost_dt: float = 52.0  # Full neutron + tritium operational overhead
+    om_cost_dd: float = 39.0  # ~1/3 DT neutron flux, smaller tritium inventory
+    om_cost_dhe3: float = 26.0  # ~5% neutron fraction, minimal tritium
+    om_cost_pb11: float = 24.0  # Aneutronic, no tritium, RSO-only
 
     # CAS80 — fuel isotope unit costs ($/kg)
     # STARFIRE (1980) inflation-adjusted via GDP IPD. Range: $1,500-3,500/kg.
@@ -127,6 +131,17 @@ class CostingConstants:
 
     def replace(self, **kwargs):
         return replace(self, **kwargs)
+
+    def om_cost(self, fuel):
+        """Annual O&M cost coefficient (k$/MW/yr) for a given fuel type."""
+        from costingfe.types import Fuel
+
+        return {
+            Fuel.DT: self.om_cost_dt,
+            Fuel.DD: self.om_cost_dd,
+            Fuel.DHE3: self.om_cost_dhe3,
+            Fuel.PB11: self.om_cost_pb11,
+        }.get(fuel, self.om_cost_dt)
 
     def licensing_cost(self, fuel):
         from costingfe.types import Fuel
