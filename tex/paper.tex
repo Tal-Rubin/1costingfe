@@ -911,7 +911,8 @@ CAS & Description & Method \\
 10$^\dagger$ & Pre-construction & Land intensity scaling, fuel-dependent licensing \\
 20 & Total direct costs & Sum of CAS21--29 \\
 21 & Buildings \& structures & Power scaling on gross electric \\
-22 & Reactor plant equipment & Component-level parametric (17 sub-accounts) \\
+22 & Reactor plant equipment & Component-level parametric (18 sub-accounts) \\
+\hspace{1em}22.01.10$^\dagger$ & Remote handling \& maintenance & Fuel- and concept-dependent \\
 \hspace{1em}22.01.12$^\dagger$ & Isotope separation plant & Zeroed; market purchase in CAS80 \\
 23 & Turbine plant equipment & Power scaling on gross electric \\
 24 & Electric plant equipment & Power scaling on gross electric \\
@@ -986,6 +987,55 @@ p-${}^{11}$B & 0.0 & No NRC jurisdiction \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+
+%% ------------------------------------------------------------
+\subsubsection{CAS22.01.10: Remote Handling \& Maintenance Equipment}
+\label{sec:cas2210}
+
+CAS22.01.10 covers the robotic and remotely-operated equipment required
+for in-vessel maintenance: manipulators, transfer casks, in-pipe
+welding/cutting tools, and rad-hardened actuators. The building that
+houses this equipment (hot cell) is costed separately in CAS21.
+
+The cost model is:
+\begin{equation}
+\label{eq:cas2210}
+C_{220110} = C_{\text{RH,base}}(f) \times S_{\text{concept}}
+             \times \left(\frac{P_{\text{et}}}{1000}\right)^{0.5}
+\end{equation}
+
+\noindent where $C_{\text{RH,base}}(f)$ is a fuel-dependent base cost
+(M\$ at 1~GWe tokamak reference) and $S_{\text{concept}}$ is a
+geometry-dependent scaling factor.
+
+\paragraph{Fuel dependence.}
+Neutron activation determines whether remote handling is needed and how
+heavily equipment must be rad-hardened.
+\Cref{tab:rh-fuel} lists the base costs.
+
+\begin{table}[htbp]
+\caption{Remote handling base costs by fuel cycle (1~GWe tokamak reference).}
+\label{tab:rh-fuel}
+\centering
+\begin{tabular}{lrl}
+\toprule
+Fuel & Base (M\$) & Rationale \\
+\midrule
+D-T          & 150 & Full RH suite, rad-hardened to 14.1~MeV neutrons \\
+D-D          & 100 & Same scope, reduced rad-hardening (2.45~MeV) \\
+D-${}^3$He   &  30 & Lighter duty, activation still exceeds occupational limits \\
+p-${}^{11}$B &  20 & Conventional maintenance equipment (no rad-hardening) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Concept dependence.}
+Toroidal vessels (tokamak, stellarator) require articulated multi-axis
+manipulators to reach components through narrow ports, while linear
+geometries (mirror, FRC) permit simpler end-access tooling.
+Toroidal concepts use $S_{\text{concept}} = 1.0$; linear concepts
+use $S_{\text{concept}} = 0.55$.
 
 
 %% ------------------------------------------------------------

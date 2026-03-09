@@ -39,6 +39,22 @@ power_supplies_base: 80.0    # M$ at 1 GWe (power-scaled)
 divertor_base: 60.0          # M$ at 1 GWth (power-scaled)
 target_factory_base: 244.0   # M$ at 1 GWe ref (IFE/MIF target factory capital)
 
+# 220110: Remote Handling & Maintenance Equipment (M$ at 1 GWe reference, tokamak)
+# See docs/account_justification/CAS220110_remote_handling.md
+# DT: Full RH suite (in-vessel transporter, divertor handler, cask transfer,
+#   hot cell robotics, in-pipe welding, rad-hardened actuators).
+# DD: Same scope, reduced rad-hardening tier (2.45 MeV vs 14.1 MeV).
+# DHe3: Still needs RH (activation exceeds occupational limits), lighter duty.
+# pB11: No rad-hardened robotics. Conventional maintenance equipment
+#   (cranes, platforms, vessel access tooling). Cost is non-trivial due to
+#   vacuum vessel access constraints, heavy components, confined-space work.
+# Base costs calibrated to toroidal (tokamak/stellarator) geometry;
+# linear concepts (mirror, FRC) apply concept_rh_scale < 1.0.
+remote_handling_dt_base: 150.0
+remote_handling_dd_base: 100.0
+remote_handling_dhe3_base: 30.0
+remote_handling_pb11_base: 20.0
+
 # 220111: Installation labor
 installation_frac: 0.14      # Fraction of reactor subtotal
 

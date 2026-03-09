@@ -63,6 +63,13 @@ class CostingConstants:
     # IFE/MIF target factory capital (M$ at 1 GWe reference)
     target_factory_base: float = 244.0
 
+    # 220110: Remote Handling & Maintenance Equipment (M$ at 1 GWe, tokamak ref)
+    # See docs/account_justification/CAS220110_remote_handling.md
+    remote_handling_dt_base: float = 150.0
+    remote_handling_dd_base: float = 100.0
+    remote_handling_dhe3_base: float = 30.0
+    remote_handling_pb11_base: float = 20.0
+
     # 220111: Installation labor (fraction of reactor subtotal)
     installation_frac: float = 0.14
 

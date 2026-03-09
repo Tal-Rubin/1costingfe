@@ -177,6 +177,28 @@ def cas22_reactor_plant_equipment(
     c220109 = 0.0  # DEC placeholder (f_dec=0 for default tokamak)
 
     # -----------------------------------------------------------------------
+    # 220110: Remote Handling & Maintenance Equipment
+    # Fuel-dependent (rad-hardening tier) x concept-dependent (vessel geometry).
+    # Base costs calibrated to toroidal geometry (tokamak/stellarator).
+    # Linear concepts (mirror) have simpler end-access → lower cost.
+    # See docs/account_justification/CAS220110_remote_handling.md
+    # -----------------------------------------------------------------------
+    rh_base = {
+        Fuel.DT: cc.remote_handling_dt_base,
+        Fuel.DD: cc.remote_handling_dd_base,
+        Fuel.DHE3: cc.remote_handling_dhe3_base,
+        Fuel.PB11: cc.remote_handling_pb11_base,
+    }
+    # Toroidal vessels (narrow ports) vs linear (end-access)
+    rh_concept_scale = {
+        ConfinementConcept.TOKAMAK: 1.0,
+        ConfinementConcept.STELLARATOR: 1.0,
+        ConfinementConcept.MIRROR: 0.55,
+    }
+    concept_scale = rh_concept_scale.get(concept, 0.5)
+    c220110 = rh_base[fuel] * concept_scale * (p_et / 1000.0) ** 0.5
+
+    # -----------------------------------------------------------------------
     # 220111: Installation Labor
     # Source: pyFECONs cas220111_installation.py
     # -----------------------------------------------------------------------
@@ -190,6 +212,7 @@ def cas22_reactor_plant_equipment(
         + c220107
         + c220108
         + c220109
+        + c220110
     )
     c220111 = cc.installation_frac * reactor_subtotal
 
@@ -269,6 +292,7 @@ def cas22_reactor_plant_equipment(
         + c220107
         + c220108
         + c220109
+        + c220110
         + c220111
         + c220112
     )
@@ -285,6 +309,7 @@ def cas22_reactor_plant_equipment(
         "C220107": c220107,
         "C220108": c220108,
         "C220109": c220109,
+        "C220110": c220110,
         "C220111": c220111,
         "C220112": c220112,
         "C220200": c220200,

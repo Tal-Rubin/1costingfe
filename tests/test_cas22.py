@@ -85,6 +85,7 @@ def test_cas22_all_subaccounts_present():
         "C220107",
         "C220108",
         "C220109",
+        "C220110",
         "C220111",
         "C220112",
         "C220200",
@@ -338,3 +339,56 @@ def test_cas220104_nbi_most_expensive_per_mw():
     nbi = _make_cas22_heating(p_nbi=50.0, p_icrf=0.0)
     icrf = _make_cas22_heating(p_nbi=0.0, p_icrf=50.0)
     assert nbi["C220104"] > icrf["C220104"]  # NBI ~$7/MW vs ICRF ~$4/MW
+
+
+# ---- CAS220110: Remote Handling & Maintenance Equipment ----
+
+
+def test_cas220110_dt_has_remote_handling():
+    """DT should have substantial remote handling cost."""
+    result = _make_cas22(fuel=Fuel.DT)
+    assert result["C220110"] > 100  # > $100M for DT tokamak
+
+
+def test_cas220110_pb11_much_cheaper():
+    """pB11 should have much cheaper maintenance equipment than DT."""
+    dt = _make_cas22(fuel=Fuel.DT)
+    pb11 = _make_cas22(fuel=Fuel.PB11)
+    assert pb11["C220110"] < dt["C220110"] * 0.25  # at least 4x cheaper
+
+
+def test_cas220110_concept_scales():
+    """Mirror (linear) should be cheaper than tokamak (toroidal) for same fuel."""
+    tok = cas22_reactor_plant_equipment(
+        CC,
+        p_net=1000.0,
+        p_th=2500.0,
+        p_et=1100.0,
+        p_fus=2300.0,
+        p_cryo=0.5,
+        n_mod=1,
+        fuel=Fuel.DT,
+        noak=True,
+        blanket_vol=BLANKET_VOL,
+        shield_vol=SHIELD_VOL,
+        structure_vol=STRUCTURE_VOL,
+        vessel_vol=VESSEL_VOL,
+        concept=ConfinementConcept.TOKAMAK,
+    )
+    mir = cas22_reactor_plant_equipment(
+        CC,
+        p_net=1000.0,
+        p_th=2500.0,
+        p_et=1100.0,
+        p_fus=2300.0,
+        p_cryo=0.5,
+        n_mod=1,
+        fuel=Fuel.DT,
+        noak=True,
+        blanket_vol=BLANKET_VOL,
+        shield_vol=SHIELD_VOL,
+        structure_vol=STRUCTURE_VOL,
+        vessel_vol=VESSEL_VOL,
+        concept=ConfinementConcept.MIRROR,
+    )
+    assert mir["C220110"] < tok["C220110"]
