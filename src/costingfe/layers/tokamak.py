@@ -107,28 +107,28 @@ def compute_greenwald_density(I_p_MA, a):
     return I_p_MA / (jnp.pi * a**2)
 
 
-def compute_fusion_power(n_e, T_keV, V_plasma):
+def compute_fusion_power(n_e, T_i, V_plasma):
     """DT fusion power [MW].
 
-    P_fus = (1/4) * n_e^2 * <sigma*v>(T) * E_fus * V / 1e6
+    P_fus = (1/4) * n_e^2 * <sigma*v>(T_i) * E_fus * V / 1e6
     Factor 1/4 = n_D*n_T/n_e^2 for 50/50 DT mix.
 
     Multiplication order avoids float32 overflow (n_e^2 ~ 1e40).
     """
-    sv = sigma_v_dt(T_keV)
+    sv = sigma_v_dt(T_i)
     E_fus_J = E_FUS_DT * MEV_TO_J
     # n_e * sv keeps intermediates in safe range (~1e-2)
     rate = n_e * sv
     return 0.25 * rate * n_e * E_fus_J * V_plasma * 1e-6  # W -> MW
 
 
-def compute_beta_N(n_e, T_keV, B, I_p_MA, a):
+def compute_beta_N(n_e, T_i, B, I_p_MA, a):
     """Normalized beta [%·m·T/MA].
 
-    beta_t = 2 * mu_0 * n_e * T_keV [J] / B^2  (dimensionless)
+    beta_t = 2 * mu_0 * n_e * T_i [J] / B^2  (dimensionless)
     beta_N = beta_t * (a * B / I_p_MA)  with beta_t in %, i.e. * 100
     """
-    T_J = T_keV * KEV_TO_J
+    T_J = T_i * KEV_TO_J
     beta_t = 2.0 * MU_0 * n_e * T_J / B**2  # dimensionless fraction
     beta_N = beta_t * 100.0 * a * B / I_p_MA  # %·m·T/MA
     return beta_N
@@ -224,13 +224,15 @@ def tokamak_0d_forward(
     fw_area = _first_wall_area(R, a, kappa)
 
     # 4. Fusion power
-    p_fus = compute_fusion_power(n_e, T_e, V_plasma)
+    # TODO: separate T_i from T_e for non-DT fuels (p-B11: T_i >> T_e)
+    T_i = T_e  # DT assumption: T_i ≈ T_e
+    p_fus = compute_fusion_power(n_e, T_i, V_plasma)
 
     # 5. Alpha power and neutron split
     p_alpha, p_neutron = ash_neutron_split(p_fus, fuel)
 
     # 6. Radiation
-    p_rad = compute_p_rad(n_e, T_e, Z_eff, V_plasma, B)
+    p_rad = compute_p_rad(n_e, T_e, Z_eff, V_plasma, B, R=R, a=a, kappa=kappa)
     p_rad = jnp.minimum(p_rad, p_alpha)
 
     # 7. Heating power for confinement scaling
@@ -247,7 +249,7 @@ def tokamak_0d_forward(
     H_factor = tau_E_actual / tau_E_scaling
 
     # 10. Beta
-    beta_N = compute_beta_N(n_e, T_e, B, I_p, a)
+    beta_N = compute_beta_N(n_e, T_i, B, I_p, a)
 
     # 11. Wall loading
     wall_loading = compute_wall_loading(p_neutron, fw_area)
@@ -284,15 +286,16 @@ def tokamak_0d_forward(
 # Inverse mode: find T_e that produces target p_fus
 # ---------------------------------------------------------------------------
 def _find_T_for_pfus(target_pfus, n_e, V_plasma, T_lo=1.0, T_hi=100.0, n_iter=60):
-    """Bisection to find T_e [keV] that yields target fusion power.
+    """Bisection to find T_i [keV] that yields target fusion power.
 
     Uses jnp.where for JAX differentiability (no Python control flow).
+    Returns T_i; caller sets T_e = T_i (DT assumption).
     """
 
     def body(i, state):
         lo, hi = state
         mid = 0.5 * (lo + hi)
-        p_mid = compute_fusion_power(n_e, mid, V_plasma)
+        p_mid = compute_fusion_power(n_e, mid, V_plasma)  # mid = T_i
         lo = jnp.where(p_mid < target_pfus, mid, lo)
         hi = jnp.where(p_mid >= target_pfus, mid, hi)
         return (lo, hi)
@@ -383,9 +386,13 @@ def tokamak_0d_inverse(
         Z_eff=Z_eff,
         plasma_volume=V_plasma,
         B=B,
+        R_major=R,
+        a_minor=a,
+        kappa=kappa,
     )
 
-    # Step 2: Find T_e that produces this p_fus
+    # Step 2: Find T_i that produces this p_fus (T_e = T_i for DT)
+    # TODO: separate T_i from T_e for non-DT fuels (p-B11: T_i >> T_e)
     T_e = _find_T_for_pfus(p_fus_required, n_e, V_plasma)
 
     # Step 3: Build full plasma state at found T_e
@@ -427,6 +434,9 @@ def tokamak_0d_inverse(
         Z_eff=Z_eff,
         plasma_volume=V_plasma,
         B=B,
+        R_major=R,
+        a_minor=a,
+        kappa=kappa,
     )
 
     return plasma_state, pt

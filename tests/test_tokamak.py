@@ -83,7 +83,7 @@ class TestFusionPower:
         model uses a flat profile rather than peaked profiles with
         profile correction factors).
         """
-        p_fus = float(compute_fusion_power(n_e=1.0e20, T_keV=13.0, V_plasma=830.0))
+        p_fus = float(compute_fusion_power(n_e=1.0e20, T_i=13.0, V_plasma=830.0))
         assert 100 < p_fus < 3000, f"ITER-like P_fus = {p_fus} MW"
 
 
@@ -468,16 +468,16 @@ class TestJAXAutodiff:
         """Fusion power should have finite gradient w.r.t. T_e."""
 
         def p_fus_fn(T):
-            return compute_fusion_power(n_e=1e20, T_keV=T, V_plasma=500.0)
+            return compute_fusion_power(n_e=1e20, T_i=T, V_plasma=500.0)
 
-        g = jax.grad(p_fus_fn)(jnp.float64(15.0))
+        g = jax.grad(p_fus_fn)(15.0)
         assert jnp.isfinite(g)
 
     def test_beta_N_grad(self):
         """beta_N should have finite gradient w.r.t. T_e."""
 
         def beta_fn(T):
-            return compute_beta_N(n_e=1e20, T_keV=T, B=5.0, I_p_MA=15.0, a=2.0)
+            return compute_beta_N(n_e=1e20, T_i=T, B=5.0, I_p_MA=15.0, a=2.0)
 
         g = jax.grad(beta_fn)(15.0)
         assert jnp.isfinite(g)

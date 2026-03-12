@@ -288,6 +288,72 @@ def compute_p_line(
     return total_Lz * n_e_20**2 * volume * 1e34  # 1e40 * 1e-6 = 1e34
 
 
+_BETA_T = 2.0  # Temperature profile shape exponent (fixed; see Appendix A)
+
+
+def compute_p_sync_albajar(
+    T_e0: float,
+    n_e0_20: float,
+    B: float,
+    R: float,
+    a: float,
+    kappa: float = 1.7,
+    R_w: float = 0.6,
+    alpha_n: float = 0.5,
+    alpha_T: float = 1.0,
+) -> float:
+    """Synchrotron radiation power [MW] — Albajar et al. (2001).
+
+    Accounts for optical thickness and wall reflection.
+
+    Ref: Albajar, Johner, Granata, Nucl. Fusion 41 665 (2001), eqs 13, 15.
+         Fidone, Giruzzi, Granata, Nucl. Fusion 41 1755 (2001).
+
+    Parameters
+    ----------
+    T_e0 : central electron temperature [keV]
+    n_e0_20 : central electron density [10^20 m^-3]
+    B : toroidal magnetic field on axis [T]
+    R : major radius [m]
+    a : minor radius [m]
+    kappa : elongation (default 1.7)
+    R_w : wall reflectivity (default 0.6; metallic walls ~0.6-0.8)
+    alpha_n, alpha_T : density and temperature profile peaking exponents
+    """
+    A = R / a
+    p_a0 = 6.04e3 * a * n_e0_20 / B
+
+    # Wall reflection / optical thickness correction
+    correction = (1 - R_w) ** 0.62 / (
+        1 + 0.12 * T_e0 / p_a0**0.41 * (1 - R_w) ** 0.41
+    ) ** 1.51
+
+    # Profile shape factor K (beta_T fixed at 2)
+    K = (
+        (alpha_n + 3.87 * alpha_T + 1.46) ** (-0.79)
+        * (1.98 + alpha_T) ** 1.36
+        * _BETA_T**2.14
+        * (_BETA_T**1.53 + 1.87 * alpha_T - 0.16) ** (-1.33)
+    )
+
+    # Aspect ratio correction G
+    G = 0.93 * (1 + 0.85 * jnp.exp(-0.82 * A))
+
+    return (
+        3.84e-8
+        * correction
+        * R
+        * a**1.38
+        * kappa**0.79
+        * B**2.62
+        * n_e0_20**0.38
+        * T_e0
+        * (16 + T_e0) ** 2.61
+        * K
+        * G
+    )
+
+
 def compute_p_rad(
     n_e: float,
     T_e: float,
@@ -295,18 +361,48 @@ def compute_p_rad(
     volume: float,
     B: float = 0.0,
     impurities: ImpurityMix | None = None,
+    R: float = 0.0,
+    a: float = 0.0,
+    kappa: float = 1.7,
+    R_w: float = 0.6,
+    alpha_n: float = 0.5,
+    alpha_T: float = 1.0,
 ) -> float:
-    """Plasma radiation power (bremsstrahlung + synchrotron + line).
+    """Plasma radiation power (bremsstrahlung + synchrotron + line) [MW].
 
-    Calculated from plasma parameters by default, can be overridden.
-    P_brem = 5.35e-37 * n_e^2 * Z_eff * sqrt(T_e) * V  [W], T_e in keV, n_e in m^-3
-    P_sync = 6.2e-22 * n_e * T_e^2 * B^2 * V  [W] (MFE only)
-    P_line = n_e^2 * Σ(f_z * L_z(T_e)) * V  [W] (impurity line radiation)
+    P_brem = 5.35e-37 * n_e^2 * Z_eff * sqrt(T_e) * V  [W], T_e in keV
+    P_sync: Albajar et al. (2001) when R and a > 0; zero otherwise
+    P_line = n_e^2 * Σ(f_z * L_z(T_e)) * V  [W]
+
+    Volume-averaged n_e, T_e are converted to central values using
+    the profile exponents: T_e0 = T_e * (1 + alpha_T),
+    n_e0 = n_e * (1 + alpha_n).  Assumes beta_T = 2 (parabolic).
     """
-    # Scale n_e to avoid float32 overflow (n_e~1e20, n_e^2~1e40 > float32 max)
     n_e_20 = n_e * 1e-20
     p_brem = 5.35e3 * n_e_20**2 * Z_eff * jnp.sqrt(T_e) * volume * 1e-6  # -> MW
-    p_sync = 6.2e-2 * n_e_20 * T_e**2 * B**2 * volume * 1e-6  # -> MW
+
+    # Synchrotron: Albajar when geometry available, else zero
+    use_albajar = jnp.logical_and(R > 0, a > 0)
+    # Convert volume-averaged to central: <f> = f_0 / (1 + alpha) for beta_T=2
+    T_e0 = T_e * (1 + alpha_T)
+    n_e0_20 = n_e_20 * (1 + alpha_n)
+    # Clamp a > 0 to prevent R/a division by zero: in plain Python
+    # (validation path) this raises ZeroDivisionError; in JAX it
+    # produces inf/nan that poison gradients through jnp.where.
+    a_safe = jnp.maximum(a, 1e-10)
+    p_sync_albajar = compute_p_sync_albajar(
+        T_e0,
+        n_e0_20,
+        B,
+        R,
+        a_safe,
+        kappa,
+        R_w,
+        alpha_n,
+        alpha_T,
+    )
+    p_sync = jnp.where(use_albajar, p_sync_albajar, 0.0)
+
     p_line = compute_p_line(n_e, T_e, impurities, volume)
     return p_brem + p_sync + p_line
 
@@ -348,10 +444,18 @@ def mfe_forward_power_balance(
     f_screen: float = 0.01,
     tau_ratio: float = 3.0,
     fw_area: float = 0.0,
+    # Synchrotron (Albajar) geometry — pass R, a > 0 to enable
+    R_major: float = 0.0,
+    a_minor: float = 0.0,
+    kappa: float = 1.7,
+    R_w: float = 0.6,
 ) -> PowerTable:
     """MFE forward power balance: fusion power -> net electric.
 
-    Source: pyFECONs power_balance.py + fusion-tea mfe_power_balance.sysml
+    Plasma energy balance: P_ash + P_input = P_rad + P_transport.
+    If P_rad > P_ash + P_input at the given T_e, heating power is increased
+    to sustain the plasma (P_input_eff = P_rad - P_ash).
+
     Radiation model: bremsstrahlung + synchrotron + impurity line radiation.
     """
     # Step 1: Ash/neutron split
@@ -386,47 +490,62 @@ def mfe_forward_power_balance(
     elif seeded_impurities and p_rad_override is None:
         impurities = ImpurityMix(wall_derived={}, seeded=seeded_impurities)
 
-    # Step 3: Radiation power (p_rad + p_transport = p_ash)
+    # Step 3: Radiation power
     if p_rad_override is not None:
         p_rad = p_rad_override
     else:
-        p_rad = compute_p_rad(n_e, T_e, Z_eff, plasma_volume, B, impurities)
-    p_rad = jnp.minimum(p_rad, p_ash)  # Can't radiate more than ash power
-    p_transport = p_ash - p_rad
+        p_rad = compute_p_rad(
+            n_e,
+            T_e,
+            Z_eff,
+            plasma_volume,
+            B,
+            impurities,
+            R=R_major,
+            a=a_minor,
+            kappa=kappa,
+            R_w=R_w,
+        )
 
-    # Step 4: Auxiliary power
+    # Step 4: Plasma energy balance — P_ash + P_input = P_rad + P_transport
+    # If P_rad > P_ash + P_input, increase heating to sustain T_e
+    p_input_eff = jnp.maximum(p_input, p_rad - p_ash)
+    p_transport = p_ash + p_input_eff - p_rad
+
+    # Step 5: Auxiliary power
     p_aux = p_trit + p_house
 
-    # Step 5: DEC routing (operates on transport channel only)
+    # Step 6: DEC routing (operates on transport channel only)
     p_dee = f_dec * eta_de * p_transport
     p_dec_waste = f_dec * (1.0 - eta_de) * p_transport
     p_wall = (1.0 - f_dec) * p_transport
 
-    # Step 6: Thermal power (neutrons + radiation + wall transport + heating + pumping)
-    p_th = mn * p_neutron + p_rad + p_wall + p_input + eta_p * p_pump
+    # Step 7: Thermal power (neutrons + radiation + wall transport + pumping)
+    # P_input enters via transport (Step 4), not here
+    p_th = mn * p_neutron + p_rad + p_wall + eta_p * p_pump
 
-    # Step 7: Thermal electric
+    # Step 8: Thermal electric
     p_the = eta_th * p_th
 
-    # Step 8: Gross electric
+    # Step 9: Gross electric
     p_et = p_dee + p_the
 
-    # Step 9: Lost power
+    # Step 10: Lost power
     p_loss = (p_th - p_the) + p_dec_waste
 
-    # Step 10: Subsystem power
+    # Step 11: Subsystem power
     p_sub = f_sub * p_et
 
-    # Step 11: Scientific Q
-    q_sci = p_fus / p_input
+    # Step 12: Scientific Q
+    q_sci = p_fus / p_input_eff
 
-    # Step 12: Engineering Q
+    # Step 13: Engineering Q (uses effective heating power)
     recirculating = (
-        p_coils + p_pump + p_sub + p_aux + p_cool + p_cryo + p_input / eta_pin
+        p_coils + p_pump + p_sub + p_aux + p_cool + p_cryo + p_input_eff / eta_pin
     )
     q_eng = p_et / recirculating
 
-    # Step 12: Net electric
+    # Step 14: Net electric
     rec_frac = 1.0 / q_eng
     p_net = (1.0 - rec_frac) * p_et
 
@@ -443,6 +562,7 @@ def mfe_forward_power_balance(
         p_et=p_et,
         p_loss=p_loss,
         p_net=p_net,
+        p_input=p_input_eff,
         p_pump=p_pump,
         p_sub=p_sub,
         p_aux=p_aux,
@@ -493,13 +613,24 @@ def mfe_inverse_power_balance(
     f_screen: float = 0.01,
     tau_ratio: float = 3.0,
     fw_area: float = 0.0,
+    # Synchrotron (Albajar) geometry — pass R, a > 0 to enable
+    R_major: float = 0.0,
+    a_minor: float = 0.0,
+    kappa: float = 1.7,
+    R_w: float = 0.6,
 ) -> float:
     """Inverse MFE power balance: target net electric -> required fusion power.
 
-    Closed-form linear inversion (no iteration needed).
-    p_rad is constant w.r.t. p_fus (depends on plasma params, not fusion power),
-    so it enters as a constant term in the linear inversion.
-    Source: fusion-tea Inverse MFE Power Balance Calc
+    Uses Newton iteration to invert the forward power balance.  The forward
+    balance is piecewise linear in P_fus due to the plasma energy balance:
+
+        P_ash + P_input_eff = P_rad + P_transport
+
+    where P_input_eff = max(P_input, P_rad - P_ash).  When P_rad exceeds
+    P_ash + P_input, the effective heating increases to sustain T_e, which
+    raises recirculating power and penalises LCOE.
+
+    Newton converges in ≤2 iterations (piecewise-linear function).
     """
     # Step 1: Build impurity mix (if wall_material provided)
     impurities = None
@@ -523,44 +654,80 @@ def mfe_inverse_power_balance(
 
     # Step 2: Radiation power (constant w.r.t. p_fus)
     if p_rad_override is not None:
-        p_rad = p_rad_override
+        p_rad_raw = p_rad_override
     else:
-        p_rad = compute_p_rad(n_e, T_e, Z_eff, plasma_volume, B, impurities)
+        p_rad_raw = compute_p_rad(
+            n_e,
+            T_e,
+            Z_eff,
+            plasma_volume,
+            B,
+            impurities,
+            R=R_major,
+            a=a_minor,
+            kappa=kappa,
+            R_w=R_w,
+        )
 
-    # Step 2: Ash fraction from fuel type (use p_fus=1.0 to get the fraction)
+    # Step 3: Ash fraction from fuel type (use p_fus=1.0 to get the fraction)
     p_ash_unit, _ = ash_neutron_split(
         1.0, fuel, dd_f_T, dd_f_He3, dhe3_dd_frac, dhe3_f_T, pb11_f_alpha_n, pb11_f_p_n
     )
     ash_frac = p_ash_unit
     neutron_frac = 1.0 - ash_frac
 
-    # Step 3: Linearize forward chain coefficients
-    # Thermal power per unit p_fus
-    c_th = mn * neutron_frac + (1.0 - f_dec) * ash_frac
-
-    # Constant thermal power (radiation + heating + pumping)
-    # p_rad - (1-f_dec)*p_rad simplifies to f_dec*p_rad
-    c_th0 = f_dec * p_rad + p_input + eta_p * p_pump
-
-    # DEC electric per unit p_fus
-    c_dee = f_dec * eta_de * ash_frac
-    c_dee0 = -f_dec * eta_de * p_rad
-
-    # Gross electric: p_et = c_et * p_fus + c_et0
-    c_et = c_dee + eta_th * c_th
-    c_et0 = c_dee0 + eta_th * c_th0
-
-    # Recirculating (p_fus-dependent): p_sub = f_sub * p_et
-    c_den = f_sub * c_et
-
-    # Recirculating (constant loads)
+    # Constant recirculating loads (independent of p_fus and p_input_eff)
     p_aux = p_trit + p_house
-    c_den0 = (
-        p_coils + p_pump + f_sub * c_et0 + p_aux + p_cool + p_cryo + p_input / eta_pin
+    p_recirc_base = p_coils + p_pump + p_aux + p_cool + p_cryo
+
+    # Step 4: Forward P_net as a function of P_fus (matches forward balance)
+    def _p_net(pf):
+        pa = ash_frac * pf
+        pn = neutron_frac * pf
+        # Plasma energy balance: effective heating covers radiation deficit
+        pi_eff = jnp.maximum(p_input, p_rad_raw - pa)
+        p_transport = pa + pi_eff - p_rad_raw
+        p_dee = f_dec * eta_de * p_transport
+        p_wall = (1.0 - f_dec) * p_transport
+        # P_input enters via transport, not directly into P_th
+        p_th = mn * pn + p_rad_raw + p_wall + eta_p * p_pump
+        p_et = eta_th * p_th + p_dee
+        p_sub = f_sub * p_et
+        return p_et - p_sub - p_recirc_base - pi_eff / eta_pin
+
+    # Analytical dP_net/dP_fus (piecewise constant — function is piecewise linear)
+    def _dp_net(pf):
+        pa = ash_frac * pf
+        capped = p_rad_raw >= pa + p_input
+        # Uncapped: p_input_eff = p_input (constant), transport active
+        dp_uncapped = (1.0 - f_sub) * (
+            eta_th * (mn * neutron_frac + (1.0 - f_dec) * ash_frac)
+            + f_dec * eta_de * ash_frac
+        )
+        # Capped: p_input_eff = p_rad - p_ash → dp_input_eff/dp_fus = -ash_frac
+        # transport = 0, p_th = mn*nf*pf + p_rad + eta_p*p_pump
+        dp_capped = (1.0 - f_sub) * eta_th * mn * neutron_frac + ash_frac / eta_pin
+        return jnp.where(capped, dp_capped, dp_uncapped)
+
+    # Step 5: Linear initial guess (uncapped assumption — P_input in transport)
+    c_et = (
+        eta_th * (mn * neutron_frac + (1.0 - f_dec) * ash_frac)
+        + f_dec * eta_de * ash_frac
+    )
+    c_et0 = eta_th * (
+        f_dec * p_rad_raw + (1.0 - f_dec) * p_input + eta_p * p_pump
+    ) + f_dec * eta_de * (p_input - p_rad_raw)
+    p_recirc_init = p_recirc_base + p_input / eta_pin
+    p_fus = (p_net_target + p_recirc_init - (1.0 - f_sub) * c_et0) / (
+        (1.0 - f_sub) * c_et
     )
 
-    # Step 4: Solve p_net = (c_et - c_den) * p_fus + (c_et0 - c_den0)
-    p_fus = (p_net_target - c_et0 + c_den0) / (c_et - c_den)
+    # Step 6: Newton refinement (converges in ≤2 for piecewise-linear)
+    for _ in range(4):
+        residual = _p_net(p_fus) - p_net_target
+        dp = _dp_net(p_fus)
+        p_fus = p_fus - residual / dp
+
     return p_fus
 
 
@@ -672,6 +839,7 @@ def ife_forward_power_balance(
         p_et=p_et,
         p_loss=p_loss,
         p_net=p_net,
+        p_input=0.0,
         p_pump=p_pump,
         p_sub=p_sub,
         p_aux=p_aux,
@@ -852,6 +1020,7 @@ def mif_forward_power_balance(
         p_et=p_et,
         p_loss=p_loss,
         p_net=p_net,
+        p_input=0.0,
         p_pump=p_pump,
         p_sub=p_sub,
         p_aux=p_aux,

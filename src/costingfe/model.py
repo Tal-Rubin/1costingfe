@@ -1,5 +1,7 @@
 """Top-level CostModel API: wires all 5 layers together."""
 
+import math
+
 import jax
 import jax.numpy as jnp
 
@@ -94,6 +96,33 @@ class CostModel:
                 fw_area=params.get("fw_area", 0.0),
             )
 
+            # Synchrotron geometry: for mirrors (axis_t=0), use L/(2*pi)
+            R_major = params.get("axis_t", 0.0)
+            L = params.get("chamber_length", 0.0)
+            R_major = jnp.where(R_major > 0, R_major, L / (2 * math.pi))
+            a_minor = params.get("plasma_t", 0.0)
+            sync_kw = dict(
+                R_major=R_major,
+                a_minor=a_minor,
+                kappa=params.get("elon", 1.0),
+                R_w=params.get("R_w", 0.6),
+            )
+
+            # Plasma radiation parameters (from YAML defaults or user overrides)
+            def _to_num(v, default):
+                """str→float (PyYAML parses '5e19' as str); pass Tracers."""
+                if v is None:
+                    return default
+                return float(v) if isinstance(v, str) else v
+
+            rad_kw = dict(
+                n_e=_to_num(params.get("n_e"), 1.0e20),
+                T_e=_to_num(params.get("T_e"), 15.0),
+                Z_eff=_to_num(params.get("Z_eff"), 1.5),
+                plasma_volume=_to_num(params.get("plasma_volume"), 500.0),
+                B=_to_num(params.get("B"), 5.0),
+            )
+
             p_fus = mfe_inverse_power_balance(
                 p_net_target=p_net_per_mod,
                 fuel=self.fuel,
@@ -111,7 +140,9 @@ class CostModel:
                 p_trit=params["p_trit"],
                 p_house=params["p_house"],
                 p_cryo=params["p_cryo"],
+                **rad_kw,
                 **impurity_kw,
+                **sync_kw,
             )
             pt = mfe_forward_power_balance(
                 p_fus=p_fus,
@@ -130,7 +161,9 @@ class CostModel:
                 p_trit=params["p_trit"],
                 p_house=params["p_house"],
                 p_cryo=params["p_cryo"],
+                **rad_kw,
                 **impurity_kw,
+                **sync_kw,
             )
 
         elif self.family == ConfinementFamily.IFE:
@@ -269,6 +302,10 @@ class CostModel:
                 Z_eff=params.get("Z_eff", 1.5),
                 plasma_volume=plasma_state.V_plasma,
                 B=B,
+                R_major=R,
+                a_minor=a,
+                kappa=kappa,
+                R_w=params.get("R_w", 0.6),
                 **impurity_kw,
             )
         else:

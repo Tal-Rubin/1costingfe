@@ -14,7 +14,7 @@
 \usepackage{microtype}
 \usepackage{cleveref}
 \usepackage{graphicx}
-\usepackage{natbib}
+\usepackage[numbers]{natbib}
 \usepackage{doi}
 \usepackage{tikz}
 
@@ -81,7 +81,7 @@ We present \textsc{1costingfe}, a JAX-based costing framework for fusion power p
 that computes the levelized cost of electricity (LCOE) from customer-level requirements
 across all major confinement families and fuel cycles.
 The framework implements the Code of Accounts Structure (CAS)
-established by the Generation~IV Economic Modeling Working Group and adapted for fusion 
+established by the Generation~IV Economic Modeling Working Group and adapted for fusion
 by Schulte et~al.\ and the ARIES program, and adopted by the ARPA-E-funded pyfecons framework
 of Woodruff Scientific.
 The purpose of \textsc{1costingfe}, beyond enabling extraction of exact gradients and built-in uncertainty analysis via JAX,
@@ -120,8 +120,8 @@ cost overruns and schedule delays \citep{eashgates2020}. Applying this
 framework to fusion introduces two further challenges:
 \begin{enumerate}
 \item No combination of confinement approach (magnetic, inertial,
-  magneto-inertial), system (tokamak, stellarator, laser-driven, etc.) 
-  and fuel cycle (DT, DD, D${}^3$He, or p${}^{11}$B) has yet
+  magneto-inertial), system (tokamak, stellarator, laser-driven, etc.)
+  and fuel cycle (D-T, D-D, D-${}^3$He, or p-${}^{11}$B) has yet
   demonstrated sustained net electricity generation, and it remains unclear
   which will prove commercially viable.
 \item Most proposed fusion plant designs are pre-conceptual, with
@@ -139,7 +139,7 @@ input parameter in a single backward pass - and vectorized evaluation over
 parameter sweeps and Monte Carlo samples. These capabilities transform
 sensitivity analysis from a computational bottleneck into a routine
 operation, enabling rapid identification of the design levers with the
-greatest leverage on cost. 
+greatest leverage on cost.
 
 We are entering a phase of fusion development where fusion power plants are being designed,
 not only experiments meant to determine the plasma physics and demonstrate scientific breakeven.
@@ -163,9 +163,9 @@ to the public, as they contain sensitive information about their design and
 its maturity.
 
 Certain inputs to the cost model are well constrained regardless of design
-choice. The fuel nuclear physics: cross sections, energy per reaction, and 
-products are immutable. Raw material isotope mix and enrichment ease are 
-well characterized and unlikely to shift dramatically, though some cost 
+choice. The fuel nuclear physics: cross sections, energy per reaction, and
+products are immutable. Raw material isotope mix and enrichment ease are
+well characterized and unlikely to shift dramatically, though some cost
 reduction through learning is expected if a fusion plant design is successful.
 Materials science for fusion-specific alloys is expected to lag behind deployment,
 owing to the current lack of testing facilities for neutron irradiation and high heat fluxes,
@@ -176,8 +176,8 @@ than a design parameter, and a high cost of capital strongly incentivizes
 designs with lower capital costs and faster construction, even at the
 expense of higher operating costs.
 
-The \textsc{1cfe} initiative to search for corridors through which fusion energy can reach the 
-optimistic price target of 1~cent/kWh must balance technological optimism regarding the 
+The \textsc{1cfe} initiative to search for corridors through which fusion energy can reach the
+optimistic price target of 1~cent/kWh must balance technological optimism regarding the
 potential of medium-to-high Technology Readiness Level (TRL) concepts with healthy skepticism
 regarding very early stage physics. As an example, untested direct energy conversion methods are
 not specifically considered at this stage, but the potential for their development and deployment is not ruled out.
@@ -203,17 +203,16 @@ costing parameters for specific implementations, and a backcasting dashboard
 for target-driven design exploration.
 
 The remainder of this paper is organized as follows.
-\Cref{sec:methodology} presents the economics module, the physics
-module, and the cost account methodology, with detailed treatment of
+\Cref{sec:lcoe} presents the economics module,
+\Cref{sec:physics-module} the physics module,
+\Cref{sec:tokamak-model} the 0D tokamak model, and
+\Cref{sec:cas} the cost account structure, with detailed treatment of
 the accounts for which we have completed independent justification
 studies.
 
 
 %% ============================================================
-\section{Methodology}
-\label{sec:methodology}
-
-\subsection{Economics Module}
+\section{Economics Module}
 \label{sec:lcoe}
 
 The levelized cost of electricity is the constant electricity price at
@@ -246,7 +245,7 @@ engineering coefficients is described in the physics module
 \Cref{fig:cashflow} illustrates the cash-flow structure. Total capital
 expenditure (CAPEX) is disbursed during the construction period, after
 which revenue from electricity sales and annual operating expenditure
-(OPEX) flow in opposite directions over the plant lifetime. 
+(OPEX) flow in opposite directions over the plant lifetime.
 
 \begin{figure}[htbp]
 \centering
@@ -296,7 +295,7 @@ which revenue from electricity sales and annual operating expenditure
 \label{fig:cashflow}
 \end{figure}
 
-\subsubsection{Capital Recovery Factor}
+\subsection{Capital Recovery Factor}
 
 The Capital Recovery Factor (CRF) converts a present-value capital
 investment into equal annual payments over the plant lifetime:
@@ -311,7 +310,7 @@ $n$ is the plant operating lifetime in years. At reference conditions
 ($i = \refWACC$, $n = \pgfmathprintnumber[precision=0]{\refN}$~yr),
 CRF $= \pgfmathprintnumber[precision=4]{\refCRF}$.
 
-\subsubsection{Annualized Capital Cost}
+\subsection{Annualized Capital Cost}
 \label{sec:capex-annual}
 
 Capital expenditure is disbursed over the construction period $T_c$
@@ -349,7 +348,7 @@ C_{\text{annual}} = \text{CRF}(i, n) \times (C + \text{IDC})
 $T_c = \pgfmathprintnumber[precision=0]{\refTc}$~yr), the IDC adds
 \pgfmathprintnumber[precision=1]{\refIDCpct}\% to the overnight cost.
 
-\subsubsection{Levelized Annual Operating Cost}
+\subsection{Levelized Annual Operating Cost}
 \label{sec:lac}
 
 Annual operating costs (maintenance, fuel, and manpower) are stated in constant
@@ -402,37 +401,37 @@ when the growing annuity is neglected.
 
 
 %% ------------------------------------------------------------
-\subsection{Physics Module}
+\section{Physics Module}
 \label{sec:physics-module}
 
 The denominator of the LCOE (\cref{eq:lcoe}) is the annual saleable
 electricity, which depends on the net electric power $P_{\text{net}}$ and plant availability.
 The purpose of the physics module is computing $P_{\text{net}}$ from
 device and plasma parameters, given a confinement concept and fuel cycle.
-A computation of the plant availability would also fit in this, or an Engineering module, 
+A computation of the plant availability would also fit in this, or an Engineering module,
 but requires a dedicated model incorporating the specifics of a design (e.g. maintainability, accessibility, component failure modes).
 
 Currently, the physics module is under development, and has some sections
 already implemented. The power balance section is complete and concept-agnostic,
-while the plasma performance section is being developed in parallel with the 
+while the plasma performance section is being developed in parallel with the
 first confinement-specific layer: a zero-dimensional tokamak equilibrium model.
 
-The power balance section of the physics module computes $P_{\text{net}}$ 
+The power balance section of the physics module computes $P_{\text{net}}$
 from the fusion power $P_{\text{fus}}$ for the four fusion fuels by tracking
-every energy channel from the plasma to the grid: energy split between fusion ash and neutrons, 
+every energy channel from the plasma to the grid: energy split between fusion ash and neutrons,
 radiation losses, blanket multiplication, thermal and direct energy conversion, and
-recirculating power. 
+recirculating power.
 
-Many concepts will deviate significantly from the defaults - a non-Maxwellian 
+Many concepts will deviate significantly from the defaults - a non-Maxwellian
 deuterium plasma may alter the burn rates of the secondary D-D reactions,
 or a doped plasma may alter the radiation losses or the plasma optical thickness
-\citep{frank2022}. So these and other coefficients are exposed as first-class 
+\citep{frank2022}. So these and other coefficients are exposed as first-class
 parameters amenable to sensitivity analysis via automatic differentiation.
 
 Lumped efficiency parameters are used for characterizing the power flow and thermal cycle.
 A more involved power plant thermodynamics model could be implemented in the future,
-which would allow the selection of a thermal cycle (Bryton vs. Rankine, etc.) and working 
-fluid. 
+which would allow the selection of a thermal cycle (Bryton vs. Rankine, etc.) and working
+fluid.
 
 The power balance above is concept-agnostic: given $P_{\text{fus}}$
 and the engineering coefficients, it produces $P_{\text{net}}$
@@ -447,54 +446,74 @@ The power balance described here applies to magnetic fusion energy
 (MFE) systems; inertial and magneto-inertial variants follow the same
 logic with minor differences noted below.
 
-\subsubsection{Fusion Power Split}
+\subsection{Fusion Power Split}
 
-The fusion power divides into charged products (ash) and neutrons
-according to the reaction kinematics of the fuel cycle. For D-T
-fusion, each reaction releases 17.6~MeV: 3.5~MeV to the alpha
-particle and 14.1~MeV to the neutron, giving a neutron fraction
-of approximately 0.80. Aneutronic fuels such as p-${}^{11}$B
-produce only charged particles (neutron fraction~$\approx 0$).
-\Cref{tab:neutron-fractions} summarizes the primary split for each
-fuel cycle.
+Operating the power plant requires collecting the power leaving the
+plasma and converting it to electricity. The total power exiting the
+plasma is the fusion power $P_{\text{fus}}$ plus the external heating
+power $P_{\text{in}}$ required to sustain the burn. This power leaves
+in three forms: charged particles, neutrons, and photon
+radiation. Neutrons deposit their energy volumetrically in the blanket
+and shielding; charged particles and photons are absorbed by
+plasma-facing surfaces. Most of this energy is converted to electricity
+via a thermal cycle, though a fraction of the charged-particle energy
+may be recovered directly via direct energy conversion (DEC).
+
+The purpose of this calculation is to determine the power in each of
+these channels, which depends on the nuclear physics of the fuel burn.
+The neutron energy fraction
+$f_n \equiv E_n / Q$, where $Q$ is the total energy released by the
+primary reaction and $E_n$ is the portion carried by neutrons.
+For fuel cycles with secondary burns (D-D, D-${}^3$He), $f_n$ is
+generalised to $\bar{E}_n / \bar{E}_{\text{total}}$ using the
+effective averages defined in the subsections below.
+\Cref{tab:fusion-reactions} summarizes the primary reaction
+for each fuel cycle:
 
 \begin{table}[htbp]
-\caption{Fusion power split by fuel cycle (primary reactions only;
-  secondary burn of tritium and ${}^3$He products is included in the
-  full calculation).}
-\label{tab:neutron-fractions}
+\caption{Primary fusion reaction by fuel cycle.}
+\label{tab:fusion-reactions}
 \centering
+\renewcommand{\arraystretch}{1.3}
 \begin{tabular}{lccl}
 \toprule
 Fuel & $Q$ (MeV) & $f_n$ & Products \\
 \midrule
 D-T           & 17.6  & 0.80 & ${}^4$He + n \\
-D-D           & 3.65  & 0.33 & ${}^3$He + n \\
-              &       &      & T + p \\
+D-D           & 3.65  & 0.33 & $\begin{cases} {}^3\text{He} + \text{n} \\ \text{T} + \text{p} \end{cases}$ \\
 D-${}^3$He    & 18.3  & 0.0  & ${}^4$He + p \\
 p-${}^{11}$B  & 8.7   & 0.0  & 3${}^4$He \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\paragraph{D-D secondary burn.}
-The D-D fuel cycle is more complex than the table suggests because both
-branches produce fusion fuels as ash. Branch~1 produces tritium and
-branch~2 produces ${}^3$He, each of which can undergo secondary fusion
-with the background deuterium:
+\subsubsection{Deuterium-tritium (D-T)}
+The D-T reaction is the simplest case: each fusion event releases a
+fixed $Q = 17.6$~MeV, split by momentum conservation into a 3.5~MeV
+alpha particle and a 14.1~MeV neutron ($f_n = 0.80$). The alpha ash
+(${}^4$He) is inert and does not undergo further reactions, so the
+power split is fully determined by the primary kinematics.
 
-\begin{align}
-\label{eq:dd-secondary}
-\text{T} + \text{D} &\to {}^4\text{He}\,(3.5\;\text{MeV})
-  + \text{n}\,(14.1\;\text{MeV}), &\quad Q_{\text{DT}} &= 17.6\;\text{MeV} \\
-{}^3\text{He} + \text{D} &\to {}^4\text{He}\,(3.6\;\text{MeV})
-  + \text{p}\,(14.7\;\text{MeV}), &\quad Q_{\text{D}{}^3\text{He}} &= 18.3\;\text{MeV}
-\end{align}
+\subsubsection{Deuterium-deuterium (D-D)}
+The D-D fuel cycle is the most complex fuel cycle. The primary reaction
+branches into two channels with approximately equal probability, producing
+either tritium and a proton (branch~1) or ${}^3$He and a neutron (branch~2).
+The tritium and ${}^3$He products are themselves fusion fuels that react
+with the majority species of deuterium in the plasma. The deuterium-tritium
+(D-T) reaction has a much higher cross section than the D-D reaction, so the tritium
+from branch~1 undergoes secondary D-T fusion with a burn fraction $f_T$ that
+approaches 1 at typical D-D burn temperatures. The D-${}^3$He reaction
+has a cross section comparable to D-D, so the ${}^3$He product
+from branch~2 undergoes secondary D-${}^3$He fusion with a burn fraction 
+$f_{{}^3\text{He}}$ that is typically lower than $f_T$.
 
-\noindent The fraction of ash that undergoes secondary burn depends on
-the plasma temperature and confinement time; the framework parameterizes
-this through burn fractions $f_T$ and $f_{{}^3\text{He}}$. The effective
-energy per D-D event, averaged over the two primary branches, becomes:
+The effective energy per D-D event, and the split between charged particles and neutrons,
+is determined by the burn fractions of these secondary reactions. 
+The burn fractions depend on the plasma conditions and confinement time, and are
+currently treated as free parameters in the framework, with default values
+informed by typical D-D burn conditions in the literature \citep{huba2016}.
+A detailed plasma model could be added to compute these burn fractions from plasma parameters.
+The effective energy per D-D event, averaged over the two primary branches, becomes:
 
 \begin{equation}
 \label{eq:dd-etotal}
@@ -504,74 +523,118 @@ energy per D-D event, averaged over the two primary branches, becomes:
 \end{equation}
 
 \noindent where $Q_1 = 4.03$~MeV and $Q_2 = 3.27$~MeV are the primary
-branch Q-values. The effective charged-particle energy follows the same
-structure, noting that the secondary D-${}^3$He reaction produces only
-charged particles while the secondary D-T reaction splits between an
-alpha and a neutron. At default burn fractions ($f_T = 0.97$,
-$f_{{}^3\text{He}} = 0.69$), the effective total energy rises from
-3.65~MeV to approximately 18.5~MeV per primary event, and the effective
-neutron fraction increases from 0.33 to approximately 0.44 due to the
-secondary D-T neutrons.
-
-\paragraph{D-${}^3$He side reactions.}
-The D-${}^3$He fuel cycle is nominally aneutronic, but at the
-temperatures required for D-${}^3$He fusion, a fraction $f_{\text{DD}}$
-of the deuterium undergoes D-D side reactions. These side reactions
-produce tritium (branch~1) which can in turn undergo secondary D-T
-fusion, introducing 14.1~MeV neutrons into an otherwise neutron-free
-system. The effective ash fraction is the weighted average of the pure
-D-${}^3$He contribution (fully charged) and the D-D side-reaction
-contribution (with its own secondary burn chain):
+branch Q-values. Each secondary reaction consumes one additional
+deuteron, so the total deuterons consumed per primary D-D event is
+$2 + \tfrac{1}{2} f_T + \tfrac{1}{2} f_{{}^3\text{He}}$.
+The neutron energy per primary D-D event is
 
 \begin{equation}
-\label{eq:dhe3-ash}
-f_{\text{ash}} = (1 - f_{\text{DD}})
-  + f_{\text{DD}} \cdot \frac{\bar{E}_{\text{charged,DD}}}
-                              {\bar{E}_{\text{total,DD}}}
+\label{eq:dd-eneutron}
+\bar{E}_n = \tfrac{1}{2} E_{n,1} + \tfrac{1}{2} f_T \, E_{n,\text{DT}}
 \end{equation}
 
-\noindent where $\bar{E}_{\text{charged,DD}}$ and
-$\bar{E}_{\text{total,DD}}$ include the secondary D-T burn of the
-tritium product (the ${}^3$He product from the D-D side reaction is
-already present in excess and need not be tracked separately). At
-the default D-D fraction $f_{\text{DD}} = 0.07$ and tritium burn
-fraction $f_T = 0.97$, the effective neutron fraction is approximately
-3\%, small but nonzero---and consequential for shielding, activation,
-and tritium breeding requirements.
+\noindent where $E_{n,1} = 2.45$~MeV is the neutron from primary branch~2
+and $E_{n,\text{DT}} = 14.1$~MeV is the neutron from the secondary D-T
+reaction; the secondary D-${}^3$He reaction produces only charged
+particles and contributes no neutrons.
+At default burn fractions ($f_T = 0.97$,
+$f_{{}^3\text{He}} = 0.69$), 2.83 deuterons are consumed per primary
+event, the effective total energy rises from
+3.65~MeV to approximately 18.5~MeV, and the effective
+neutron energy fraction $\bar{E}_n / \bar{E}_{\text{total}}$ increases from
+0.33 to approximately 0.44 due to the secondary D-T neutrons.
 
-\paragraph{p-${}^{11}$B side reactions.}
-The p-${}^{11}$B reaction is nominally aneutronic, but two side channels
-produce neutrons. The ${\sim}2.9$~MeV alpha particles from the primary
-reaction can undergo ${}^{11}$B($\alpha$,n)${}^{14}$N
-($Q = +0.16$~MeV), which is exothermic but suppressed by the Coulomb
-barrier (${\sim}3.2$~MeV); measured cross sections at alpha energies of
-2.5--3.0~MeV are 200--600~mb with significant resonance structure
-\citep{walker1949, prior2017}. The endothermic channel
-${}^{11}$B(p,n)${}^{11}$C ($Q = -2.76$~MeV, threshold 3.02~MeV) is
-accessible to protons in the high-energy tail, though at a much lower
-rate (${\sim}10^{-5}$ relative to the primary reaction). Published
-estimates place the overall neutron fraction at approximately 0.1\% of
-reactions, carrying less than 0.2\% of the total released energy
+\subsubsection{\texorpdfstring{Deuterium-helium 3 (D-${}^3$He)}{Deuterium-helium 3 (D-3He)}}
+The primary D-${}^3$He reaction produces only charged particles
+($Q = 18.3$~MeV). However, at the temperatures required
+for D-${}^3$He fusion, a fraction $f_{\text{DD}}$ of the deuterium
+undergoes D-D side reactions, producing tritium that can in turn
+undergo secondary D-T fusion and introduce 14.1~MeV neutrons into
+an otherwise neutron-free system.
+
+The effective total energy and neutron energy per D-${}^3$He event are:
+
+\begin{equation}
+\label{eq:dhe3-etotal}
+\bar{E}_{\text{total}} = Q_{\text{D}{}^3\text{He}}
+  + f_{\text{DD}} \, \bar{E}_{\text{total,DD}}
+\end{equation}
+
+\begin{equation}
+\label{eq:dhe3-eneutron}
+\bar{E}_n = f_{\text{DD}} \, \bar{E}_{n,\text{DD}}
+\end{equation}
+
+\noindent where $\bar{E}_{\text{total,DD}}$ and
+$\bar{E}_{n,\text{DD}}$ follow the same structure as
+\cref{eq:dd-etotal,eq:dd-eneutron} but with only the tritium
+secondary burn: the ${}^3$He product from D-D branch~2 is already the
+majority species and need not be tracked, so $f_{{}^3\text{He}} = 0$
+and only the D-T secondary (parameterized by $f_T$) contributes
+neutrons. Note that this $f_T$ is a separate parameter from the
+D-D fuel cycle's $f_T$: the tritium burn fraction in a D-${}^3$He
+plasma may differ due to higher operating temperatures.
+This makes the secondary D-T burn of the tritium from D-D
+branch~1 the sole source of neutrons in a D-${}^3$He plasma.
+At the default D-D fraction $f_{\text{DD}} = 0.07$ and tritium burn
+fraction $f_T = 0.97$, the effective neutron energy fraction
+$\bar{E}_n / \bar{E}_{\text{total}}$ is approximately 3\%, small but
+nonzero---and consequential for shielding, activation, and tritium
+breeding requirements.
+
+\subsubsection{\texorpdfstring{Proton-boron 11 (p-${}^{11}$B)}{Proton-boron 11 (p-11B)}}
+The primary p-${}^{11}$B reaction produces three alpha particles
+($Q = 8.68$~MeV) with a broad energy spectrum. \citet{dmitriev2009} reports
+a primary alpha peaking near 4.5~MeV and two secondary alphas from the
+decay of an excited ${}^8$Be intermediate at approximately 2.4~MeV each. These alphas
+are not inert ash but can undergo further reactions with the boron fuel.
+The dominant side reaction is ${}^{11}$B($\alpha$,n)${}^{14}$N ($Q = 0.16$~MeV).
+The Coulomb barrier between $\alpha$ and ${}^{11}$B is ${\sim}3.2$~MeV, which is
+below the primary alpha energy but above the secondary alpha energies.
+Measured total cross sections range from ${\sim}20$ to ${\sim}240$~mb
+over alpha energies of 2--6~MeV, with significant resonance structure
+\citep{prior2017}. A secondary side reaction,
+${}^{11}$B(p,n)${}^{11}$C ($Q = -2.76$~MeV, threshold 3.02~MeV),
+is endothermic and accessible to protons in the high-energy tail at a much lower rate
+(${\sim}10^{-5}$ relative to the primary reaction)
 \citep{putvinski2019}.
 
-The framework models these side reactions via burn fractions
-$f_{\alpha n}$ and $f_{pn}$, analogous to the secondary-burn treatment
-used for D-D fuel. Both default to zero: \citet{ochs2025} show that
-viable p-${}^{11}$B reactors must remove alpha ash on timescales much
-shorter than the energy confinement time to avoid bremsstrahlung
-poisoning, which drastically reduces the population of MeV-scale alphas
-coexisting with the boron fuel and thus suppresses the dominant
-${}^{11}$B($\alpha$,n)${}^{14}$N channel
-\citep{hora2021}.
+The framework parameterizes these via $f_{\alpha n}$ (probability per
+alpha of undergoing ($\alpha$,n)) and $f_{pn}$ (fraction of primary
+events that instead undergo (p,n)). Since each primary event produces
+three alphas, the effective energies per primary event are:
 
+\begin{equation}
+\label{eq:pb11-etotal}
+\bar{E}_{\text{total}} = Q_{\text{pB}} + 3 f_{\alpha n} \, Q_{\alpha n}
+  + f_{pn} \, Q_{pn}
+\end{equation}
 
-\subsubsection{Thermal and Electric Power}
+\begin{equation}
+\label{eq:pb11-eneutron}
+\bar{E}_n = 3 f_{\alpha n} \, E_{n,\alpha} + f_{pn} \, E_{n,p}
+\end{equation}
 
-The charged-particle (ash) power divides into radiation losses
-(bremsstrahlung and synchrotron) and transport power deposited on
-plasma-facing surfaces. The framework computes radiation power from
-plasma parameters assuming an optically thin plasma
-\citep{wesson2011}:
+\noindent where $Q_{\alpha n} = +0.16$~MeV and $Q_{pn} = -2.76$~MeV
+are the side-reaction Q-values, $E_{n,\alpha} \approx 2.2$~MeV and
+$E_{n,p} \approx 0.17$~MeV are the neutron kinetic energies from
+center-of-mass kinematics.
+Both $f_{\alpha n}$ and $f_{pn}$ default to zero:
+\citet{ochs2025} show that viable p-${}^{11}$B reactors must remove
+alpha ash on timescales much shorter than the energy confinement time
+to avoid excessive bremsstrahlung losses, which drastically reduces the
+population of MeV-scale alphas coexisting with the boron fuel and thus
+suppresses the dominant ${}^{11}$B($\alpha$,n)${}^{14}$N channel
+\citep{hora2021}. At the default values, p-${}^{11}$B is treated as
+purely aneutronic.
+
+\subsection{Thermal and Electric Power}
+
+The power deposited in the plasma---charged-particle fusion products
+$P_{\text{cp}}$ plus external heating $P_{\text{in}}$---exits as
+radiation losses (bremsstrahlung, synchrotron, and impurity line
+radiation) and transport power deposited on plasma-facing surfaces.
+Bremsstrahlung power \citep{wesson2011}:
 
 \begin{equation}
 \label{eq:p-brem}
@@ -579,21 +642,55 @@ P_{\text{brem}} = 5.35 \times 10^{-37}\; n_e^2 \, Z_{\text{eff}}
   \sqrt{T_e}\; V \quad [\text{W}]
 \end{equation}
 
+\noindent where $n_e$ is the electron density in m$^{-3}$, $T_e$ the
+volume-averaged electron temperature in keV, $Z_{\text{eff}}$ the
+effective charge, and $V$ the plasma volume in m$^3$.
+
+For synchrotron radiation, the optically thin (Larmor) formula
+grossly overestimates the net loss in MFE plasmas because most
+emission is reabsorbed. The framework uses the global model of
+\citet{albajar2001} with the wall-reflectivity correction of
+\citet{fidone2001}:
+
 \begin{equation}
 \label{eq:p-sync}
-P_{\text{sync}} = 6.2 \times 10^{-22}\; n_e \, T_e^2 \, B^2 \; V
-  \quad [\text{W}]
+P_{\text{sync}} = 3.84 \times 10^{-8}\;
+  C(R_w)\; R\, a^{1.38}\, \kappa^{0.79}\, B^{2.62}\,
+  n_{e0,20}^{0.38}\; T_{e0}\,(16 + T_{e0})^{2.61}\;
+  K\, G
+  \quad [\text{MW}]
 \end{equation}
 
-\noindent where $n_e$ is the electron density in m$^{-3}$, $T_e$ the
-electron temperature in keV, $Z_{\text{eff}}$ the effective charge,
-$B$ the magnetic field in T, and $V$ the plasma volume in m$^3$.
-Synchrotron radiation applies only to MFE; IFE and MIF set
-$P_{\text{rad}} = 0$. This is a naive model: optically thick plasmas
-or those with significant wall reflection would re-absorb a fraction
-of the synchrotron radiation, reducing the effective loss.
+\noindent where $T_{e0}$ and $n_{e0,20}$ are central values (keV
+and $10^{20}$~m$^{-3}$), $R$ the major radius, $a$ the minor
+radius, $\kappa$ the elongation, and $B$ the toroidal field in T.
+The correction factor
+$C(R_w) = (1-R_w)^{0.62}\bigl[1 + 0.12\,T_{e0}\,(1-R_w)^{0.41}/
+p_{a0}^{0.41}\bigr]^{-1.51}$
+captures wall reflectivity $R_w$ and optical thickness via
+$p_{a0} = 6.04 \times 10^3\, a\, n_{e0,20}/B$.
+The profile shape factor $K(\alpha_n, \alpha_T, \beta_T)$ and
+aspect-ratio correction $G(A) = 0.93\,[1 + 0.85\,e^{-0.82\,A}]$
+account for profile peaking and toroidal geometry.
+Although derived for tokamak geometry, the formula is applied to all
+MFE concepts: for stellarators the toroidal geometry is directly
+analogous, while for mirrors the effective major radius is set to
+$R_{\text{eff}} = L/(2\pi)$ (mapping the cylinder length $L$ to a
+torus of equivalent volume) with reduced wall reflectivity to account
+for the open ends. IFE and MIF set $P_{\text{rad}} = 0$.
 
-\paragraph{Impurity line radiation.}
+The Albajar model assumes a thermal (Maxwell--J\"uttner) electron
+distribution. At the high temperatures required for aneutronic fuels
+($T_e \gtrsim 100$~keV), synchrotron drag itself suppresses the
+high-energy electron tail, which is responsible for most of the
+emission at optically thin harmonics \citep{ochs2024}. This
+self-consistent kinetic effect can reduce the net synchrotron loss by
+up to an order of magnitude relative to the thermal prediction. For
+such regimes the user should supply a radiation power override
+informed by kinetic Fokker--Planck modeling rather than rely on the
+Albajar formula.
+
+\subsubsection{Impurity line radiation.}
 In MFE plasmas, line radiation from partially ionized impurities is
 often the dominant radiation loss channel. The framework models this
 via a steady-state sputtering--transport chain connecting the
@@ -650,16 +747,54 @@ P_{\text{line}} = n_e^2 \sum_z f_z \, L_z(T_e) \; V \quad [\text{W}]
 
 \noindent The summation runs over all impurity species (both
 wall-derived and seeded). Cooling curves are tabulated for W, C, Be,
-Mo, Si, Li, Ne, and Ar. The total
-radiated power is capped at the ash power,
-$P_{\text{rad}} = \min(P_{\text{brem}} + P_{\text{sync}} + P_{\text{line}},\; P_{\text{ash}})$,
-and the remainder is the transport power
-$P_{\text{wall}} = P_{\text{ash}} - P_{\text{rad}}$.
+Mo, Si, Li, Ne, and Ar.
 
 All new parameters default to no-op values (null wall material, empty
 seeded impurities), preserving backward compatibility: when no wall
 material is specified, $P_{\text{line}} = 0$ and the radiation model
 reduces to bremsstrahlung plus synchrotron as before.
+
+\subsubsection{Plasma energy balance.}
+
+The total radiated power is
+$P_{\text{rad}} = P_{\text{brem}} + P_{\text{sync}} + P_{\text{line}}$,
+computed at the user-specified electron temperature $T_e$.
+In steady state, the plasma energy balance requires that all power
+entering the plasma (charged-particle fusion products plus external
+heating) equals all power leaving (radiation plus transport to
+plasma-facing surfaces):
+
+\begin{equation}
+\label{eq:plasma-balance}
+P_{\text{cp}} + P_{\text{in}} = P_{\text{rad}} + P_{\text{transport}}
+\end{equation}
+
+\noindent where $P_{\text{cp}}$ is the charged-particle (ash) power and
+$P_{\text{in}}$ is the external heating power. The transport power is
+therefore $P_{\text{transport}} = P_{\text{cp}} + P_{\text{in}} - P_{\text{rad}}$.
+
+If $P_{\text{rad}}$ exceeds $P_{\text{cp}} + P_{\text{in}}$ at the
+specified $T_e$, the user-supplied heating power is insufficient to
+sustain the plasma against radiation losses. Rather than silently
+capping $P_{\text{rad}}$ (which would mask an unphysical operating
+point), the framework increases the effective heating power to the
+minimum needed to close the energy balance:
+
+\begin{equation}
+\label{eq:p-input-eff}
+P_{\text{in,eff}} = \max\!\bigl(P_{\text{in}},\;
+  P_{\text{rad}} - P_{\text{cp}}\bigr)
+\end{equation}
+
+\noindent This ensures $P_{\text{transport}} \geq 0$ and correctly
+penalizes radiation-dominated regimes through increased recirculating
+power: the additional heating must be supplied at wall-plug efficiency
+$\eta_{\text{aux}}$, which raises $P_{\text{recirc}}$ and degrades the
+engineering~$Q$. For example, a p-${}^{11}$B mirror at
+$T_e = 150$~keV requires $P_{\text{in,eff}} \gg P_{\text{in}}$ due to
+synchrotron losses, driving the LCOE well above D-T levels.
+
+\subsubsection{Thermal and electric conversion.}
 
 Neutron power is absorbed in the breeding blanket, where nuclear
 reactions (primarily ${}^6$Li(n,$\alpha$)T) release additional energy
@@ -670,15 +805,17 @@ heat-transfer system is:
 \begin{equation}
 \label{eq:p-thermal}
 P_{\text{th}} = M_n \, P_n + P_{\text{rad}} + P_{\text{wall}}
-              + P_{\text{aux}} + \eta_p \, P_{\text{pump}}
+              + \eta_p \, P_{\text{pump}}
 \end{equation}
 
 \noindent where $P_n$ is the neutron power, $P_{\text{rad}}$ is the
 radiated power reabsorbed by the first wall, $P_{\text{wall}}$ is the
 charged-particle transport power deposited on plasma-facing components,
-$P_{\text{aux}}$ is the injected auxiliary heating power, and
-$\eta_p P_{\text{pump}}$ is the fraction of pumping power deposited as
-heat. A conventional Rankine cycle with thermal efficiency $\eta_{\text{th}}$
+and $\eta_p P_{\text{pump}}$ is the fraction of pumping power deposited
+as heat. The heating power $P_{\text{in}}$ does not appear
+separately---it enters the plasma and exits via the radiation and
+transport channels already included in $P_{\text{th}}$.
+A conventional Rankine cycle with thermal efficiency $\eta_{\text{th}}$
 converts thermal power to gross electric power:
 
 \begin{equation}
@@ -687,7 +824,7 @@ P_{\text{gross}} = \eta_{\text{th}} \, P_{\text{th}}
 \end{equation}
 
 \noindent For systems with direct energy conversion (DEC), a fraction
-$f_{\text{dec}}$ of the charged-particle transport power bypasses the
+$f_{\text{dec}}$ of the transport power bypasses the
 thermal cycle and is converted at efficiency $\eta_{\text{de}}$, and
 the gross electric power becomes
 $P_{\text{gross}} = \eta_{\text{th}} P_{\text{th}} +
@@ -695,21 +832,22 @@ $P_{\text{gross}} = \eta_{\text{th}} P_{\text{th}} +
 DEC is disabled by default ($f_{\text{dec}} = 0$) pending further
 technology maturation.
 
-\subsubsection{Recirculating Power and Net Electric Output}
+\subsection{Recirculating Power and Net Electric Output}
 
 A fraction of the gross electric power is recirculated to sustain
 the plant:
 
 \begin{equation}
 \label{eq:p-recirc}
-P_{\text{recirc}} = \frac{P_{\text{aux}}}{\eta_{\text{aux}}}
+P_{\text{recirc}} = \frac{P_{\text{in,eff}}}{\eta_{\text{aux}}}
   + P_{\text{coils}} + P_{\text{pump}} + P_{\text{cryo}}
   + P_{\text{cool}} + f_{\text{sub}} \, P_{\text{gross}}
   + P_{\text{other}}
 \end{equation}
 
-\noindent where $P_{\text{aux}}/\eta_{\text{aux}}$ is the wall-plug
-power for the heating system, $P_{\text{coils}}$ powers the magnets,
+\noindent where $P_{\text{in,eff}}/\eta_{\text{aux}}$ is the wall-plug
+power for the heating system (using the effective heating power from
+\cref{eq:p-input-eff}), $P_{\text{coils}}$ powers the magnets,
 $P_{\text{cryo}}$ and $P_{\text{cool}}$ serve the cryogenic and cooling
 systems, $f_{\text{sub}} P_{\text{gross}}$ covers balance-of-plant
 subsystems (typically 3\%), and $P_{\text{other}}$ includes tritium
@@ -733,9 +871,55 @@ efficiency, and target fabrication adds a fixed power load. For
 magneto-inertial fusion (MIF), both driver and target/liner fabrication
 power contribute. The power balance structure is otherwise identical.
 
+\subsection{Inverse Power Balance}
+\label{sec:inverse-balance}
+
+The costing model operates in ``inverse'' mode: given a target net
+electric output $P_{\text{net}}^*$, determine the required fusion power
+$P_{\text{fus}}$.  Substituting the forward power balance into
+\cref{eq:p-net} gives $P_{\text{net}}(P_{\text{fus}})$; the inverse
+problem is to find the root
+$P_{\text{net}}(P_{\text{fus}}) = P_{\text{net}}^*$.
+
+For fixed plasma parameters $(n_e, T_e, B)$, the radiated power
+$P_{\text{rad}}$ is independent of $P_{\text{fus}}$.  However, the
+effective heating power (\cref{eq:p-input-eff}) introduces a
+nonlinearity: when $P_{\text{rad}} > P_{\text{cp}} + P_{\text{in}}$,
+the effective heating depends on $P_{\text{cp}} = f_{\text{cp}} \,
+P_{\text{fus}}$ (where $f_{\text{cp}}$ is the charged-particle
+fraction), making $P_{\text{in,eff}}$ a function of $P_{\text{fus}}$.
+The net electric power is therefore piecewise linear in
+$P_{\text{fus}}$, with two regimes:
+
+\begin{enumerate}
+\item \textbf{Uncapped} ($P_{\text{rad}} < P_{\text{cp}} + P_{\text{in}}$):
+  $P_{\text{in,eff}} = P_{\text{in}}$ (constant); the forward balance
+  is linear in $P_{\text{fus}}$ and admits a closed-form solution.
+\item \textbf{Radiation-limited} ($P_{\text{rad}} \geq P_{\text{cp}} + P_{\text{in}}$):
+  $P_{\text{in,eff}} = P_{\text{rad}} - f_{\text{cp}}\,P_{\text{fus}}$;
+  the forward balance is linear with a different slope (increasing
+  $P_{\text{fus}}$ provides more ash power to offset radiation, reducing
+  required heating).
+\end{enumerate}
+
+\noindent The inverse solver uses Newton iteration with an analytical
+piecewise-constant Jacobian, initialized from the closed-form uncapped
+solution.  Because $P_{\text{net}}(P_{\text{fus}})$ is piecewise linear,
+convergence is exact in at most two iterations.  The Newton step is:
+
+\begin{equation}
+P_{\text{fus}}^{(k+1)} = P_{\text{fus}}^{(k)}
+  - \frac{P_{\text{net}}(P_{\text{fus}}^{(k)}) - P_{\text{net}}^*}
+         {\mathrm{d}P_{\text{net}}/\mathrm{d}P_{\text{fus}}\big|_{P_{\text{fus}}^{(k)}}}
+\end{equation}
+
+\noindent where the derivative is computed analytically for each regime
+rather than via automatic differentiation, avoiding nested
+differentiation during sensitivity analysis.
+
 
 %% ------------------------------------------------------------
-\subsection{0D Tokamak Model}
+\section{0D Tokamak Model}
 \label{sec:tokamak-model}
 
 The power balance of the physics module accepts fusion power
@@ -746,9 +930,9 @@ laws. The model is fully JAX-differentiable, enabling gradient-based
 sensitivity analysis of LCOE with respect to machine-level design
 choices ($R$, $a$, $B$, $q_{95}$, etc.).
 
-\subsubsection{DT Reactivity}
+\subsection{D-T Reactivity}
 
-The DT fusion reactivity $\langle\sigma v\rangle$ is evaluated using
+The D-T fusion reactivity $\langle\sigma v\rangle$ is evaluated using
 the analytic parameterization of \citet{boschhale1992}, valid for
 $0.2 \leq T \leq 100$~keV:
 
@@ -764,7 +948,7 @@ $\xi = (B_G^2 / 4\theta)^{1/3}$, $B_G = 34.38$~keV$^{1/2}$ is the
 Gamow constant, and $C_1$--$C_7$ are the tabulated coefficients from
 \citet{boschhale1992}. The reactivity peaks near $T \approx 65$~keV.
 
-\subsubsection{Plasma Equilibrium}
+\subsection{Plasma Equilibrium}
 
 Given major radius $R$, minor radius $a$, elongation $\kappa$,
 toroidal field $B$, and edge safety factor $q_{95}$, the plasma
@@ -790,7 +974,7 @@ n_e = f_{\text{GW}}\,n_{\text{GW}}
 The plasma volume and first-wall area of the elongated torus are
 $V = 2\pi^2 R\,a^2\,\kappa$ and $A_{\text{fw}} = 4\pi^2 R\,a\,\kappa$.
 
-\subsubsection{Fusion Power}
+\subsection{Fusion Power}
 
 For a 50/50 D-T plasma ($n_D = n_T = n_e/2$), the volumetric fusion
 power is:
@@ -802,12 +986,12 @@ P_{\text{fus}} = \tfrac{1}{4}\,n_e^2\,
   \quad [\text{W}]
 \end{equation}
 
-\noindent where $E_{\text{fus}} = 17.58$~MeV per DT reaction.
+\noindent where $E_{\text{fus}} = 17.58$~MeV per D-T reaction.
 This $P_{\text{fus}}$ feeds directly into the fuel-cycle-dependent
-power split (\cref{tab:neutron-fractions}) and the power balance
+power split (\cref{tab:fusion-reactions}) and the power balance
 of \cref{eq:p-thermal}--\cref{eq:p-net}.
 
-\subsubsection{Energy Confinement}
+\subsection{Energy Confinement}
 
 The energy confinement time is evaluated against the IPB98(y,2)
 H-mode scaling \citep{iterphysics1999}:
@@ -831,7 +1015,7 @@ equal temperatures) to the scaling prediction gives the H-factor,
 $H = \tau_E / \tau_{E,98}$, which measures the quality of confinement
 relative to the empirical database.
 
-\subsubsection{Stability and Engineering Limits}
+\subsection{Stability and Engineering Limits}
 
 The normalized beta,
 
@@ -853,7 +1037,7 @@ from a simplified scrape-off-layer model with midplane power width
 $\lambda_q \approx 2$~mm and flux expansion factor $f_{\text{exp}}
 \approx 5$.
 
-\subsubsection{Disruption Model}
+\subsection{Disruption Model}
 
 Disruptions destroy confinement and can cause significant structural
 damage. The model estimates a disruption frequency from the proximity
@@ -872,7 +1056,7 @@ steepness. Each disruption damages a fraction of the first-wall
 component lifetime and incurs 72~hours of downtime, reducing
 effective plant availability.
 
-\subsubsection{Operating Modes}
+\subsection{Operating Modes}
 
 The model supports two operating modes. In \emph{forward mode}, the
 user specifies machine geometry, field, safety factor, Greenwald
@@ -889,7 +1073,7 @@ the resulting LCOE in a single differentiable pass.
 
 
 %% ------------------------------------------------------------
-\subsection{Cost Account Structure}
+\section{Cost Account Structure}
 \label{sec:cas}
 
 The cost account structure maps the financial framework of
@@ -939,7 +1123,7 @@ the ARIES/PyFECONS tradition; their documentation is ongoing.
 
 
 %% ------------------------------------------------------------
-\subsubsection{CAS10: Pre-Construction Costs}
+\subsection{CAS10: Pre-Construction Costs}
 \label{sec:cas10}
 
 CAS10 covers land acquisition, site and plant permits, licensing,
@@ -947,7 +1131,7 @@ engineering studies, and pre-construction reports. It is typically less
 than 1\% of total capital; individual sub-accounts do not warrant
 detailed parametric modeling.
 
-\paragraph{Land and land rights (C11).}
+\subsubsection{Land and land rights (C11).}
 Modern compact fusion plant designs require 20--200 acres, far less
 than the legacy 1{,}000-acre assumption in earlier ARIES studies.
 The CFS ARC project \citep{cfs_arc} plans 100 acres for 400~MWe,
@@ -966,7 +1150,7 @@ eliminates the large-radius emergency planning zone required for
 fission plants \citep{nrc2023}. Aneutronic fuels such as p-${}^{11}$B
 likely fall outside NRC jurisdiction entirely.
 
-\paragraph{Plant licensing (C13).}
+\subsubsection{Plant licensing (C13).}
 Licensing timelines are fuel-dependent and affect first-of-a-kind
 (FOAK) builds by extending the total project time, which flows into
 the levelized annual cost calculation for CAS70 and CAS80.
@@ -990,7 +1174,7 @@ p-${}^{11}$B & 0.0 & No NRC jurisdiction \\
 
 
 %% ------------------------------------------------------------
-\subsubsection{CAS22.01.10: Remote Handling \& Maintenance Equipment}
+\subsection{CAS22.01.10: Remote Handling \& Maintenance Equipment}
 \label{sec:cas2210}
 
 CAS22.01.10 covers the robotic and remotely-operated equipment required
@@ -1009,7 +1193,7 @@ C_{220110} = C_{\text{RH,base}}(f) \times S_{\text{concept}}
 (M\$ at 1~GWe tokamak reference) and $S_{\text{concept}}$ is a
 geometry-dependent scaling factor.
 
-\paragraph{Fuel dependence.}
+\subsubsection{Fuel dependence.}
 Neutron activation determines whether remote handling is needed and how
 heavily equipment must be rad-hardened.
 \Cref{tab:rh-fuel} lists the base costs.
@@ -1030,7 +1214,7 @@ p-${}^{11}$B &  20 & Conventional maintenance equipment (no rad-hardening) \\
 \end{tabular}
 \end{table}
 
-\paragraph{Concept dependence.}
+\subsubsection{Concept dependence.}
 Toroidal vessels (tokamak, stellarator) require articulated multi-axis
 manipulators to reach components through narrow ports, while linear
 geometries (mirror, FRC) permit simpler end-access tooling.
@@ -1039,7 +1223,7 @@ use $S_{\text{concept}} = 0.55$.
 
 
 %% ------------------------------------------------------------
-\subsubsection{CAS22.01.12: Isotope Separation}
+\subsection{CAS22.01.12: Isotope Separation}
 \label{sec:cas2212}
 
 CAS22.01.12 is set to zero for all fuel cycles. All isotope procurement
@@ -1089,7 +1273,7 @@ B-11 (enriched) & 10{,}000 & FOAK estimate (B-10 tails) \\
 
 
 %% ------------------------------------------------------------
-\subsubsection{CAS30: Capitalized Indirect Service Costs}
+\subsection{CAS30: Capitalized Indirect Service Costs}
 \label{sec:cas30}
 
 CAS30 covers construction support services not attributable to specific
@@ -1097,7 +1281,7 @@ plant systems: field indirect costs (equipment rental, temporary
 structures, consumables), construction supervision, and offsite design
 services \citep{emwg2007}.
 
-\paragraph{Literature review.}
+\subsubsection{Literature review.}
 Three methodologies exist in the fusion costing literature:
 
 \begin{enumerate}
@@ -1129,7 +1313,7 @@ series-built fission plants (Korean APR1400, Chinese Hualong~One)
 achieve indirect costs of 12--20\% of TDC, while troubled FOAK
 projects (US Vogtle~3\&4) exceed 35\%.
 
-\paragraph{Adopted model.}
+\subsubsection{Adopted model.}
 We adopt a simpler aggregate model:
 
 \begin{equation}
@@ -1159,14 +1343,14 @@ distinguishable for fusion and is not modeled.
 
 
 %% ------------------------------------------------------------
-\subsubsection{CAS60: Interest During Construction}
+\subsection{CAS60: Interest During Construction}
 \label{sec:cas60}
 
 Interest during construction (IDC) represents the cost of financing
 the plant during the construction period, as introduced in
 \cref{sec:capex-annual}.
 
-\paragraph{Derivation.}
+\subsubsection{Derivation.}
 Assuming the total overnight cost $C$ is spent uniformly over $T_c$ years
 with end-of-year disbursements at annual interest rate $i$, the future
 value at commercial operation date is:
@@ -1188,7 +1372,7 @@ value at commercial operation date is:
 $T_c = \pgfmathprintnumber[precision=0]{\refTc}$~yr),
 $f_{\text{IDC}} = \pgfmathprintnumber[precision=3]{\refIDCfrac}$.
 
-\paragraph{Interaction with CAS90.}
+\subsubsection{Interaction with CAS90.}
 CAS60 and CAS90 must use complementary conventions to avoid
 double-counting construction-period financing. Two valid approaches
 exist:
@@ -1213,7 +1397,7 @@ lump-sum in Option~B), and is consistent with EMWG/ARIES cost reporting
 conventions \citep{emwg2007}.
 
 %% ------------------------------------------------------------
-\subsubsection{CAS70: Annualized O\&M and Replacement}
+\subsection{CAS70: Annualized O\&M and Replacement}
 \label{sec:cas70}
 
 CAS70 comprises two sub-accounts:
@@ -1226,7 +1410,7 @@ CAS70 comprises two sub-accounts:
   each replacement event and annualized via the CRF.
 \end{itemize}
 
-\paragraph{CAS71: Staffing-based O\&M.}
+\subsubsection{CAS71: Staffing-based O\&M.}
 The CAS71 O\&M coefficient is derived from a bottom-up staffing model
 that estimates headcount and compensation by division (operations,
 maintenance, administration, technical, offsite) for each fuel type,
@@ -1254,10 +1438,10 @@ neutron flux. The resulting fuel-dependent coefficients are:
 \toprule
 Fuel & Staff & O\&M (M\$/yr) & O\&M (k\$/MW/yr) & Key drivers \\
 \midrule
-DT   & 117 & 52.0 & 52 & Tritium systems, HP dept, radwaste, remote handling \\
-DD   &  94 & 38.7 & 39 & Reduced neutron flux ($\sim\!\tfrac{1}{3}$ DT), smaller T inventory \\
-DHe3 &  69 & 26.0 & 26 & $\sim$5\% neutron fraction, minimal tritium \\
-pB11 &  59 & 23.6 & 24 & Aneutronic, no tritium, RSO only \\
+D-T   & 117 & 52.0 & 52 & Tritium systems, HP dept, radwaste, remote handling \\
+D-D   &  94 & 38.7 & 39 & Reduced neutron flux ($\sim\!\tfrac{1}{3}$ D-T), smaller T inventory \\
+D-${}^3$He &  69 & 26.0 & 26 & $\sim$5\% neutron fraction, minimal tritium \\
+p-${}^{11}$B &  59 & 23.6 & 24 & Aneutronic, no tritium, RSO only \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -1269,7 +1453,7 @@ twice the conventional CCGT level, reflecting fusion-specific system
 complexity (vacuum, magnets, plasma-facing components) rather than
 regulatory burden.
 
-\paragraph{Levelization.}
+\subsubsection{Levelization.}
 Both sub-accounts are levelized using the growing-annuity procedure
 described in \cref{sec:lac}, which accounts for nominal cost escalation
 over the full plant lifetime. A simpler approach that inflates costs
@@ -1282,7 +1466,7 @@ $n = \pgfmathprintnumber[precision=0]{\refN}$~yr).
 
 
 %% ------------------------------------------------------------
-\subsubsection{CAS90: Annualized Financial Costs}
+\subsection{CAS90: Annualized Financial Costs}
 \label{sec:cas90}
 
 CAS90 converts the total capital investment into an equivalent annual
@@ -1306,6 +1490,91 @@ modeled. The framework thus equates CAS90 with CAS93 (cost of money).
 
 
 %% ============================================================
+
+\appendix
+
+\section{Synchrotron radiation model details}
+\label{app:synchrotron}
+
+This appendix documents the implementation details of the synchrotron
+radiation model summarized in equation~\eqref{eq:p-sync}.
+
+\subsection{Profile assumptions and central-value conversion}
+
+The Albajar model is a model of synchrotron radiation out of a tokamak
+plasma, and it requires central (on-axis) values of electron
+temperature and density, whereas \textsc{1costingfe}'s power balance
+operates on volume-averaged quantities. The assumed radial profiles
+follow the convention of \citet{albajar2001}:
+%
+\begin{equation}
+\label{eq:profile-Te}
+T_e(\rho) = T_{e0}\,(1 - \rho^{\beta_T})^{\alpha_T}, \qquad
+n_e(\rho) = n_{e0}\,(1 - \rho^{2})^{\alpha_n}
+\end{equation}
+%
+where $\rho = r/a$ is the normalized minor radius. For profiles
+depending only on $\rho$, the toroidal volume average reduces exactly
+to $\langle f \rangle = 2\int_0^1 f(\rho)\,\rho\,d\rho$ (the
+$(R + a\rho\cos\theta)$ Jacobian factor integrates out). For
+$\beta_T = 2$ (the default) this gives
+%
+\begin{equation}
+\label{eq:peaking}
+\langle T_e \rangle = \frac{T_{e0}}{1 + \alpha_T}, \qquad
+\langle n_e \rangle = \frac{n_{e0}}{1 + \alpha_n}
+\end{equation}
+%
+The code inverts these relations to obtain central values from the
+volume-averaged inputs: $T_{e0} = \langle T_e \rangle\,(1+\alpha_T)$
+and $n_{e0} = \langle n_e \rangle\,(1+\alpha_n)$. The temperature
+profile shape exponent is fixed at $\beta_T = 2$ (standard parabolic
+profile). Default peaking exponents are $\alpha_T = 1.0$ and
+$\alpha_n = 0.5$, giving peaking factors of 2.0 and 1.5, respectively.
+
+\subsection{Profile shape factor}
+
+The profile shape factor $K$ in equation~\eqref{eq:p-sync} is
+\citep{albajar2001}, evaluated at $\beta_T = 2$:
+%
+\begin{equation}
+\label{eq:K-factor}
+K(\alpha_n, \alpha_T) =
+  (\alpha_n + 3.87\,\alpha_T + 1.46)^{-0.79}\;
+  (1.98 + \alpha_T)^{1.36}\;
+  2^{2.14}\;
+  (2^{1.53} + 1.87\,\alpha_T - 0.16)^{-1.33}
+\end{equation}
+
+\subsection{Aspect ratio correction}
+
+The geometric correction factor $G$ accounts for the finite aspect
+ratio of the torus \citep{albajar2001}:
+%
+\begin{equation}
+\label{eq:G-factor}
+G(A) = 0.93\,\bigl[1 + 0.85\,e^{-0.82\,A}\bigr]
+\end{equation}
+%
+where $A = R/a$ is the aspect ratio. In the large aspect-ratio limit
+$G \to 0.93$.
+
+\subsection{Application to non-tokamak geometries}
+
+For stellarators the formula is applied directly using the
+stellarator's major and minor radii. For magnetic mirrors, which have
+a cylindrical geometry of length $L$ and plasma radius $a$, an
+effective major radius is defined as
+%
+\begin{equation}
+\label{eq:R-eff-mirror}
+R_{\text{eff}} = \frac{L}{2\pi}
+\end{equation}
+%
+This maps the cylinder to a torus of equivalent volume
+($V = 2\pi^2 R a^2 \kappa \to \pi a^2 L$ for $\kappa = 1$). The
+wall reflectivity $R_w$ is reduced for mirrors (default 0.4 vs.\ 0.6
+for tokamaks) to account for radiation escaping through the open ends.
 
 \bibliographystyle{unsrtnat}
 \bibliography{references}

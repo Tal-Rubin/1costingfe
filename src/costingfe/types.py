@@ -94,6 +94,9 @@ class PowerTable:
     p_pump: float  # Pumping power [MW]
     p_sub: float  # Subsystem power [MW]
     p_aux: float  # Auxiliary power [MW]
+    p_input: (
+        float  # Effective heating power [MW] (may exceed user value if P_rad > P_ash)
+    )
     p_coils: float  # Coil power [MW] (MFE)
     p_cool: float  # Cooling power [MW] (MFE)
     p_cryo: float  # Cryogenic system power [MW]
