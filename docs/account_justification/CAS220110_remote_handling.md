@@ -1,7 +1,7 @@
 # CAS220110: Remote Handling & Maintenance Equipment
 
 **Date:** 2026-03-09
-**Status:** Proposed (pending code implementation)
+**Status:** Implemented
 
 ---
 

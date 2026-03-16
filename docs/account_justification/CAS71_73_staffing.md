@@ -281,14 +281,44 @@ The pB11 estimate ($24k/MW/yr) is ~2x gas CCGT and ~half of fission — consiste
 
 ### Values for Cost Model
 
-The following fuel-specific O&M coefficients replace the previous fuel-independent `om_cost_per_mw_yr = 60.0`:
+The following fuel-specific O&M coefficients are at a 1 GWe reference point:
 
-| Parameter | Value (k$/MW/yr) | Justification |
+| Parameter | Value (M$/yr at 1 GWe) | Justification |
 |---|---|---|
 | `om_cost_dt` | 52.0 | Full neutron + tritium operational overhead |
 | `om_cost_dd` | 39.0 | Reduced neutron flux (~1/3 DT), smaller tritium inventory |
 | `om_cost_dhe3` | 26.0 | ~5% neutron fraction, minimal tritium, light HP program |
 | `om_cost_pb11` | 24.0 | Aneutronic, no tritium, RSO-only rad protection |
+
+### Power-Law Scaling with Plant Size
+
+Staffing does not scale linearly with plant capacity. The INL SFR data (Sort_67398) shows significant economy of scale:
+
+| Plant size | Staff | Staff/GWe |
+|-----------|-------|-----------|
+| 165 MWe (1 rx) | 236 | 1,430 |
+| 311 MWe (1 rx) | 236 | 759 |
+| 1,243 MWe (4 rx) | 493 | 397 |
+| 3,108 MWe (10 rx) | 1,040 | 335 |
+
+INL models this as: operations and maintenance staff scale with reactor count, while administration, technical, and offsite staff are 50% fixed + 50% proportional to the O&M headcount change. Fitting a power law (staff ∝ P^α) to the endpoints (165 → 3,108 MWe) gives **α ≈ 0.5**.
+
+The cost model uses this exponent:
+
+```
+annual_om = om_cost(fuel) * (P_net / 1 GWe)^0.5
+```
+
+This produces the expected economy-of-scale behavior — smaller plants have higher per-MW O&M costs due to the fixed staffing component:
+
+| Plant size | DT annual O&M | Effective k$/MW/yr |
+|-----------|--------------|-------------------|
+| 200 MWe | $23.3M/yr | $116 |
+| 500 MWe | $36.8M/yr | $74 |
+| 1,000 MWe | $52.0M/yr | $52 |
+| 2,000 MWe | $73.5M/yr | $37 |
+
+The same exponent is used for CAS40 (capitalized owner's costs), which is also staffing-driven. See `CAS40_capitalized_owners_costs.md`.
 
 ---
 

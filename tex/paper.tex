@@ -711,8 +711,9 @@ Y(E) = Q \left(1 - \left(\frac{E_{\text{th}}}{E}\right)^{2/3}\right)
 \end{equation}
 
 \noindent where $E_{\text{th}}$ is the material-dependent threshold
-energy and $Q$ is a fit coefficient. Below threshold ($E < E_{\text{th}}$),
-$Y = 0$. The steady-state impurity fraction in the core is then:
+energy and $Q$ is an effective fit coefficient that absorbs the
+Thomas--Fermi nuclear stopping cross-section $S_n(\varepsilon)$. Below
+threshold ($E < E_{\text{th}}$), $Y = 0$. The steady-state impurity fraction in the core is then:
 
 \begin{equation}
 \label{eq:f-impurity}
@@ -1106,11 +1107,11 @@ CAS & Description & Method \\
 28 & Digital twin & Fixed cost \\
 29 & Contingency on direct costs & 10\% FOAK, 0\% NOAK \\
 30$^\dagger$ & Indirect service costs & Fraction of CAS20, construction-time scaled \\
-40 & Owner's costs & 5\% of CAS20 \\
+40$^\dagger$ & Owner's costs & Fuel-dependent, staffing-based, power-law scaled \\
 50 & Supplementary costs & Spares, shipping, taxes, decommissioning \\
 60$^\dagger$ & Interest during construction & Uniform-spending IDC formula \\
 70$^\dagger$ & Annualized O\&M + replacement & Growing-annuity levelization \\
-80 & Annualized fuel cost & Fuel-specific consumables, levelized \\
+80$^\dagger$ & Annualized fuel cost & Fuel-specific consumables, burn-fraction corrected, levelized \\
 90$^\dagger$ & Annualized financial costs & CRF $\times$ total capital \\
 \bottomrule
 \end{tabular}
@@ -1343,6 +1344,84 @@ distinguishable for fusion and is not modeled.
 
 
 %% ------------------------------------------------------------
+\subsection{CAS40: Capitalized Owner's Costs}
+\label{sec:cas40}
+
+CAS40 covers one-time costs incurred by the plant owner during
+construction to build an operating organization before commercial
+operation: staff recruitment and training (C41), staff
+housing/relocation (C42), and salary-related costs during the
+pre-operational period (C43) \citep{emwg2007, prosser2024}.
+
+\subsubsection{Relationship to CAS70.}
+CAS40 and CAS70 share the same underlying staff pool but cover
+different time periods. CAS40 is the capital cost of \emph{building}
+the operations team (pre-COD); CAS70 is the annual cost of
+\emph{running} it (post-COD). Both are derived from the same
+fuel-specific staffing analysis (Section~\ref{sec:cas70}), applied
+through different cost models. There is no double-counting.
+
+\subsubsection{Methodology.}
+The INL first-principles SFR cost study \citep{prosser2024}
+estimates CAS40 sub-accounts as:
+\begin{itemize}
+\item C41: 1.5~years of salary for 110\% of staff (IAEA-recommended
+  overhire for training attrition), plus a 25\% recruiting fee.
+\item C42: \$40k relocation cost for 50\% of staff.
+\item C43: Benefits at 57--59\% of salary during the training period.
+\end{itemize}
+Applying this methodology to our fuel-specific staffing estimates
+yields total pre-operational costs that scale as roughly 3.2$\times$
+annual labor-plus-benefits.
+
+\subsubsection{Adopted model.}
+\begin{equation}
+\label{eq:cas40}
+\text{CAS40} = C_{\text{owner}}(f) \times
+               \left(\frac{P_{\text{net}}}{1000}\right)^{0.5}
+\end{equation}
+
+\noindent where $C_{\text{owner}}(f)$ is a fuel-dependent base cost
+(M\$ at 1~GWe reference, 2023~USD) and the exponent 0.5 captures
+staffing economy of scale. \Cref{tab:cas40-fuel} lists the adopted
+values.
+
+\begin{table}[htbp]
+\caption{Capitalized owner's cost by fuel cycle (1~GWe reference).}
+\label{tab:cas40-fuel}
+\centering
+\begin{tabular}{lrrl}
+\toprule
+Fuel & Staff & Base (M\$) & Key drivers \\
+\midrule
+D-T          & 117 & 39 & Tritium systems training, HP dept, radwaste, remote handling \\
+D-D          &  94 & 31 & Reduced neutron/tritium scope \\
+D-${}^3$He   &  69 & 23 & Light HP program, minor tritium \\
+p-${}^{11}$B &  59 & 20 & Near-industrial, RSO only \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{Power-law scaling.}
+Staffing does not scale linearly with plant capacity. The INL SFR
+data \citep{prosser2024} shows 236~staff at 165~MWe rising to
+1{,}040~staff at 3{,}108~MWe---a power-law exponent of
+$\alpha \approx 0.5$, reflecting the large fixed component in
+administration, technical, and offsite divisions. This same exponent
+applies to CAS70 (annual O\&M), since both accounts are driven by
+total staff count.
+
+\subsubsection{Comparison with prior methods.}
+PyFECONS uses the same LSA factor (\texttt{fac\_91}) for both CAS32
+(construction supervision) and CAS40 (owner's costs)---fundamentally
+different scopes. This artifact of the old ARIES Account~91 mapping
+produces CAS40 $\approx$ 11--15\% of TDC, implicitly assuming
+fission-level staffing ($\sim$500 per GWe). Our staffing-based
+approach yields 1--2\% of TDC for fusion, correctly reflecting the
+4--8$\times$ reduction in headcount under Part~30 regulation.
+
+
+%% ------------------------------------------------------------
 \subsection{CAS60: Interest During Construction}
 \label{sec:cas60}
 
@@ -1453,6 +1532,20 @@ twice the conventional CCGT level, reflecting fusion-specific system
 complexity (vacuum, magnets, plasma-facing components) rather than
 regulatory burden.
 
+Annual O\&M scales with plant size via a power law:
+\begin{equation}
+\label{eq:cas71}
+\text{CAS71}_{\text{annual}} = C_{\text{O\&M}}(f) \times
+               \left(\frac{P_{\text{net}}}{1000}\right)^{0.5}
+\end{equation}
+
+\noindent where the exponent 0.5 captures staffing economy of scale.
+The INL SFR data \citep{prosser2024} shows staff scaling from
+236~at 165~MWe to 1{,}040 at 3{,}108~MWe ($\alpha \approx 0.5$),
+driven by the large fixed component in administration, technical, and
+offsite divisions. The same exponent is used for CAS40
+(\cref{sec:cas40}), which shares the same staffing basis.
+
 \subsubsection{Levelization.}
 Both sub-accounts are levelized using the growing-annuity procedure
 described in \cref{sec:lac}, which accounts for nominal cost escalation
@@ -1463,6 +1556,68 @@ levelized O\&M and fuel costs by approximately
 \pgfmathprintnumber[precision=0]{\refUnderestimate}\% at reference
 conditions ($g = \refG$,
 $n = \pgfmathprintnumber[precision=0]{\refN}$~yr).
+
+
+%% ------------------------------------------------------------
+\subsection{CAS80: Annualized Fuel Cost}
+\label{sec:cas80}
+
+CAS80 covers the annualized cost of fuel isotope consumables. The
+annual fuel expenditure is computed from the fusion power, the
+energy per reaction, and the unit cost of fuel isotopes:
+
+\begin{equation}
+\label{eq:cas80-base}
+A_{\text{fuel}} = N_{\text{mod}} \cdot P_{\text{fus}} \cdot
+  \frac{8760 \times 3600 \cdot f_{\text{avail}} \cdot c_{\text{rxn}}}
+       {Q_{\text{eff}} \cdot e_{\text{MeV}}}
+\end{equation}
+
+\noindent where $c_{\text{rxn}}$ is the cost per fusion reaction
+(summing the unit costs of the consumed isotopes weighted by their
+per-reaction masses), $Q_{\text{eff}}$ is the effective energy per
+reaction in MeV (fuel-dependent; see \cref{tab:fusion-reactions}), and
+$e_{\text{MeV}} = 1.602 \times 10^{-13}$~J/MeV. The factor
+$8760 \times 3600$ converts one year to seconds. Fuel-specific
+unit costs are listed in \cref{tab:fuel-prices}.
+
+\subsubsection{Burn fraction and fuel recovery.}
+\Cref{eq:cas80-base} implicitly assumes that all injected fuel
+undergoes fusion. In practice, only a fraction $\beta_{\text{burn}}$
+of the injected fuel fuses per plasma pulse or confinement cycle;
+the remainder must be exhausted, processed, and either recycled or
+repurchased. The fuel recovery fraction $\eta_{\text{rec}}$ captures
+the efficiency of recycling unburned fuel from the exhaust stream.
+The effective annual fuel cost becomes:
+
+\begin{equation}
+\label{eq:cas80-burn}
+A_{\text{fuel}}^{\text{eff}} = A_{\text{fuel}} \left[
+  1 + \frac{1 - \beta_{\text{burn}}}{\beta_{\text{burn}}}
+      \left(1 - \eta_{\text{rec}}\right)
+\right]
+\end{equation}
+
+\noindent The multiplier equals unity when either
+$\beta_{\text{burn}} = 1$ (complete burn) or
+$\eta_{\text{rec}} = 1$ (perfect fuel recovery). For inexpensive
+fuels (deuterium at \$2{,}175/kg), the correction is negligible.
+For expensive fuels---particularly He-3 at \$2{,}000{,}000/kg---
+the multiplier is economically significant: at
+$\beta_{\text{burn}} = 0.10$ and $\eta_{\text{rec}} = 0.95$,
+the effective fuel cost is $1.45\times$ the full-burn estimate;
+at $\beta_{\text{burn}} = 0.05$ and $\eta_{\text{rec}} = 0.90$,
+it rises to $2.9\times$.
+
+Default values are $\beta_{\text{burn}} = 0.05$ and
+$\eta_{\text{rec}} = 0.95$, reflecting typical MCF plasma
+conditions where single-pass burn fractions of 1--10\% are
+expected and modern exhaust fuel processing achieves high
+recovery rates.
+
+\subsubsection{Levelization.}
+CAS80 is levelized using the same growing-annuity procedure as
+CAS70 (\cref{sec:lac}).
 
 
 %% ------------------------------------------------------------

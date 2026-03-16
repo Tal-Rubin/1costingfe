@@ -1,7 +1,7 @@
 # CAS30: Capitalized Indirect Service Costs
 
 **Date:** 2026-02-20
-**Status:** Research complete, implementation pending
+**Status:** Implemented
 
 ## Account Structure
 
