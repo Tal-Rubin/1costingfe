@@ -206,7 +206,7 @@ def cas70_om(
     """
     # CAS71: Annual O&M — fuel-dependent staffing-based coefficient
     # Power-law exponent 0.5: staffing economy of scale (INL SFR data).
-    # Source: docs/account_justification/CAS71_73_staffing.md
+    # Source: docs/account_justification/CAS70_staffing_and_om_costs.md
     annual_om = cc.om_cost(fuel) * (p_net / 1000.0) ** 0.5  # M$
     t_project = _total_project_time(cc, construction_time, fuel, noak)
     cas71 = levelized_annual_cost(

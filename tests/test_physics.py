@@ -1,7 +1,7 @@
 import jax
 
-from costingfe.layers.physics import (
-    ash_neutron_split,
+from costingfe.layers.physics import ash_neutron_split
+from costingfe.layers.radiation import (
     compute_impurity_fraction,
     compute_p_line,
     compute_p_rad,

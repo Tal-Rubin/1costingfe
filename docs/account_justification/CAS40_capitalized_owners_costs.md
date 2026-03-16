@@ -36,7 +36,7 @@ CAS40 and CAS70 share the same underlying staff — the people recruited and tra
 | CAS43 | Pre-COD | One-time capital | Salary + benefits during ~1.5yr training period |
 | CAS71-73 | Post-COD | Annual recurring | Salary + benefits during plant operation |
 
-There is no double-counting: CAS40 is the cost of *building* the operating organization; CAS70 is the cost of *running* it. Both are derived from the same staffing analysis (see `CAS71_73_staffing.md`) but cover different time periods. The INL Sort_67398 report uses exactly this approach — the same staff headcount drives both accounts.
+There is no double-counting: CAS40 is the cost of *building* the operating organization; CAS70 is the cost of *running* it. Both are derived from the same staffing analysis (see `CAS70_staffing_and_om_costs.md`) but cover different time periods. The INL Sort_67398 report uses exactly this approach — the same staff headcount drives both accounts.
 
 ## Source Documents
 
@@ -69,7 +69,7 @@ There is no double-counting: CAS40 is the cost of *building* the operating organ
    - At BOAK total of $4,537/kWe (Accounts 10-60), CAS40 is **5.8% of TCIC**.
    - **493 staff at 1,243 MWe** drives the CAS40 total — staffing is the dominant cost driver.
 
-5. **CAS71-73 staffing analysis.** `docs/account_justification/CAS71_73_staffing.md`.
+5. **CAS71-73 staffing analysis.** `docs/account_justification/CAS70_staffing_and_om_costs.md`.
    - Fuel-specific staffing estimates at 1 GWe reference, derived from S-PRISM fission baseline scaled by regulatory burden and fusion-specific complexity.
    - The same staff that CAS40 recruits and trains are the staff that CAS70 pays annually.
 
@@ -127,7 +127,7 @@ Verification: INL CAS40 (pre-contingency) = $218/kWe × 1,243 MWe = $271M. Annua
 
 ### Step 1: Staffing inputs from CAS71-73 analysis
 
-From `CAS71_73_staffing.md`, at 1 GWe reference:
+From `CAS70_staffing_and_om_costs.md`, at 1 GWe reference:
 
 | Fuel | Staff | Annual Labor+Benefits | Annual Salary | Annual Benefits |
 |------|-------|-----------------------|---------------|-----------------|

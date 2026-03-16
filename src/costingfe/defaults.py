@@ -126,7 +126,7 @@ class CostingConstants:
     decommissioning: float = 5.0
 
     # CAS70 — Annual O&M cost (M$/yr at 1 GWe reference, 2023$)
-    # Source: CAS71_73_staffing.md — staffing-based build-up by fuel type
+    # Source: CAS70_staffing_and_om_costs.md — staffing-based build-up by fuel type
     # Power-law scaling: annual_om = om_cost(fuel) * (P_net / 1 GWe)^0.5
     om_cost_dt: float = 52.0  # Full neutron + tritium operational overhead
     om_cost_dd: float = 39.0  # ~1/3 DT neutron flux, smaller tritium inventory
