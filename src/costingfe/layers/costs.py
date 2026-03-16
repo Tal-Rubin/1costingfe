@@ -132,10 +132,23 @@ def cas30_indirect(cc, cas20, construction_time):
     )
 
 
-# REQUIRES CHECKING
-def cas40_owner(cas20):
-    """CAS40: Owner's costs (~5% of direct). Returns M$."""
-    return 0.05 * cas20
+def cas40_owner(cc, fuel, p_net):
+    """CAS40: Capitalized owner's costs. Returns M$.
+
+    Pre-operational costs to recruit, train, house, and compensate
+    the plant operations staff before COD.  Derived from the CAS71-73
+    staffing analysis applied through the INL CAS40 methodology
+    (1.5 yr pre-op, 10 % overhire, 25 % recruiting, 58 % benefits).
+
+    Uses the SAME staffing basis as CAS70 annual O&M — CAS40 covers
+    pre-COD costs, CAS70 covers post-COD costs.  No double-counting.
+
+    Power-law exponent 0.5 reflects staffing economy of scale
+    (INL SFR data: 165 MWe to 3108 MWe, alpha ~ 0.5).
+
+    See docs/account_justification/CAS40_capitalized_owners_costs.md
+    """
+    return cc.owner_cost(fuel) * (p_net / 1000.0) ** 0.5
 
 
 # REQUIRES CHECKING
@@ -192,8 +205,9 @@ def cas70_om(
            years via availability.
     """
     # CAS71: Annual O&M — fuel-dependent staffing-based coefficient
+    # Power-law exponent 0.5: staffing economy of scale (INL SFR data).
     # Source: docs/account_justification/CAS71_73_staffing.md
-    annual_om = cc.om_cost(fuel) * p_net * 1000 / 1e6  # M$
+    annual_om = cc.om_cost(fuel) * (p_net / 1000.0) ** 0.5  # M$
     t_project = _total_project_time(cc, construction_time, fuel, noak)
     cas71 = levelized_annual_cost(
         annual_om, interest_rate, inflation_rate, lifetime_yr, t_project
@@ -230,6 +244,8 @@ def cas80_fuel(
     noak,
     dd_f_T=DD_F_T_DEFAULT,
     dd_f_He3=DD_F_HE3_DEFAULT,
+    burn_fraction=None,
+    fuel_recovery=None,
 ):
     """CAS80: Annualized fuel cost. Fuel-specific consumable costs.
 
@@ -270,6 +286,14 @@ def cas80_fuel(
         * cost_per_rxn
         / (q_eff * MEV_TO_JOULES)
     )
+
+    # Burn-fraction correction: unburned fuel not recovered must be repurchased.
+    # multiplier = 1 + (1 - burn_fraction) / burn_fraction * (1 - fuel_recovery)
+    bf = burn_fraction if burn_fraction is not None else cc.burn_fraction
+    fr = fuel_recovery if fuel_recovery is not None else cc.fuel_recovery
+    fuel_loss = (1.0 - bf) / bf * (1.0 - fr)
+    annual_musd = annual_musd * (1.0 + fuel_loss)
+
     t_project = _total_project_time(cc, construction_time, fuel, noak)
     return levelized_annual_cost(
         annual_musd, interest_rate, inflation_rate, lifetime_yr, t_project

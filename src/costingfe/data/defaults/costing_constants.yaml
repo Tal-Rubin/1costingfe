@@ -117,6 +117,14 @@ contingency_rate_noak: 0.0
 indirect_fraction: 0.20           # fraction of CAS20 (total direct cost)
 reference_construction_time: 6.0  # years (scaling baseline)
 
+# CAS40 — Capitalized owner's costs (M$ at 1 GWe reference, 2023$)
+# Source: CAS40_capitalized_owners_costs.md — INL methodology on CAS71-73 staffing
+# Power-law scaling: CAS40 = owner_cost(fuel) * (P_net / 1 GWe)^0.5
+owner_cost_dt: 39.0        # 117 staff, full neutron + tritium pre-op training
+owner_cost_dd: 31.0        # 94 staff, reduced tritium scope
+owner_cost_dhe3: 23.0      # 69 staff, light HP program
+owner_cost_pb11: 20.0      # 59 staff, near-industrial, RSO-only
+
 # CAS50
 shipping: 1.0                # M$
 spare_parts_frac: 0.01
@@ -124,8 +132,9 @@ taxes: 0.5                   # M$
 insurance_cost: 0.5          # M$
 decommissioning: 5.0         # M$
 
-# CAS70 — Annual O&M cost (k$/MW/yr at 1 GWe reference, 2023$)
+# CAS70 — Annual O&M cost (M$/yr at 1 GWe reference, 2023$)
 # Source: CAS71_73_staffing.md — staffing-based build-up by fuel type
+# Power-law scaling: annual_om = om_cost(fuel) * (P_net / 1 GWe)^0.5
 om_cost_dt: 52.0       # Full neutron + tritium operational overhead
 om_cost_dd: 39.0       # ~1/3 DT neutron flux, smaller tritium inventory
 om_cost_dhe3: 26.0     # ~5% neutron fraction, minimal tritium
@@ -142,3 +151,7 @@ u_he3: 2000000.0             # $/kg, He-3 ($2,000/g — optimistic self-producti
 u_protium: 5.0               # $/kg, commodity H2
 u_b11: 10000.0               # $/kg, FOAK enriched B-11 (no industrial supply)
 u_b11_noak: 75.0             # $/kg, NOAK B-11 (industrial chemical exchange distillation)
+
+# CAS80 — fuel utilization
+burn_fraction: 0.05          # Fraction of injected fuel that undergoes fusion per pass
+fuel_recovery: 0.95          # Fraction of unburned fuel recovered and recycled

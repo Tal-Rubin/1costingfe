@@ -91,13 +91,12 @@ class CostModel:
                 wall_material=wall_mat,
                 seeded_impurities=params.get("seeded_impurities") or None,
                 T_edge=params.get("T_edge", 0.05),
-                f_screen=params.get("f_screen", 0.01),
                 tau_ratio=params.get("tau_ratio", 3.0),
                 fw_area=params.get("fw_area", 0.0),
             )
 
-            # Synchrotron geometry: for mirrors (axis_t=0), use L/(2*pi)
-            R_major = params.get("axis_t", 0.0)
+            # Synchrotron geometry: for mirrors (R0=0), use L/(2*pi)
+            R_major = params.get("R0", 0.0)
             L = params.get("chamber_length", 0.0)
             R_major = jnp.where(R_major > 0, R_major, L / (2 * math.pi))
             a_minor = params.get("plasma_t", 0.0)
@@ -244,7 +243,7 @@ class CostModel:
     def _power_balance_0d(self, params, n_mod):
         """0D tokamak power balance: derives p_fus from plasma physics."""
         mode = params.get("0d_mode", "inverse")
-        R = params["axis_t"]
+        R = params["R0"]
         a = params["plasma_t"]
         kappa = params["elon"]
         B = params["B"]
@@ -260,7 +259,6 @@ class CostModel:
             wall_material=wall_mat,
             seeded_impurities=params.get("seeded_impurities") or None,
             T_edge=params.get("T_edge", 0.05),
-            f_screen=params.get("f_screen", 0.01),
             tau_ratio=params.get("tau_ratio", 3.0),
             fw_area=params.get("fw_area", 0.0),
         )
@@ -358,6 +356,9 @@ class CostModel:
         """Forward costing: customer requirements -> LCOE."""
         # Merge defaults with overrides
         params = dict(self._eng_defaults)
+        # Inject fuel utilization defaults from CostingConstants
+        params.setdefault("burn_fraction", self.cc.burn_fraction)
+        params.setdefault("fuel_recovery", self.cc.fuel_recovery)
         params.update(overrides)
         params.update(
             dict(
@@ -373,6 +374,10 @@ class CostModel:
                 concept=self.concept,
             )
         )
+
+        # Zero tritium processing power for non-DT fuels (no breeding loop)
+        if self.fuel != Fuel.DT and "p_trit" not in overrides:
+            params["p_trit"] = 0.0
 
         # Validate merged parameters (skip under JAX tracing)
         _tracing = any(isinstance(v, jax.core.Tracer) for v in params.values())
@@ -538,7 +543,7 @@ class CostModel:
         c29 = cas29_contingency(cc, cas2x_pre_contingency, noak)
         c20 = cas2x_pre_contingency + c29
         c30 = cas30_indirect(cc, c20, construction_time_yr)
-        c40 = cas40_owner(c20)
+        c40 = cas40_owner(cc, self.fuel, pt.p_net)
         c50 = cas50_supplementary(cc, c23 + c24 + c25 + c26 + c27 + c28, pt.p_net, noak)
         overnight_cost = c10 + c20 + c30 + c40 + c50
         c60 = cas60_idc(interest_rate, overnight_cost, construction_time_yr)
@@ -589,6 +594,8 @@ class CostModel:
             construction_time_yr,
             self.fuel,
             noak,
+            burn_fraction=params.get("burn_fraction"),
+            fuel_recovery=params.get("fuel_recovery"),
         )
         lcoe = compute_lcoe(c90, c70, c80, pt.p_net, n_mod, avail_eff)
         overnight = total_capital * 1e6 / (pt.p_net * n_mod * 1e3)  # $/kW
@@ -649,6 +656,9 @@ class CostModel:
             "structure_t",
             "vessel_t",
             "plasma_t",
+            # Fuel utilization
+            "burn_fraction",
+            "fuel_recovery",
         ]
         family_specific = {
             ConfinementFamily.MFE: [
@@ -658,12 +668,21 @@ class CostModel:
                 "f_dec",
                 "p_coils",
                 "p_cool",
-                "axis_t",
+                "R0",
                 "elon",  # torus geometry
+                "chamber_length",  # mirror cylinder length
                 "q95",
                 "f_GW",
                 "B",
                 "T_e",
+                # Radiation model parameters
+                "n_e",
+                "Z_eff",
+                "plasma_volume",
+                "R_w",
+                # Impurity model parameters
+                "T_edge",
+                "tau_ratio",
             ],
             ConfinementFamily.IFE: [
                 "p_implosion",

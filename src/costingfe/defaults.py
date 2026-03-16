@@ -111,6 +111,13 @@ class CostingConstants:
     indirect_fraction: float = 0.20
     reference_construction_time: float = 6.0
 
+    # CAS40 — Capitalized owner's costs (M$ at 1 GWe reference, 2023$)
+    # Source: CAS40_capitalized_owners_costs.md — INL methodology on CAS71-73 staffing
+    owner_cost_dt: float = 39.0  # 117 staff, full neutron + tritium pre-op training
+    owner_cost_dd: float = 31.0  # 94 staff, reduced tritium scope
+    owner_cost_dhe3: float = 23.0  # 69 staff, light HP program
+    owner_cost_pb11: float = 20.0  # 59 staff, near-industrial, RSO-only
+
     # CAS50
     shipping: float = 1.0
     spare_parts_frac: float = 0.01
@@ -118,8 +125,9 @@ class CostingConstants:
     insurance_cost: float = 0.5
     decommissioning: float = 5.0
 
-    # CAS70 — Annual O&M cost (k$/MW/yr at 1 GWe reference, 2023$)
+    # CAS70 — Annual O&M cost (M$/yr at 1 GWe reference, 2023$)
     # Source: CAS71_73_staffing.md — staffing-based build-up by fuel type
+    # Power-law scaling: annual_om = om_cost(fuel) * (P_net / 1 GWe)^0.5
     om_cost_dt: float = 52.0  # Full neutron + tritium operational overhead
     om_cost_dd: float = 39.0  # ~1/3 DT neutron flux, smaller tritium inventory
     om_cost_dhe3: float = 26.0  # ~5% neutron fraction, minimal tritium
@@ -136,11 +144,28 @@ class CostingConstants:
         75.0  # $/kg, NOAK B-11 (industrial chemical exchange distillation)
     )
 
+    # CAS80 — fuel utilization
+    burn_fraction: float = (
+        0.05  # Fraction of injected fuel that undergoes fusion per pass
+    )
+    fuel_recovery: float = 0.95  # Fraction of unburned fuel recovered and recycled
+
     def replace(self, **kwargs):
         return replace(self, **kwargs)
 
+    def owner_cost(self, fuel):
+        """Pre-operational owner's cost (M$ at 1 GWe ref) for a given fuel type."""
+        from costingfe.types import Fuel
+
+        return {
+            Fuel.DT: self.owner_cost_dt,
+            Fuel.DD: self.owner_cost_dd,
+            Fuel.DHE3: self.owner_cost_dhe3,
+            Fuel.PB11: self.owner_cost_pb11,
+        }.get(fuel, self.owner_cost_dt)
+
     def om_cost(self, fuel):
-        """Annual O&M cost coefficient (k$/MW/yr) for a given fuel type."""
+        """Annual O&M cost (M$/yr at 1 GWe reference) for a given fuel type."""
         from costingfe.types import Fuel
 
         return {
