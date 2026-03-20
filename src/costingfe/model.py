@@ -7,6 +7,7 @@ import jax.numpy as jnp
 
 from costingfe.defaults import (
     CostingConstants,
+    cc_float_fields,
     load_costing_constants,
     load_engineering_defaults,
 )
@@ -357,9 +358,11 @@ class CostModel:
         """Forward costing: customer requirements -> LCOE."""
         # Merge defaults with overrides
         params = dict(self._eng_defaults)
-        # Inject fuel utilization defaults from CostingConstants
-        params.setdefault("burn_fraction", self.cc.burn_fraction)
-        params.setdefault("fuel_recovery", self.cc.fuel_recovery)
+        # Inject CostingConstants float fields into params so they are
+        # JAX-traceable for sensitivity analysis.  User overrides take
+        # precedence (via params.update(overrides) below).
+        for name in cc_float_fields():
+            params.setdefault(name, getattr(self.cc, name))
         params.update(overrides)
         params.update(
             dict(
@@ -449,7 +452,12 @@ class CostModel:
         vessel_vol = geo.vessel_vol
 
         # Layer 4: Cost accounts
-        cc = self.cc
+        # Reconstruct CC from params (which may contain JAX tracers
+        # from sensitivity analysis) so gradients flow through.
+        cc_kwargs = {k: params[k] for k in cc_float_fields() if k in params}
+        cc_kwargs["building_costs"] = self.cc.building_costs
+        cc_kwargs["replaceable_accounts"] = self.cc.replaceable_accounts
+        cc = CostingConstants(**cc_kwargs)
         co = cost_overrides or {}
         overridden = []
 
@@ -460,7 +468,10 @@ class CostModel:
         if "CAS10" in co:
             overridden.append("CAS10")
 
-        c21 = co.get("CAS21", cas21_buildings(cc, pt.p_et, self.fuel, noak))
+        c21 = co.get(
+            "CAS21",
+            cas21_buildings(cc, pt.p_et, pt.p_the, pt.p_th, pt.p_fus, self.fuel, noak),
+        )
         if "CAS21" in co:
             overridden.append("CAS21")
 
@@ -659,9 +670,6 @@ class CostModel:
             "structure_t",
             "vessel_t",
             "plasma_t",
-            # Fuel utilization
-            "burn_fraction",
-            "fuel_recovery",
         ]
         family_specific = {
             ConfinementFamily.MFE: [
@@ -703,19 +711,28 @@ class CostModel:
         }
         return common + family_specific.get(self.family, [])
 
+    # CostingConstants float fields — cost model calibration parameters
+    # Exclude reference/normalization constants that aren't real levers:
+    # they exist only to make other parameters dimensionally correct.
+    _CC_EXCLUDE = {
+        "reference_construction_time",  # normalization for indirect_fraction
+    }
+    _COSTING_KEYS = set(cc_float_fields()) - _CC_EXCLUDE
+
     def _continuous_keys(self) -> list[str]:
-        """All differentiable continuous parameter names (engineering + financial)."""
-        return self._engineering_keys() + self._FINANCIAL_KEYS
+        """All differentiable continuous parameter names."""
+        return (
+            self._engineering_keys() + self._FINANCIAL_KEYS + list(self._COSTING_KEYS)
+        )
 
     def _build_lcoe_fn(
         self, params: dict, cost_overrides: dict[str, float] | None = None
     ):
         """Build a JAX-differentiable function: param_vector -> LCOE.
 
-        Fuel, concept, CostingConstants, and discrete params are closed
-        over. Only continuous engineering/financial params are traced.
-        Returns (lcoe_fn, keys, base_values) where lcoe_fn takes a 1D
-        JAX array and returns a scalar LCOE.
+        The param vector includes engineering, financial, AND costing
+        constants (all CC float fields are injected into params by
+        forward()).  Returns (lcoe_fn, keys, base_values).
 
         cost_overrides are closed over as constants — gradients through
         overridden accounts are naturally zero.
@@ -786,13 +803,12 @@ class CostModel:
         Elasticity = (dLCOE/dp) * (p / LCOE) = %ΔLCOE / %Δparam.
         Dimensionless, allowing fair comparison across parameters.
 
-        Returns {"engineering": {...}, "financial": {...}} so that
-        engineering levers (things you can improve) are separated from
-        financial givens (cost of capital).
+        Returns {"engineering": {...}, "financial": {...}, "costing": {...}}
+        where engineering levers are things you can improve, financial are
+        cost-of-capital givens, and costing are CostingConstants calibration
+        parameters (unit costs, fractions, base costs).
 
         Uses jax.grad for exact autodiff gradients.
-        cost_overrides are closed over as constants — overridden accounts
-        have zero gradient automatically.
         """
         lcoe_fn, keys, base_vals = self._build_lcoe_fn(params, cost_overrides)
         base_lcoe = float(lcoe_fn(base_vals))
@@ -802,16 +818,23 @@ class CostModel:
 
         engineering = {}
         financial = {}
+        costing = {}
         for i, key in enumerate(keys):
             p = float(base_vals[i])
             dLCOE_dp = float(grads[i])
             elasticity = dLCOE_dp * p / base_lcoe
             if key in self._FINANCIAL_KEYS:
                 financial[key] = elasticity
+            elif key in self._COSTING_KEYS:
+                costing[key] = elasticity
             else:
                 engineering[key] = elasticity
 
-        return {"engineering": engineering, "financial": financial}
+        return {
+            "engineering": engineering,
+            "financial": financial,
+            "costing": costing,
+        }
 
     def batch_lcoe(
         self,

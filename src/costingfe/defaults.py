@@ -88,8 +88,9 @@ class CostingConstants:
     fuel_handling_dhe3_base: float = 40.0  # He-3 handling
     fuel_handling_pb11_base: float = 15.0  # Boron powder injection
 
-    # CAS21
-    building_costs_per_kw: dict[str, float] = None  # loaded from YAML
+    # CAS21 — per-building, per-fuel costs (M$ at 1 GWe reference)
+    # Each entry has fuel keys (dt/dd/dhe3/pb11 or 'all') + 'scales' key
+    building_costs: dict[str, dict] = None  # loaded from YAML
 
     # CAS27 — Special materials: initial reactor material inventory (M$ at 1 GWe)
     # Default assumes PbLi blanket concept for DT (~4,500 tonnes PbLi @ $3/kg
@@ -265,6 +266,13 @@ class CostingConstants:
 
     def contingency_rate(self, noak):
         return self.contingency_rate_noak if noak else self.contingency_rate_foak
+
+
+def cc_float_fields() -> list[str]:
+    """Return names of all float fields on CostingConstants."""
+    return [
+        f.name for f in fields(CostingConstants) if f.type == "float" or f.type is float
+    ]
 
 
 def load_costing_constants(path: Path = None) -> CostingConstants:

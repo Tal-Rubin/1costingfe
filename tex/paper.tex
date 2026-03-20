@@ -1095,7 +1095,7 @@ CAS & Description & Method \\
 \midrule
 10$^\dagger$ & Pre-construction & Land intensity scaling, fuel-dependent licensing \\
 20 & Total direct costs & Sum of CAS21--29 \\
-21$^\dagger$ & Buildings \& structures & Per-kW scaling, fuel-dependent (19 building types) \\
+21$^\dagger$ & Buildings \& structures & Per-building, per-fuel, industrial-grade (18 buildings) \\
 22$^\dagger$ & Reactor plant equipment & Component-level parametric (18 sub-accounts) \\
 \multicolumn{3}{l}{\textit{Per-module accounts (×\,$n_{\text{mod}}$):}} \\
 \hspace{1em}22.01.01 & First wall + blanket & Volume $\times$ thermal intensity, fuel-dependent \\
@@ -1195,28 +1195,81 @@ p-${}^{11}$B & 0.0 & No NRC jurisdiction \\
 \label{sec:cas21}
 
 CAS21 covers all buildings and structures on the fusion plant site.
-The cost model sums per-kW costs (\$/kW of gross electric) across
-19~building types, with fuel-dependent scaling on four tritium-related
-buildings.
+Each building is priced individually per fuel type based on its
+physical scope and construction grade---not a blanket multiplier.
+All fusion plants are regulated under 10~CFR~Part~30 (byproduct
+materials), not Part~50 (reactor license), which means no Seismic
+Category~I requirements, no NQA-1 program for most buildings, and
+no fission-style containment structure.
 
-The total building cost is ${\sim}$760~\$/kW for D-T
-(${\sim}$511~\$/kW for non-D-T), yielding ${\sim}$\$886M at 1~GWe net.
-This represents ${\sim}$14\% of overnight capital cost---consistent with
-the NREL ATB 2024 nuclear cost structure (16.1\% for structures), after
-discounting for non-nuclear-grade construction under Part~30.
+\begin{center}
+\begin{tabular}{lrrl}
+\toprule
+Fuel & \$/kW & M\$ at 1\,GWe & Construction grade \\
+\midrule
+D-T    & 528 & 607 & Enhanced industrial (tritium confinement, hot cell, rad-HVAC) \\
+D-D    & 466 & 536 & Enhanced industrial (reduced tritium/activation scope) \\
+D-${}^3$He & 344 & 396 & Light enhanced industrial \\
+p-${}^{11}$B & 308 & 354 & Industrial (no hot cell, no tritium, standard HVAC) \\
+\bottomrule
+\end{tabular}
+\end{center}
 
-\subsubsection{Fuel-dependent scaling.}
-Four buildings associated with tritium handling receive a 0.5$\times$
-scaling factor for non-D-T fuels: site improvements (tritium monitoring
-perimeter), fusion heat island (tritium barrier systems), hot cell
-(activated component handling), and fuel storage.  These four buildings
-account for 65\% of D-T building cost; the 0.5$\times$ factor yields a
-33\% reduction for aneutronic fuels.  The scaling is binary (D-T vs.\
-non-D-T) rather than fuel-specific, as building cost uncertainty
-(${\sim}\pm$30\%) dominates the fuel-scaling uncertainty.
+\subsubsection{Fuel-dependent scoping.}
+Each building is costed for what it physically is.  Key
+differentiators by fuel:
 
-Source: ARIES cost-account tradition \citep{waganer2013}, calibrated
-against the NETL baseline \citep{netl2022}.
+\begin{itemize}
+\item \textbf{Hot cell:} D-T \$104M (full remote handling, 3--4~ft
+  shielding, NQA-1 on tritium-wetted systems); D-D \$78M (3/4 scope,
+  NQA-1 overhead similar); D-${}^3$He \$23M (shielded inspection room
+  only); p-${}^{11}$B \textbf{\$0} (does not exist---nothing
+  activates).  The hot cell is physically integrated within the
+  reactor building (UKAEA STEP/PROCESS model), not a separate
+  structure.
+
+\item \textbf{Reactor building:} D-T \$138M (biological shielding
+  walls, tritium confinement barriers); p-${}^{11}$B \$81M (standard
+  heavy industrial crane hall, no shielding, personnel walk-in access).
+
+\item \textbf{Ventilation/HVAC:} D-T \$17M (rad-HVAC: HEPA, stack
+  monitoring, emergency isolation); D-D \$15M (full rad-HVAC for
+  tritium zones); p-${}^{11}$B \$3.5M (standard industrial HVAC).
+
+\item \textbf{Security:} Tritium is not listed in 10~CFR Part~37
+  Category~1/2 table---no armed response requirements for any fusion
+  fuel.  All fuels use standard industrial security (\$2--3.5M).
+
+\item \textbf{Site improvements:} D-T \$115M (tritium monitoring
+  perimeter); p-${}^{11}$B \$69M (standard industrial site).
+\end{itemize}
+
+\subsubsection{Scaling basis.}
+Different buildings scale with different physical drivers.  The
+turbine building scales with thermal electric power $P_{\text{the}}$
+(steam cycle only, not DEC); the reactor building and hot cell scale
+with fusion power $P_{\text{fus}}$; site improvements, control room,
+and security are approximately fixed; BOP electrical buildings scale
+with gross electric $P_{\text{et}}$.
+
+\subsubsection{Comparison with benchmarks.}
+\begin{center}
+\begin{tabular}{lrl}
+\toprule
+Plant type & Buildings \$/kW & Grade \\
+\midrule
+Gas CCGT & 150--250 & Industrial \\
+Coal (NETL B12A) & 175--300 & Heavy industrial \\
+Fusion pB11 (this model) & 308 & Industrial (1.5$\times$ CCGT) \\
+Fusion D-T (this model) & 528 & Enhanced industrial (2.6$\times$ CCGT) \\
+Fission nuclear (Part~50) & 800--1{,}300 & Nuclear-grade \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Source: from-scratch derivation using industrial construction
+benchmarks (Cushman~\&~Wakefield 2025, NETL 2019, NREL ATB 2024,
+Breakthrough Institute 2022).  Supersedes ARIES/pyFECONS values.
 
 
 %% ------------------------------------------------------------

@@ -1,168 +1,290 @@
 # CAS21: Buildings and Structures
 
-**Date:** 2026-03-16
-**Status:** Justified — values retained, fuel scaling validated
+**Date:** 2026-03-20
+**Status:** Approved - Tal
 
 ## Overview
 
-CAS21 covers all buildings and structures on the fusion plant site.
-The cost model sums per-kW costs ($/kW of gross electric) across 19
-building types, with fuel-dependent scaling on four tritium-related
-buildings.
+CAS21 covers all buildings and structures on the fusion plant site. The cost model prices each building individually based on its construction grade (industrial vs enhanced-industrial), physical scope (what equipment it houses), and fuel-dependent requirements (tritium containment, shielding, hot cell).
 
-**Adopted total:** ~760 $/kW (DT), ~511 $/kW (non-DT) of gross electric.
+**Building totals:** DT = \$528/kW, DD = \$466/kW, DHe3 = \$344/kW, pB11 = \$308/kW (of gross electric).
 
-At a reference 1 GWe net DT tokamak (~1.165 GW gross), CAS21 = **$886M**
-(NOAK, no contingency: $760M; FOAK +10% = $836M).  This represents
-~14% of overnight capital cost — consistent with the NREL ATB 2024
-nuclear cost structure (16.1% for "Structures") and the pyFECONS
-framework (~$714/kW).
+**Key design principle:** Each building is priced for what it physically is, not scaled from a blanket multiplier. A pB11 plant has no hot cell — not half a hot cell. A DT plant has tritium confinement barriers in the reactor hall — but not a Part 50 containment structure.
 
-## Building List and Per-kW Costs
+## Construction Grade Framework
 
-| # | Building | $/kW | % of Total | Fuel-dep? | Scope |
-|---|----------|-----:|----------:|-----------:|-------|
-| 1 | Site improvements | 268.0 | 35.3% | Yes | Land clearing, grading, roads, parking, fencing, utilities, drainage, tritium monitoring perimeter, emergency infrastructure |
-| 2 | Fusion heat island | 126.0 | 16.6% | Yes | Reactor containment building, crane hall, primary confinement, shielding walls, tritium barrier systems |
-| 3 | Turbine building | 54.0 | 7.1% | No | Turbine hall, condenser bay, feedwater equipment area |
-| 4 | Heat exchanger building | 12.0 | 1.6% | No | Primary/secondary heat exchanger housing |
-| 5 | Power supply storage | 17.0 | 2.2% | No | Magnet power supply building, energy storage |
-| 6 | Reactor auxiliaries | 35.0 | 4.6% | No | Auxiliary systems building (vacuum, gas, diagnostics) |
-| 7 | Hot cell | 93.4 | 12.3% | Yes | Activated component handling, decontamination, size reduction, packaging |
-| 8 | Reactor services | 25.0 | 3.3% | No | Maintenance shops, laydown areas |
-| 9 | Service water | 11.0 | 1.4% | No | Water treatment, storage, distribution |
-| 10 | Fuel storage | 9.1 | 1.2% | Yes | Tritium storage, deuterium storage, gas handling |
-| 11 | Control room | 17.0 | 2.2% | No | Main control room, emergency control, I&C rooms |
-| 12 | Onsite AC power | 21.0 | 2.8% | No | Electrical switchgear building, diesel generator building |
-| 13 | Administration | 10.0 | 1.3% | No | Office building, training center |
-| 14 | Site services | 4.0 | 0.5% | No | Warehouses, fire station, medical |
-| 15 | Cryogenics | 15.0 | 2.0% | No | Cryoplant building (LHe/LN2) |
-| 16 | Security | 8.0 | 1.1% | No | Security building, guard posts, barriers |
-| 17 | Ventilation stack | 9.2 | 1.2% | No | Stack, HVAC discharge, monitoring equipment |
-| 18 | Assembly hall | 20.0 | 2.6% | No | Pre-assembly of reactor modules |
-| 19 | Direct energy building | 5.0 | 0.7% | No | Direct energy conversion equipment housing |
-| | **Total** | **759.7** | **100%** | | |
+All fusion plants are regulated under 10 CFR Part 30 (byproduct materials), not Part 50 (reactor license). This means:
+- No Seismic Category I requirements (use IBC/ASCE 7 industrial seismic)
+- No NQA-1 QA program for most buildings (only tritium-containing systems for DT)
+- No ACI 349 nuclear concrete (use ACI 318 commercial concrete)
+- No fission-style containment structure (confinement approach: sealed building + negative pressure + filtered exhaust)
 
-## Fuel-Dependent Scaling
+The relevant construction grades for fusion buildings are:
 
-Four buildings are classified as "tritium-related" and receive a **0.5×
-scaling factor** for non-DT fuels:
+| Grade | Description | Typical $/sqft | When used |
+|-------|-------------|---------------|-----------|
+| Industrial | Pre-engineered steel, standard concrete, conventional HVAC | $100-250 | Most pB11 buildings, BOP for all fuels |
+| Heavy industrial | Crane-served, reinforced concrete + steel, heavy foundations | $200-400 | Reactor hall, hot cell shell, assembly hall |
+| Enhanced industrial | Industrial + selective upgrades for tritium or radiation | $300-500 | DT reactor hall, DT fuel storage, DT ventilation |
 
-    fuel_scale = 1.0 if fuel == DT else 0.5
+**Reference benchmarks ($/kW of gross electric):**
 
-| Building | DT cost | non-DT cost | Rationale for scaling |
-|----------|--------:|------------:|----------------------|
-| Site improvements | 268 | 134 | DT requires tritium monitoring perimeter, protected-area fencing, emergency infrastructure per 10 CFR Part 30. Non-DT eliminates nuclear-specific site infrastructure. |
-| Fusion heat island | 126 | 63 | DT reactor building requires tritium primary confinement barriers, double-walled penetrations, and glove-box interfaces. Non-DT uses conventional industrial construction. |
-| Hot cell | 93.4 | 46.7 | DT produces activated components requiring remote handling hot cell. pB11 needs no hot cell; DD/DHe3 need smaller ones. |
-| Fuel storage | 9.1 | 4.6 | Tritium storage, processing, and accountability systems. Non-DT fuels use conventional gas storage. |
-| **Subtotal** | **496.5** | **248.3** | |
+| Plant type | Buildings $/kW | Grade | Source |
+|-----------|---------------|-------|--------|
+| Gas CCGT | $150-250 | Industrial | Thunder Said Energy, EIA |
+| Supercritical coal (NETL B12A) | $175-300 | Heavy industrial | DOE/NETL 2019 |
+| Fusion pB11 (this model) | $309 | Industrial | Bottom-up, below |
+| Fusion DHe3 (this model) | $348 | Light enhanced industrial | Bottom-up, below |
+| Fusion DD (this model) | $458 | Enhanced industrial | Bottom-up, below |
+| Fusion DT (this model) | $531 | Enhanced industrial | Bottom-up, below |
+| Fission nuclear (Part 50) | $800-1,300 | Nuclear-grade | NREL ATB 2024 |
 
-This yields:
-- **DT total:** 760 $/kW (496.5 tritium + 263.2 non-tritium)
-- **Non-DT total:** 511 $/kW (248.3 scaled tritium + 263.2 non-tritium)
-- **Reduction:** 33% for non-DT fuels
+The fusion values form a gradient driven by neutron flux and tritium inventory:
+- pB11 at $309/kW is 1.5x CCGT — industrial-grade with fusion-specific items (magnet hall, cryogenics, heavy crane)
+- DHe3 at $348/kW is 1.7x CCGT — adds a small shielded maintenance area and light tritium monitoring
+- DD at $458/kW is 2.3x CCGT — needs a reduced hot cell and moderate tritium handling
+- DT at $531/kW is 2.7x CCGT — full hot cell, tritium confinement, shielding walls, rad-HVAC
 
-### Is binary DT/non-DT scaling appropriate?
+## Source Documents
 
-The 0.5× factor is a simplification.  A more granular model would
-differentiate DD (produces tritium via side reaction, needs some tritium
-handling) from pB11 (no tritium, no significant activation).  However:
+### Primary sources
 
-1. DD tritium production is small (side-reaction rates are ~1/50 of DT)
-   and would require a much smaller tritium handling system — closer to
-   0.5× than 1.0×.
-2. DHe3 has ~5% neutron fraction — similar argument, small hot cell and
-   minimal tritium handling.
-3. The building cost uncertainty (~±30%) dominates the fuel-scaling
-   uncertainty (~±0.1-0.2 on the multiplier).
+1. **NETL Case B12A.** "Cost and Performance Baseline for Fossil Energy Plants," DOE/NETL-2015/1723, Rev 4, 2019. Account 13 (site improvements) and Account 14 (buildings). Supercritical coal, 550 MWe, 2019$.
+2. **Cushman & Wakefield.** "Industrial Construction Cost Guide," 2025. Industrial building costs by type ($77-400/sqft).
+3. **Cushman & Wakefield.** "Data Center Cost Guide," 2024. Data center costs $600-1,100/sqft.
+4. **Breakthrough Institute.** "To Cut Nuclear Costs, Cut Concrete," 2022. Nuclear vs conventional concrete: 1.5x material, 33-105% longer installation, 23% QA overhead.
+5. **Construction Physics.** "Why Are Nuclear Power Construction Costs So High?" Parts I & II, 2024. NQA-1 multipliers: 23% on concrete, 41% on steel, 5-50x on components.
+6. **NREL ATB 2024.** Nuclear structures = 16.1% of ~$7,000/kW = ~$1,130/kW.
+7. **SHINE Medical Technologies.** Isotope production facility, Janesville WI. ~$100M total for 91,000 sqft including hot cells. Part 30 licensed.
+8. **ORNL SIPRC.** Stable Isotope Production & Research Center. $325M total, 64,000 sqft. DOE nuclear facility.
 
-The binary model is retained for simplicity.  If fuel-specific building
-costs become a significant LCOE driver, a 4-level model (DT=1.0,
-DD=0.8, DHe3=0.6, pB11=0.5) could be implemented.
+### Previous model sources (superseded)
 
-## Source Analysis
+9. **Waganer, L.M.** "ARIES Cost Account Documentation," UCSD-CER-13-01, 2013. Fusion heat island at $186.8/kW (nuclear-grade, superseded).
+10. **pyFECONS.** cas21_buildings.py + CAS210000.tex. Mix of NETL B12A and ARIES values with undocumented modifications (superseded).
 
-### Primary source: ARIES / pyFECONS
+## Building-by-Building Cost Derivation
 
-The building list and per-kW costs derive from the ARIES cost-account
-tradition (Waganer, UCSD-CER-13-01, 2013) as implemented in pyFECONS.
-pyFECONS CAS21 references NETL Case B12A (supercritical coal plant
-buildings) and ARIES-ACT facility layouts.
+All values are reference costs at a 1 GWe net plant (~1.15 GW gross), in 2024\$, expressed as \$/kW of gross electric for comparability with literature. Each building scales with a different physical driver (see "Scales with" column in the Summary table) — not all scale with gross electric.
 
-The pyFECONS building costs total ~$714/kW across 17 buildings.  The
-1costingfe values total ~$760/kW across 19 buildings (adding assembly
-hall and direct energy building).  Individual allocations differ between
-the two implementations, but the totals are within 6%, reflecting
-different calibration vintages or sub-account boundary choices.
+### Fuel-dependent buildings
 
-### Cross-check: NREL ATB 2024 (fission nuclear)
+**1. Site improvements** — DT: \$115M | DD: \$104M | DHe3: \$81M | pB11: \$69M
 
-The NREL Annual Technology Baseline (2024) reports structures at 16.1%
-of total capital for a 1 GWe fission reactor at ~$7,000/kW total,
-implying ~$1,130/kW for structures.  The fission number is ~50% higher
-than our fusion value ($760/kW) due to:
+Scales with: site footprint (~fixed). Values at 1 GWe reference.
 
-- Nuclear-grade containment building (not required for fusion under
-  Part 30)
-- Seismic Category I structures (DT fusion buildings are industrial
-  construction, not Seismic Cat I)
-- Redundant safety-related structures (emergency diesel building,
-  refueling water storage, etc.)
+Scope: land clearing, grading, roads, parking, fencing, drainage, utility distribution, outdoor lighting, stormwater management.
 
-Our lower value is consistent with the ARIES assumption that NOAK fusion
-plants use commercial/industrial construction standards rather than
-nuclear safety-grade construction.
+- CCGT benchmark: \$50-100M for a 1 GWe site (NETL Account 13 for coal: ~\$25/kW in 2019\$, escalated)
+- DT (\$115M): tritium monitoring perimeter, protected-area fencing, emergency vehicle access, rad monitoring stations, emergency assembly points
+- DD (\$104M): same scope as DT but lighter — tritium inventory is grams not kilograms, so monitoring perimeter and emergency infrastructure are scaled down
+- DHe3 (\$81M): trace tritium from DD side reactions. Light monitoring — stack monitors and a few area monitors, not a full perimeter system. No protected area.
+- pB11 (\$69M): standard industrial site. No monitoring perimeter, no protected area, no emergency zone. Fence, roads, parking, drainage — like any large industrial facility.
+- Previous value: \$268/kW (DT), \$134/kW (non-DT at 0.5x) — both substantially above benchmarks with no documented basis for the inflation
 
-### Cross-check: ITER
+**2. Reactor building (fusion heat island)** — DT: \$138M | DD: \$127M | DHe3: \$98M | pB11: \$81M
 
-ITER's 39 buildings and technical areas are part of a ~EUR 20B total
-construction budget.  Buildings represent ~15-20% of ITER's total
-cost (~EUR 3-4B).  However, ITER is a FOAK research facility with
-bespoke one-off construction, international design review overhead,
-and extreme seismic requirements (Cadarache, France).  ITER building
-costs per kW are not meaningful because ITER does not generate electricity.
+Scales with: P\_fus (reactor size determines building volume). Values at 1 GWe reference (~2,300 MW fusion).
 
-### Cross-check: Industrial construction benchmarks
+Scope: houses plasma vessel, magnets, blanket/shield, primary structure, in-vessel components. Includes crane hall, access corridors, equipment laydown.
 
-For a ~250-acre site with 19 buildings totaling ~200,000 m² of floor
-space:
+- All fuels: heavy industrial crane hall (~30,000 sqft with 200+ ton overhead crane), reinforced concrete foundations for magnet loads, seismically designed per IBC (not Cat I)
+- DT (\$138M): tritium primary confinement barriers on all penetrations, double-walled piping interfaces, glove-box connections, biological shielding walls (1-2m concrete near plasma for personnel access during shutdown), negative-pressure HVAC in reactor hall
+- DD (\$127M): biological shielding needed (2.45 MeV neutrons from primary + 14.1 MeV from secondary DT), but less than DT (lower flux, ~1/3). Tritium confinement barriers needed but for smaller inventory.
+- DHe3 (\$98M): light shielding (~5% neutron fraction — some activation exceeds occupational limits near the first wall, but far less than DD). Minor tritium barriers for DD-produced tritium. Closer to industrial than DT.
+- pB11 (\$81M): standard heavy industrial building. No shielding walls (~0.1% of DT neutron flux), no tritium barriers, no double containment. Personnel walk-in access to all areas.
+- Previous value: \$126/kW (DT), \$63/kW (non-DT at 0.5x)
 
-| Building type | Industry cost range | Our implied cost |
-|--------------|-------------------:|----------------:|
-| Large industrial site development | $50-150M | $312M (site_improvements) |
-| Heavy industrial building (crane-served) | $200-400/ft² | $250-350/ft² implied (fusion heat island) |
-| Hot cell facility | $50-150M | $109M |
-| Conventional turbine hall | $40-80M | $63M |
-| Control room / admin | $10-30M | $17M + $10M = $27M |
+**3. Hot cell** — DT: \$104M | DD: \$78M | DHe3: \$23M | pB11: \$0
 
-Site improvements ($312M) appears high relative to conventional
-industrial sites ($50-150M), but includes fusion-specific infrastructure:
-tritium monitoring perimeter, protected-area infrastructure, emergency
-systems, and utility distribution for a nuclear-regulated facility.
+Scales with: P\_fus (volume of activated components). Values at 1 GWe reference.
 
-## Decision
+Scope: shielded zone for receiving activated components, remote disassembly, decontamination, size reduction, waste characterization, packaging. This is costed as a separate line item from the reactor building but is physically **integrated** within the same structure — not a separate building with a transfer corridor (the ITER configuration). The emerging power plant consensus (UKAEA STEP/PROCESS, ARC/CFS) is an integrated layout: a shielded bay adjacent to or beneath the reactor vessel, with downward or lateral extraction of activated components using the reactor building's crane system. This eliminates the shielded cask transport, transfer corridor, and duplicate crane systems of the ITER approach. The cost here covers the shielding walls, liner, remote handling equipment, and rad-HVAC for the hot cell zone — not a separate building envelope (that is in the reactor building line item).
 
-**Retain current values.**  The total building cost (~$760/kW DT,
-~$511/kW non-DT) is consistent with:
-- pyFECONS framework (~$714/kW)
-- NREL ATB fission structures (16% of total, discounted for non-nuclear
-  construction)
-- ITER building fraction (15-20% of total)
-- Industry benchmarks for heavy industrial facilities
+For designs with demountable magnets (ARC concept), the entire vacuum vessel is replaced as a module — the hot cell scope shifts to a storage/processing bay for the removed vessel rather than in-situ component disassembly. This may reduce remote handling complexity but does not eliminate the need for shielded storage and waste processing.
 
-Individual building allocations carry ±30% uncertainty, but the
-aggregate is more robust.  The fuel-dependent scaling (0.5× for non-DT)
-appropriately captures the tritium handling infrastructure difference.
+- DT (\$90): full hot cell zone. 3-4 ft high-density concrete shielding walls, SS liner, leaded glass windows, remote manipulators, independent rad-HVAC with HEPA, fire suppression, Nuclear Quality Assurance, Level 1 (NQA-1) on tritium-wetted systems. First wall/blanket replaced every ~5 FPY at >10 Sv/hr contact dose. SHINE medical facility (Part 30, 91,000 sqft total) cost ~\$100M; fusion hot cell is smaller but more specialized.
+- DD (\$68): reduced hot cell zone. Structural activation at ~7 dpa/yr requires component replacement on ~10 FPY cycles, but lower activation levels than DT mean components can be approached sooner after shutdown, simpler remote handling, and thinner shielding. NQA-1 on tritium-wetted systems (DD produces tritium via side reaction — smaller inventory than DT but same QA requirements on contaminated components). ~3/4 of DT scope — thinner shielding and simpler manipulators offset somewhat by the fixed NQA-1 program overhead.
+- DHe3 (\$20): minimal shielded maintenance area. ~5% neutron fraction produces ~1 dpa/yr — components last 30+ FPY but some activation exceeds occupational limits for hands-on contact. A thick-walled room with manipulator arms for inspection and minor maintenance, not a full remote-handling hot cell.
+- pB11 (\$0): **does not exist.** Near-zero neutron flux means no activation over the plant lifetime. All components maintained by contact (personnel with conventional tools). No shielded zone, no remote manipulators, no waste characterization.
+- Previous value: \$93.4/kW (DT), \$46.7/kW (non-DT at 0.5x) — the 0.5x for pB11 was physically wrong
+- References: [UKAEA PROCESS building model](https://ukaea.github.io/PROCESS/unique-models/buildings_sizes/), [ARC demountable magnet concept](https://www.sciencedirect.com/science/article/abs/pii/S0920379615302337), [STEP conceptual design](https://www.sciencedirect.com/science/article/pii/S0920379624000917)
+
+**4. Fuel storage** — DT: \$9M | DD: \$7M | DHe3: \$3M | pB11: \$1M
+
+Scales with: ~fixed (tritium inventory is set by processing loop, not plant power). Values at 1 GWe reference.
+
+Scope: fuel isotope storage and handling.
+
+- DT (\$9M): cryogenic tritium storage vessels (multi-barrier containment), deuterium gas bottles, tritium accountability vault, glovebox connections. Enhanced industrial construction for tritium areas.
+- DD (\$7M): deuterium gas storage (main fuel) plus small-scale tritium handling. Side-reaction tritium inventory is grams — simpler storage than DT but still needs tritium-rated containment.
+- DHe3 (\$3M): deuterium gas + He-3 gas storage. Minor tritium monitoring for DD side-reaction tritium. No breeding blanket tritium systems.
+- pB11 (\$1M): boron-11 powder hopper/silo (commodity chemical storage), hydrogen gas bottle rack (standard compressed gas). Trivial industrial shed.
+- Previous value: \$9.1/kW (DT), \$4.6/kW (non-DT at 0.5x)
+
+**5. Reactor auxiliaries** — DT: \$29M | DD: \$25M | DHe3: \$21M | pB11: \$17M
+
+Scales with: P\_fus (reactor size determines vacuum, gas, and diagnostics scope). Values at 1 GWe reference.
+
+Scope: vacuum systems, gas handling, plasma diagnostics, water chemistry, heating system support equipment.
+
+- DT (\$29M): some systems need radiation qualification (tritium-wetted vacuum pumps, contaminated gas handling, tritium-rated instruments)
+- DD (\$25M): similar rad-qualified scope but smaller tritium-wetted area than DT
+- DHe3 (\$21M): minor rad qualification — tritium-monitored vacuum only. Most systems are standard industrial.
+- pB11 (\$17M): same equipment scope, fully industrial construction. No rad qualification needed on any system.
+- Previous value: \$35/kW (all fuels, no fuel scaling) — pB11 was overpriced
+
+**6. Control room** — DT: \$14M | DD: \$13M | DHe3: \$12M | pB11: \$12M
+
+Scales with: ~fixed (building structure, not console count). Values at 1 GWe reference.
+
+Scope: main control room, I&C equipment rooms, cable spreading room.
+
+- The control room building cost is driven by the physical structure (reinforced room, cable trays, HVAC, fire suppression, UPS), not by the number of monitored systems. On-shift staffing (2-3 operators 24/7) is similar for any power plant regardless of fuel.
+- DT (\$14M): adds a separate emergency control station for tritium release scenarios, and rad-hardened I&C in some areas.
+- DD (\$13M): similar emergency control scope as DT, slightly reduced.
+- DHe3 (\$12M) and pB11 (\$12M): standard industrial control room. No emergency control station, no rad-hardened I&C.
+- Previous value: \$17/kW all fuels
+
+**7. Security** — DT: \$3.5M | DD: \$3.5M | DHe3: \$2.3M | pB11: \$2.3M
+
+Scales with: ~fixed (perimeter infrastructure). Values at 1 GWe reference.
+
+Scope: perimeter security, access control, surveillance.
+
+- Tritium is **not listed** in the 10 CFR Part 37 Category 1/Category 2 table (Appendix A). Part 37's physical protection requirements (armed response coordination, intrusion detection, vehicle barriers) do not apply to any fusion fuel type. Security for all fusion plants under Part 30 is standard industrial: perimeter fence, card access, cameras.
+- Conventional power plant security is ~\$1-2M capital (fence + cameras + access control + guard service).
+- DT and DD (\$3.5M): standard industrial security plus minor additions for tritium reporting requirements under 10 CFR 30.55 (incident reporting for >10 Ci tritium theft/diversion). This is a documentation requirement, not a physical protection requirement, but may warrant a slightly more robust access control system.
+- DHe3 and pB11 (\$2.3M): standard industrial security. Fence, cameras, card access. No regulatory security requirements beyond normal industrial practice.
+- Previous value: \$8/kW all fuels
+- Note: the NRC's final fusion rule (due Dec 2027) could add tritium-specific security requirements. Current Part 30/37 framework does not require them.
+- References: [Part 37 Appendix A — tritium not listed](https://www.nrc.gov/reading-rm/doc-collections/cfr/part037/part037-appa), [10 CFR 30.55 — tritium reports](https://www.law.cornell.edu/cfr/text/10/30.55)
+
+**8. Ventilation/HVAC** — DT: \$17M | DD: \$15M | DHe3: \$6M | pB11: \$3.5M
+
+Scales with: served floor area (driven by building sizes above). Values at 1 GWe reference.
+
+- DT (\$17M): nuclear-grade HVAC for tritium zones — HEPA filtration banks, continuous air monitors (CAMs), stack monitoring, emergency isolation dampers, negative-pressure confinement zones. Rad-HVAC is 3-5x conventional (Breakthrough Institute).
+- DD (\$15M): rad-HVAC needed — DD produces tritium via D(D,p)T branch, and any tritium-wetted surface requires HEPA, stack monitoring, negative pressure. Slightly smaller zones than DT due to lower tritium inventory, but still full rad-HVAC, not standard industrial.
+- DHe3 (\$6M): enhanced industrial HVAC with stack monitoring for trace tritium. Not full HEPA banks — more like a monitored exhaust with a single-stage filter. Borderline between industrial and rad-HVAC.
+- pB11 (\$3.5M): standard industrial HVAC. No radioactive effluent, no stack monitoring, no HEPA banks, no confinement zones. Conventional rooftop units.
+- Previous value: \$9.2/kW all fuels (labeled "ventilation stack") — DT was too low, pB11 was too high
+
+**9. Administration** — DT: \$9M | DD: \$8M | DHe3: \$6M | pB11: \$5M
+
+Scales with: staff count. Values at 1 GWe reference.
+
+- DT ~120 staff, DD ~94, DHe3 ~69, pB11 ~60 (or ~30 automated). Office space, training rooms, meeting rooms, locker rooms scale roughly with headcount.
+- Previous value: \$10/kW all fuels
+
+**10. Maintenance shops** — DT: \$17M | DD: \$16M | DHe3: \$15M | pB11: \$14M
+
+Scales with: ~fixed + minor staff scaling. Values at 1 GWe reference.
+
+- DT (\$17M): includes decontamination area, rad material staging space
+- DD (\$16M): smaller decon area (lower activation levels)
+- DHe3 (\$15M): minor decon capability
+- pB11 (\$14M): standard industrial maintenance shop, no decon
+- Previous value: \$25/kW all fuels
+
+**11. Site services** — DT: \$5M | DD: \$5M | DHe3: \$3.5M | pB11: \$3.5M
+
+Scales with: ~fixed. Values at 1 GWe reference.
+
+- Warehouse, fire station, medical. Minor staff scaling.
+
+### Fuel-independent buildings
+
+These are the same cost for all fuels — they house equipment that doesn't depend on the fusion fuel cycle. Values at 1 GWe reference (~1.15 GW gross).
+
+| Building | M\$ at ref | Scales with | Basis |
+|----------|----------:|-------------|-------|
+| Turbine building | \$58M | P\_the (thermal electric) | NETL B12A Account 14.3, pre-engineered steel. With DEC: scales with thermal electric only, not total gross. |
+| Heat exchanger | \$17M | P\_th (thermal power) | Industrial building for coolant loops. Shrinks with DEC. |
+| Power supply | \$17M | P\_et (gross electric) | Magnet power supplies, capacitor banks, DEC power conditioning. |
+| Onsite AC power | \$12M | P\_et (gross electric) | Switchgear, diesel generators. |
+| Cryogenics | \$14M | Magnet stored energy | LHe/LN2 plant for SC magnets. |
+| Service water | \$9M | P\_th (thermal rejection) | Water treatment, circ water. |
+| Assembly hall | \$21M | Component size (~fixed) | High-bay steel, reactor module pre-assembly. |
+
+## Summary
+
+| Building | DT | DD | DHe3 | pB11 | Scales with | Key driver |
+|----------|---:|---:|-----:|-----:|-------------|------------|
+| Site improvements | 100 | 90 | 70 | 60 | Site footprint (~fixed) | Tritium monitoring scope |
+| Reactor building | 120 | 110 | 85 | 70 | P\_fus (reactor size) | Shielding + tritium barriers |
+| Hot cell | 90 | 68 | 20 | 0 | P\_fus (activated volume) | Activation level |
+| Fuel storage | 8 | 6 | 3 | 1 | ~fixed | Tritium inventory |
+| Turbine building | 50 | 50 | 50 | 50 | P\_the (thermal electric) | Steam cycle only, not DEC |
+| Heat exchanger | 15 | 15 | 15 | 15 | P\_th (thermal power) | Coolant loop capacity |
+| Power supply | 15 | 15 | 15 | 15 | P\_et (gross electric) | Magnet + DEC power conditioning |
+| Onsite AC | 10 | 10 | 10 | 10 | P\_et (gross electric) | Switchgear capacity |
+| Cryogenics | 12 | 12 | 12 | 12 | Magnet stored energy | SC magnet cooling load |
+| Reactor auxiliaries | 25 | 22 | 18 | 15 | P\_fus (reactor size) | Rad qualification |
+| Maintenance | 15 | 14 | 13 | 12 | ~fixed + staff | Decon area |
+| Service water | 8 | 8 | 8 | 8 | P\_th (thermal rejection) | Cooling water treatment |
+| Control room | 12 | 11 | 10 | 10 | ~fixed | Building structure, not consoles |
+| Administration | 8 | 7 | 5 | 4 | Staff count | Office space |
+| Site services | 4 | 4 | 3 | 3 | ~fixed | Warehouse, fire station |
+| Security | 3 | 3 | 2 | 2 | ~fixed | Part 37 does not list tritium |
+| Ventilation/HVAC | 15 | 13 | 5 | 3 | Served floor area | Rad-HVAC zones |
+| Assembly hall | 18 | 18 | 18 | 18 | Component size | Pre-assembly space |
+| **TOTAL** | **528** | **466** | **344** | **308** | | |
+
+At 1 GWe (~1.15 GW gross): DT = \$607M, DD = \$536M, DHe3 = \$396M, pB11 = \$354M.
+
+### DD rationale
+
+DD produces ~1/3 the neutron flux of DT (2.45 MeV neutrons from primary reactions, plus 14.1 MeV from secondary DT at f\_T~0.97). Key building differences from DT:
+
+- **Hot cell (\$78M vs \$104M):** Still needed — structural activation at ~7 dpa/yr requires component replacement on ~10 FPY cycles. But lower activation levels mean simpler remote handling, thinner shielding. NQA-1 still required on tritium-wetted systems (fixed overhead). ~3/4 of DT scope.
+- **Reactor building (\$127M vs \$138M):** Needs biological shielding (2.45 MeV neutrons) but less than DT (14.1 MeV). Tritium confinement barriers needed but for smaller inventory.
+- **Site improvements (\$104M vs \$115M):** Reduced tritium inventory means lighter monitoring perimeter.
+- **Ventilation/HVAC (\$15M vs \$17M):** Full rad-HVAC needed — DD produces tritium via D(D,p)T branch, and any tritium-wetted surface requires HEPA, stack monitoring, negative pressure. Slightly smaller zones than DT.
+- **Security (\$3.5M, same as DT):** Part 37 does not list tritium. Standard industrial + minor access control for 10 CFR 30.55 reporting.
+
+### DHe3 rationale
+
+DHe3 produces ~5% of fusion energy as neutrons (from DD side reactions in the plasma). Minor tritium from D(D,p)T branch. Key building differences:
+
+- **Hot cell (\$23M vs \$104M):** Minimal shielded maintenance area. ~1 dpa/yr means 30+ FPY component lifetime, but some activation exceeds occupational limits. A thick-walled room with manipulator arms, not a full remote-handling hot cell.
+- **Reactor building (\$98M vs \$138M):** Light shielding (5% neutron fraction). Minor tritium barriers. Closer to industrial than DT.
+- **Site improvements (\$81M vs \$115M):** Light monitoring requirements. No full protected area.
+- **Ventilation/HVAC (\$6M vs \$17M):** Enhanced industrial HVAC with stack monitoring for trace tritium. Not full HEPA banks.
+- **Control room (\$12M vs \$14M):** Fewer safety-critical systems to monitor.
+- **Security (\$2.3M vs \$3.5M):** Standard industrial. No tritium reporting requirements.
+
+### Comparison with previous model
+
+| Fuel | Old (\$/kW) | New (\$/kW) | New (M\$ at 1 GWe) | Change | Validation |
+|------|-----------|-----------|-------------------|--------|------------|
+| DT | 760 | 528 | \$607M | -31% | 2.6x CCGT (enhanced industrial for Part 30) |
+| DD | 511 (0.5x) | 466 | \$536M | -9% | 2.3x CCGT (moderate rad scope) |
+| DHe3 | 511 (0.5x) | 344 | \$396M | -33% | 1.7x CCGT (light rad scope) |
+| pB11 | 511 (0.5x) | 308 | \$354M | -40% | 1.5x CCGT (industrial) |
+
+The old model applied 0.5x to DD, DHe3, and pB11 identically. The new model correctly differentiates:
+- DD needs most DT infrastructure at reduced scale (side-reaction tritium, lower neutron activation)
+- DHe3 needs much less (minimal activation, trace tritium)
+- pB11 needs none of the nuclear-specific infrastructure (zero hot cell, zero tritium, industrial HVAC)
+
+Key corrections:
+1. Site improvements: \$268/kW → \$60-100/kW (old value was 10x NETL coal, undocumented)
+2. Hot cell: \$47/kW → \$0 for pB11 (was 0.5x, should be zero — nothing activates)
+3. Hot cell: \$47/kW → \$20/kW for DHe3 (was same as DD, but DHe3 activation is 15x lower)
+4. Ventilation: \$9/kW → \$3-15/kW (differentiated by fuel: rad-HVAC for DT, standard for pB11)
+5. Security: \$8/kW → \$2-3/kW (Part 37 does not list tritium — no armed response required)
+6. Many small buildings re-priced at industrial benchmarks rather than nuclear-adjacent
 
 ## References
 
-- Waganer, L. M., "ARIES Cost Account Documentation," UCSD-CER-13-01,
-  University of California San Diego, June 2013.
-- DOE/NETL, "Cost and Performance Baseline for Fossil Energy Plants,"
-  DOE/NETL-2022/3575, October 2022.  (Case B12A reference)
+- DOE/NETL, "Cost and Performance Baseline for Fossil Energy Plants," DOE/NETL-2015/1723, Rev 4, 2019.
+- Cushman & Wakefield, "Industrial Construction Cost Guide," 2025.
+- Cushman & Wakefield, "Data Center Cost Guide," 2024.
+- Breakthrough Institute, "To Cut Nuclear Costs, Cut Concrete," 2022.
+- Construction Physics, "Why Are Nuclear Power Construction Costs So High?" Parts I & II, 2024.
 - NREL, "Annual Technology Baseline — Nuclear," 2024 edition.
-  https://atb.nrel.gov/electricity/2024/nuclear
-- ITER Organization, "Building ITER," https://www.iter.org/building-iter
-- Woodruff, S., "A Costing Framework for Fusion Power Plants,"
-  arXiv:2601.21724, January 2026.
+- SHINE Medical Technologies, Janesville WI isotope facility (Part 30 licensed).
+- ORNL SIPRC, Stable Isotope Production & Research Center, $88.8M construction contract.
+- Waganer, L.M., "ARIES Cost Account Documentation," UCSD-CER-13-01, 2013 (superseded for building values).
+- `CAS21_building_cost_research.md` — detailed benchmarking analysis.

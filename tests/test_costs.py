@@ -120,10 +120,51 @@ def test_licensing_time_ordering():
 
 
 def test_cas21_scales_with_power():
-    """Building costs should scale with gross electric power."""
-    cost_low = cas21_buildings(CC, p_et=500.0, fuel=Fuel.DT, noak=True)
-    cost_high = cas21_buildings(CC, p_et=1000.0, fuel=Fuel.DT, noak=True)
+    """Building costs should increase with larger plant."""
+    cost_low = cas21_buildings(
+        CC,
+        p_et=500.0,
+        p_the=500.0,
+        p_th=1250.0,
+        p_fus=1150.0,
+        fuel=Fuel.DT,
+        noak=True,
+    )
+    cost_high = cas21_buildings(
+        CC,
+        p_et=1000.0,
+        p_the=1000.0,
+        p_th=2500.0,
+        p_fus=2300.0,
+        fuel=Fuel.DT,
+        noak=True,
+    )
     assert cost_high > cost_low
+
+
+def test_cas21_fuel_differentiation():
+    """pB11 buildings should cost less than DT (no hot cell, industrial grade)."""
+    cost_dt = cas21_buildings(
+        CC,
+        p_et=1150.0,
+        p_the=1150.0,
+        p_th=2500.0,
+        p_fus=2300.0,
+        fuel=Fuel.DT,
+        noak=True,
+    )
+    cost_pb = cas21_buildings(
+        CC,
+        p_et=1150.0,
+        p_the=1150.0,
+        p_th=2500.0,
+        p_fus=2300.0,
+        fuel=Fuel.PB11,
+        noak=True,
+    )
+    assert cost_pb < cost_dt
+    # pB11 should be roughly 55-65% of DT (308/528 ~ 58%)
+    assert cost_pb / cost_dt < 0.65
 
 
 def test_cas23_to_26_scale_with_power():

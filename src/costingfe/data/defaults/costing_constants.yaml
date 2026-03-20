@@ -75,30 +75,34 @@ fuel_handling_dd_base: 60.0    # Small-scale tritium + deuterium
 fuel_handling_dhe3_base: 40.0  # He-3 handling
 fuel_handling_pb11_base: 15.0  # Boron powder injection
 
-# CAS21 building costs ($/kW of gross electric)
-# Source: ARIES (Waganer, UCSD-CER-13-01, 2013) / NETL Case B12A
+# CAS21 building costs — M$ at 1 GWe reference (~1.15 GW gross), per fuel type
+# From-scratch derivation: industrial benchmarks + fuel-specific scoping.
 # See docs/account_justification/CAS21_buildings.md
-# Total: ~760 $/kW (DT), ~511 $/kW (non-DT, 0.5x on 4 tritium buildings)
-building_costs_per_kw:
-  site_improvements: 268
-  fusion_heat_island: 126
-  turbine_building: 54
-  heat_exchanger: 12
-  power_supply_storage: 17
-  reactor_auxiliaries: 35
-  hot_cell: 93.4
-  reactor_services: 25
-  service_water: 11
-  fuel_storage: 9.1
-  control_room: 17
-  onsite_ac: 21
-  administration: 10
-  site_services: 4
-  cryogenics: 15
-  security: 8
-  ventilation_stack: 9.2
-  assembly_hall: 20
-  direct_energy_building: 5
+# Each building has its own scaling basis (see "scales" key).
+# Totals: DT=$528/kW, DD=$466/kW, DHe3=$344/kW, pB11=$308/kW
+building_costs:
+  # --- Fuel-dependent, ~fixed (site footprint) ---
+  site_improvements:  {dt: 115, dd: 104, dhe3: 81, pb11: 69, scales: fixed}
+  # --- Fuel-dependent, scales with P_fus ---
+  reactor_building:   {dt: 138, dd: 127, dhe3: 98, pb11: 81, scales: p_fus}
+  hot_cell:           {dt: 104, dd: 78,  dhe3: 23, pb11: 0,  scales: p_fus}
+  reactor_auxiliaries: {dt: 29, dd: 25,  dhe3: 21, pb11: 17, scales: p_fus}
+  # --- Fuel-dependent, ~fixed ---
+  fuel_storage:       {dt: 9,   dd: 7,   dhe3: 3,  pb11: 1,  scales: fixed}
+  control_room:       {dt: 14,  dd: 13,  dhe3: 12, pb11: 12, scales: fixed}
+  security:           {dt: 3.5, dd: 3.5, dhe3: 2.3, pb11: 2.3, scales: fixed}
+  ventilation_hvac:   {dt: 17,  dd: 15,  dhe3: 6,  pb11: 3.5, scales: floor_area}
+  administration:     {dt: 9,   dd: 8,   dhe3: 6,  pb11: 5,  scales: staff}
+  maintenance:        {dt: 17,  dd: 16,  dhe3: 15, pb11: 14, scales: fixed}
+  site_services:      {dt: 5,   dd: 5,   dhe3: 3.5, pb11: 3.5, scales: fixed}
+  # --- Fuel-independent ---
+  turbine_building:   {all: 58, scales: p_the}
+  heat_exchanger:     {all: 17, scales: p_th}
+  power_supply:       {all: 17, scales: p_et}
+  onsite_ac:          {all: 12, scales: p_et}
+  cryogenics:         {all: 14, scales: fixed}
+  service_water:      {all: 9,  scales: p_th}
+  assembly_hall:      {all: 21, scales: fixed}
 
 # CAS27 — Special materials: initial reactor material inventory (M$ at 1 GWe)
 # Default assumes PbLi blanket concept for DT. For HCPB concepts with

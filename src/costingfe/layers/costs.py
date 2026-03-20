@@ -62,25 +62,46 @@ def cas10_preconstruction(cc, p_net, n_mod, fuel, noak):
     return subtotal + contingency
 
 
-def cas21_buildings(cc, p_et, fuel, noak):
-    """CAS21: Buildings. Scales with gross electric. Returns M$.
+def cas21_buildings(cc, p_et, p_the, p_th, p_fus, fuel, noak):
+    """CAS21: Buildings. Returns M$.
 
-    19 building types, each with per-kW cost ($/kW gross electric).
-    Fuel-dependent: 4 tritium-related buildings get 0.5x for non-DT.
-    Source: ARIES (Waganer 2013) / NETL Case B12A calibration.
+    Each building is priced per fuel type with its own scaling basis.
+    Fuel-dependent buildings have dt/dd/dhe3/pb11 costs (M$ at 1 GWe ref).
+    Fuel-independent buildings have an 'all' cost.
+    Each building specifies what it scales with (fixed, p_fus, p_et, etc).
+
     See docs/account_justification/CAS21_buildings.md
     """
-    fuel_scale = 1.0 if fuel == Fuel.DT else 0.5
-    tritium_buildings = (
-        "site_improvements",
-        "fusion_heat_island",
-        "hot_cell",
-        "fuel_storage",
-    )
+    # Reference power levels at 1 GWe calibration point
+    P_ET_REF = 1150.0  # MW gross electric (~1 GWe net)
+    P_THE_REF = 1150.0  # MW thermal electric (steam-only, = p_et when no DEC)
+    P_TH_REF = 2500.0  # MW thermal
+    P_FUS_REF = 2300.0  # MW fusion
+
+    fuel_key = {
+        Fuel.DT: "dt",
+        Fuel.DD: "dd",
+        Fuel.DHE3: "dhe3",
+        Fuel.PB11: "pb11",
+    }.get(fuel, "dt")
+
+    scale_map = {
+        "fixed": 1.0,
+        "p_et": p_et / P_ET_REF,
+        "p_the": p_the / P_THE_REF,
+        "p_th": p_th / P_TH_REF,
+        "p_fus": p_fus / P_FUS_REF,
+        "floor_area": p_et / P_ET_REF,  # proxy
+        "staff": p_et / P_ET_REF,  # proxy (staff scales with P^0.5 but
+    }  # building area is a weaker function)
+
     total = 0.0
-    for name, cost_per_kw in cc.building_costs_per_kw.items():
-        scale = fuel_scale if name in tritium_buildings else 1.0
-        total += cost_per_kw * p_et / 1000.0 * scale
+    for _name, entry in cc.building_costs.items():
+        scales = entry.get("scales", "fixed")
+        base_cost = entry.get(fuel_key, entry.get("all", 0.0))
+        ratio = scale_map.get(scales, 1.0)
+        total += base_cost * ratio
+
     contingency = cc.contingency_rate(noak) * total
     return total + contingency
 

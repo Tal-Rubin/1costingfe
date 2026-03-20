@@ -9,7 +9,7 @@ def test_load_costing_constants():
     cc = load_costing_constants()
     assert cc.site_permits > 0
     assert cc.licensing_cost_dt > 0
-    assert len(cc.building_costs_per_kw) > 10
+    assert len(cc.building_costs) > 10
 
 
 def test_load_engineering_defaults():
