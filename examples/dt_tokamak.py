@@ -85,8 +85,13 @@ print("-" * 48)
 
 print("\nEngineering levers:")
 for k, v in sorted(sens["engineering"].items(), key=lambda x: abs(x[1]), reverse=True):
-    print(f"  {k:<28} {v:+.4f}")
+    print(f"  {k:<36} {v:+.4f}")
 
 print("\nFinancial:")
 for k, v in sorted(sens["financial"].items(), key=lambda x: abs(x[1]), reverse=True):
-    print(f"  {k:<28} {v:+.4f}")
+    print(f"  {k:<36} {v:+.4f}")
+
+print("\nCosting constants (top 15):")
+costing = sorted(sens["costing"].items(), key=lambda x: abs(x[1]), reverse=True)
+for k, v in costing[:15]:
+    print(f"  {k:<36} {v:+.4f}")

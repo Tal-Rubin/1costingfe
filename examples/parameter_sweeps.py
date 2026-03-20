@@ -49,3 +49,9 @@ print(f"  availability : {e_avail:+.4f}")
 print(f"  eta_th       : {e_eta:+.4f}")
 winner = "availability" if abs(e_avail) > abs(e_eta) else "eta_th"
 print(f"\n  → {winner} has more leverage on LCOE.")
+
+# Top costing constants for comparison
+print("\nTop 5 costing constant sensitivities:")
+costing = sorted(sens["costing"].items(), key=lambda x: abs(x[1]), reverse=True)
+for k, v in costing[:5]:
+    print(f"  {k:<36} {v:+.4f}")

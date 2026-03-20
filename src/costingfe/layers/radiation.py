@@ -88,8 +88,7 @@ _COOLING_CURVES: dict[str, list[tuple[float, float, float, float]]] = {
         (10.0, 100.0, 5.0e-31, -0.5),  # slow decline
     ],
     "C": [
-        (0.01, 0.01, 1.0e-31, 0.0),  # fully ionized above ~0.3 keV
-        (0.01, 0.1, 3.0e-32, -0.5),
+        (0.01, 0.1, 3.0e-32, -0.5),  # fully ionized above ~0.3 keV
         (0.1, 0.5, 1.0e-32, 0.5),
         (0.5, 100.0, 1.0e-36, 0.0),  # fully stripped, negligible
     ],

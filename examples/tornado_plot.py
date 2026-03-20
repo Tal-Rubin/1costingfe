@@ -12,9 +12,9 @@ base = model.forward(
 
 sens = model.sensitivity(base.params)
 
-# Merge engineering + financial, skip near-zero
+# Merge all categories, skip near-zero
 all_params = {}
-for category in ("engineering", "financial"):
+for category in ("engineering", "financial", "costing"):
     for param, elasticity in sens[category].items():
         if abs(elasticity) > 1e-4:
             all_params[param] = elasticity
