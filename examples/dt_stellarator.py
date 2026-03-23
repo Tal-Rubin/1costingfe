@@ -55,6 +55,7 @@ result = model.forward(
     availability=0.90,  # Steady-state + modular maintenance advantage
     lifetime_yr=30,
     n_mod=1,
+    construction_time_yr=8.0,  # Complex 3D coil assembly (YAML default)
     interest_rate=0.07,
     inflation_rate=0.02,
     noak=True,
@@ -127,7 +128,7 @@ print("  Current drive power:   0 MW (inherent steady-state)")
 print("  Construction time:     8 yr (3D coil assembly complexity)")
 print("  Auxiliary heating:     30 MW (ECRH only, profile control)")
 
-# ── Sensitivity Analysis ─────────────────────────────────────────────
+# ── Sensitivity Analysis (elasticity) ─────────────────────────────────
 sens = model.sensitivity(result.params)
 
 print("\nSensitivity (elasticity = %LCOE / %param)")
@@ -145,3 +146,126 @@ print("\nCosting constants (top 15):")
 costing = sorted(sens["costing"].items(), key=lambda x: abs(x[1]), reverse=True)
 for k, v in costing[:15]:
     print(f"  {k:<36} {v:+.4f}")
+
+# ── Parameter sweeps — stellarator-specific levers ───────────────────
+base_lcoe = float(c.lcoe)
+base_kwargs = dict(
+    net_electric_mw=1000.0,
+    availability=0.90,
+    lifetime_yr=30,
+    construction_time_yr=8.0,
+    interest_rate=0.07,
+    inflation_rate=0.02,
+    noak=True,
+    elon=1.6,
+)
+
+# Availability: stellarator's key advantage (steady-state, no disruptions)
+print("\n" + "=" * 64)
+print("PARAMETER SWEEPS")
+print("=" * 64)
+
+avail_vals = [0.80, 0.85, 0.90, 0.92, 0.95, 0.98]
+print("\nAvailability sweep (stellarator steady-state advantage):")
+print(f"{'Avail':>8} {'LCOE':>10} {'Δ':>8} {'Overnight':>12}")
+print("-" * 42)
+for a in avail_vals:
+    r = model.forward(**{**base_kwargs, "availability": a})
+    lc = float(r.costs.lcoe)
+    on = float(r.costs.overnight_cost)
+    marker = " <-- base" if a == 0.90 else ""
+    print(f"{a:>7.0%} {lc:>9.1f} {lc - base_lcoe:>+7.1f} {on:>11.0f}{marker}")
+
+# Construction time: 3D coil assembly is the bottleneck
+ct_vals = [10.0, 8.0, 6.0, 5.0, 4.0, 3.0]
+print("\nConstruction time sweep (3D coil assembly complexity):")
+print(f"{'Years':>8} {'LCOE':>10} {'Δ':>8} {'IDC M$':>12}")
+print("-" * 42)
+for ct in ct_vals:
+    r = model.forward(**{**base_kwargs, "construction_time_yr": ct})
+    lc = float(r.costs.lcoe)
+    idc = float(r.costs.cas60)
+    marker = " <-- base" if ct == 8.0 else ""
+    print(f"{ct:>8.0f} {lc:>9.1f} {lc - base_lcoe:>+7.1f} {idc:>11.0f}{marker}")
+
+# WACC: long construction makes stellarator especially sensitive to WACC
+wacc_vals = [0.10, 0.07, 0.05, 0.04, 0.03, 0.02]
+print("\nWACC sweep (long construction amplifies financing cost):")
+print(f"{'WACC':>8} {'LCOE':>10} {'Δ':>8} {'CAS90 M$':>12}")
+print("-" * 42)
+for w in wacc_vals:
+    r = model.forward(**{**base_kwargs, "interest_rate": w})
+    lc = float(r.costs.lcoe)
+    cas90 = float(r.costs.cas90)
+    marker = " <-- base" if w == 0.07 else ""
+    print(f"{w:>7.0%} {lc:>9.1f} {lc - base_lcoe:>+7.1f} {cas90:>11.0f}{marker}")
+
+# ── Stellarator vs Tokamak head-to-head ──────────────────────────────
+print("\n" + "=" * 64)
+print("STELLARATOR vs TOKAMAK — Head-to-Head")
+print("=" * 64)
+
+tok_model = CostModel(concept=ConfinementConcept.TOKAMAK, fuel=Fuel.DT)
+
+scenarios = [
+    (
+        "NOAK baseline",
+        dict(availability=0.85, construction_time_yr=6, interest_rate=0.07),
+        dict(availability=0.85, construction_time_yr=6, interest_rate=0.07),
+    ),
+    (
+        "Stellarator advantages applied",
+        dict(availability=0.90, construction_time_yr=8, interest_rate=0.07),
+        dict(availability=0.85, construction_time_yr=6, interest_rate=0.07),
+    ),
+    (
+        "Aggressive (3% WACC, 50yr)",
+        dict(
+            availability=0.90,
+            construction_time_yr=8,
+            interest_rate=0.03,
+            lifetime_yr=50,
+        ),
+        dict(
+            availability=0.85,
+            construction_time_yr=6,
+            interest_rate=0.03,
+            lifetime_yr=50,
+        ),
+    ),
+    (
+        "Best-case stellarator",
+        dict(
+            availability=0.95,
+            construction_time_yr=6,
+            interest_rate=0.03,
+            lifetime_yr=50,
+        ),
+        dict(
+            availability=0.85,
+            construction_time_yr=6,
+            interest_rate=0.03,
+            lifetime_yr=50,
+        ),
+    ),
+]
+
+print(f"\n{'Scenario':<36} {'Stell':>8} {'Tok':>8} {'Delta':>8}")
+print(f"{'':36} {'$/MWh':>8} {'$/MWh':>8} {'$/MWh':>8}")
+print("-" * 64)
+common = dict(net_electric_mw=1000.0, lifetime_yr=30, inflation_rate=0.02, noak=True)
+# Note: construction_time_yr and availability differ per scenario/concept
+for name, stell_kw, tok_kw in scenarios:
+    rs = model.forward(**{**common, **stell_kw, "elon": 1.6})
+    rt = tok_model.forward(**{**common, **tok_kw})
+    ls = float(rs.costs.lcoe)
+    lt = float(rt.costs.lcoe)
+    print(f"{name:<36} {ls:>7.1f} {lt:>7.1f} {ls - lt:>+7.1f}")
+
+print("""
+The stellarator pays a large coil premium (4.5x) but recovers ground
+through higher availability (no disruptions) and zero current drive.
+Under aggressive financial assumptions (low WACC, long life), the
+availability advantage narrows the gap significantly. If construction
+time can be reduced to tokamak levels (6 yr), the gap closes further.
+""")
