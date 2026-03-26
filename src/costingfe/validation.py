@@ -19,6 +19,28 @@ from costingfe.types import (
 
 _PLASMA_0D_FIELDS = ["q95", "f_GW", "M_ion", "lambda_q", "use_0d_model"]
 
+_VALIDATION_PHYSICS = dict(
+    n_e=1.0e20,
+    T_e=15.0,
+    Z_eff=1.5,
+    plasma_volume=500.0,
+    B=5.0,
+    dd_f_T=0.969,
+    dd_f_He3=0.689,
+    dhe3_dd_frac=0.07,
+    dhe3_f_T=0.97,
+    pb11_f_alpha_n=0.0,
+    pb11_f_p_n=0.0,
+    wall_material=None,
+    T_edge=0.05,
+    tau_ratio=3.0,
+    fw_area=0.0,
+    R_major=0.0,
+    a_minor=0.0,
+    kappa=1.7,
+    R_w=0.6,
+)
+
 
 class CostingInput(BaseModel):
     """Validated input for the costing model.
@@ -258,6 +280,7 @@ class CostingInput(BaseModel):
             p_trit=self.p_trit,
             p_house=self.p_house,
             p_cryo=self.p_cryo,
+            **_VALIDATION_PHYSICS,
         )
         pt = mfe_forward_power_balance(
             p_fus=p_fus,
@@ -276,6 +299,7 @@ class CostingInput(BaseModel):
             p_trit=self.p_trit,
             p_house=self.p_house,
             p_cryo=self.p_cryo,
+            **_VALIDATION_PHYSICS,
         )
         self._check_power_table(pt, p_fus)
 

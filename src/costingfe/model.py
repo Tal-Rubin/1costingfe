@@ -92,8 +92,8 @@ class CostModel:
             impurity_kw = dict(
                 wall_material=wall_mat,
                 seeded_impurities=params.get("seeded_impurities") or None,
-                T_edge=params.get("T_edge", 0.05),
-                tau_ratio=params.get("tau_ratio", 3.0),
+                T_edge=params["T_edge"],
+                tau_ratio=params["tau_ratio"],
                 fw_area=params.get("fw_area", 0.0),
             )
 
@@ -106,22 +106,29 @@ class CostModel:
                 R_major=R_major,
                 a_minor=a_minor,
                 kappa=params.get("elon", 1.0),
-                R_w=params.get("R_w", 0.6),
+                R_w=params["R_w"],
             )
 
             # Plasma radiation parameters (from YAML defaults or user overrides)
-            def _to_num(v, default):
+            def _to_num(v):
                 """str→float (PyYAML parses '5e19' as str); pass Tracers."""
-                if v is None:
-                    return default
                 return float(v) if isinstance(v, str) else v
 
             rad_kw = dict(
-                n_e=_to_num(params.get("n_e"), 1.0e20),
-                T_e=_to_num(params.get("T_e"), 15.0),
-                Z_eff=_to_num(params.get("Z_eff"), 1.5),
-                plasma_volume=_to_num(params.get("plasma_volume"), 500.0),
-                B=_to_num(params.get("B"), 5.0),
+                n_e=_to_num(params["n_e"]),
+                T_e=_to_num(params["T_e"]),
+                Z_eff=_to_num(params["Z_eff"]),
+                plasma_volume=_to_num(params["plasma_volume"]),
+                B=_to_num(params["B"]),
+            )
+
+            fuel_frac_kw = dict(
+                dd_f_T=params["dd_f_T"],
+                dd_f_He3=params["dd_f_He3"],
+                dhe3_dd_frac=params["dhe3_dd_frac"],
+                dhe3_f_T=params["dhe3_f_T"],
+                pb11_f_alpha_n=params["pb11_f_alpha_n"],
+                pb11_f_p_n=params["pb11_f_p_n"],
             )
 
             p_fus = mfe_inverse_power_balance(
@@ -142,6 +149,7 @@ class CostModel:
                 p_house=params["p_house"],
                 p_cryo=params["p_cryo"],
                 **rad_kw,
+                **fuel_frac_kw,
                 **impurity_kw,
                 **sync_kw,
             )
@@ -163,6 +171,7 @@ class CostModel:
                 p_house=params["p_house"],
                 p_cryo=params["p_cryo"],
                 **rad_kw,
+                **fuel_frac_kw,
                 **impurity_kw,
                 **sync_kw,
             )
@@ -260,9 +269,18 @@ class CostModel:
         impurity_kw = dict(
             wall_material=wall_mat,
             seeded_impurities=params.get("seeded_impurities") or None,
-            T_edge=params.get("T_edge", 0.05),
-            tau_ratio=params.get("tau_ratio", 3.0),
+            T_edge=params["T_edge"],
+            tau_ratio=params["tau_ratio"],
             fw_area=params.get("fw_area", 0.0),
+        )
+
+        fuel_frac_kw = dict(
+            dd_f_T=params["dd_f_T"],
+            dd_f_He3=params["dd_f_He3"],
+            dhe3_dd_frac=params["dhe3_dd_frac"],
+            dhe3_f_T=params["dhe3_f_T"],
+            pb11_f_alpha_n=params["pb11_f_alpha_n"],
+            pb11_f_p_n=params["pb11_f_p_n"],
         )
 
         if mode == "forward":
@@ -279,6 +297,7 @@ class CostModel:
                 M_ion=params.get("M_ion", 2.5),
                 Z_eff=params.get("Z_eff", 1.5),
                 lambda_q=params.get("lambda_q", 0.002),
+                **fuel_frac_kw,
             )
             pt = mfe_forward_power_balance(
                 p_fus=plasma_state.p_fus,
@@ -305,7 +324,8 @@ class CostModel:
                 R_major=R,
                 a_minor=a,
                 kappa=kappa,
-                R_w=params.get("R_w", 0.6),
+                R_w=params["R_w"],
+                **fuel_frac_kw,
                 **impurity_kw,
             )
         else:
@@ -337,6 +357,7 @@ class CostModel:
                 p_house=params["p_house"],
                 p_cryo=params["p_cryo"],
                 n_mod=n_mod,
+                **fuel_frac_kw,
             )
 
         self._plasma_state = plasma_state

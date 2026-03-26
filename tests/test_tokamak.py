@@ -21,6 +21,39 @@ from costingfe.layers.tokamak import (
     tokamak_0d_inverse,
 )
 
+# Default fuel fraction params for DT tests
+_DT_FUEL_FRAC = dict(
+    dd_f_T=0.969,
+    dd_f_He3=0.689,
+    dhe3_dd_frac=0.07,
+    dhe3_f_T=0.97,
+    pb11_f_alpha_n=0.0,
+    pb11_f_p_n=0.0,
+)
+
+# Default physics params for power balance tests
+_PB_PHYSICS = dict(
+    n_e=1.0e20,
+    T_e=15.0,
+    Z_eff=1.5,
+    plasma_volume=500.0,
+    B=5.0,
+    dd_f_T=0.969,
+    dd_f_He3=0.689,
+    dhe3_dd_frac=0.07,
+    dhe3_f_T=0.97,
+    pb11_f_alpha_n=0.0,
+    pb11_f_p_n=0.0,
+    wall_material=None,
+    T_edge=0.05,
+    tau_ratio=3.0,
+    fw_area=0.0,
+    R_major=0.0,
+    a_minor=0.0,
+    kappa=1.7,
+    R_w=0.6,
+)
+
 
 # ---------------------------------------------------------------------------
 # 1. Bosch-Hale DT reactivity
@@ -147,6 +180,7 @@ class TestForwardMode:
             f_GW=0.85,
             T_e=15.0,
             p_input=50.0,
+            **_DT_FUEL_FRAC,
         )
         assert isinstance(ps, PlasmaState)
         assert ps.p_fus > 0
@@ -165,6 +199,7 @@ class TestForwardMode:
             f_GW=0.85,
             T_e=15.0,
             p_input=50.0,
+            **_DT_FUEL_FRAC,
         )
         assert ps.p_fus > 0
         assert ps.wall_loading > 0
@@ -187,10 +222,15 @@ class TestInverseMode:
             f_GW=0.85,
             T_e=15.0,
             p_input=50.0,
+            **_DT_FUEL_FRAC,
         )
         # Use the forward p_net as target for inverse
         from costingfe.layers.physics import mfe_forward_power_balance
 
+        pb_physics = dict(_PB_PHYSICS)
+        pb_physics["n_e"] = ps_fwd.n_e
+        pb_physics["T_e"] = ps_fwd.T_e
+        pb_physics["plasma_volume"] = ps_fwd.V_plasma
         pt_fwd = mfe_forward_power_balance(
             p_fus=ps_fwd.p_fus,
             fuel=Fuel.DT,
@@ -208,11 +248,7 @@ class TestInverseMode:
             p_trit=10.0,
             p_house=4.0,
             p_cryo=0.5,
-            n_e=ps_fwd.n_e,
-            T_e=ps_fwd.T_e,
-            Z_eff=1.5,
-            plasma_volume=ps_fwd.V_plasma,
-            B=5.0,
+            **pb_physics,
         )
         p_net = float(pt_fwd.p_net)
 
@@ -225,6 +261,7 @@ class TestInverseMode:
             B=5.0,
             q95=3.5,
             f_GW=0.85,
+            **_DT_FUEL_FRAC,
         )
         # T_e should be recovered approximately (radiation coupling
         # means the inverse path sees slightly different p_rad, so
