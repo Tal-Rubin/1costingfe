@@ -249,3 +249,21 @@ def test_adapter_default_power_cycle():
     )
     out = run_costing(inp)
     assert out.lcoe > 0
+
+
+def test_sensitivity_with_sco2():
+    """Sensitivity analysis should work with non-Rankine cycle."""
+    from costingfe.model import CostModel
+    from costingfe.types import ConfinementConcept, Fuel, PowerCycle
+
+    model = CostModel(
+        concept=ConfinementConcept.TOKAMAK,
+        fuel=Fuel.DT,
+        power_cycle=PowerCycle.BRAYTON_SCO2,
+    )
+    result = model.forward(net_electric_mw=1000.0, availability=0.85, lifetime_yr=30)
+    sens = model.sensitivity(result.params)
+    assert "engineering" in sens
+    assert "eta_th" in sens["engineering"]
+    # eta_th elasticity should be negative (higher efficiency -> lower LCOE)
+    assert sens["engineering"]["eta_th"] < 0
