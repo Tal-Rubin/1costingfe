@@ -5,6 +5,8 @@ from pathlib import Path
 
 import yaml
 
+from costingfe.types import PowerCycle
+
 _DATA_DIR = Path(__file__).parent / "data" / "defaults"
 
 
@@ -294,3 +296,22 @@ def load_engineering_defaults(concept_fuel: str) -> dict:
         with open(path) as f:
             return yaml.safe_load(f)
     return {}
+
+
+POWER_CYCLE_DEFAULTS: dict[PowerCycle, dict[str, float]] = {
+    PowerCycle.RANKINE: {
+        "eta_th": 0.40,
+        "turbine_per_mw": 0.19764,
+        "heat_rej_per_mw": 0.03416,
+    },
+    PowerCycle.BRAYTON_SCO2: {
+        "eta_th": 0.47,
+        "turbine_per_mw": 0.155,
+        "heat_rej_per_mw": 0.022,
+    },
+    PowerCycle.COMBINED: {
+        "eta_th": 0.53,
+        "turbine_per_mw": 0.235,
+        "heat_rej_per_mw": 0.018,
+    },
+}
