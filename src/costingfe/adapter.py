@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 
 from costingfe.defaults import load_costing_constants
 from costingfe.model import CostModel
-from costingfe.types import ConfinementConcept, Fuel
+from costingfe.types import ConfinementConcept, Fuel, PowerCycle
 from costingfe.validation import CostingInput
 
 
@@ -28,6 +28,7 @@ class FusionTeaInput:
     interest_rate: float = 0.07
     inflation_rate: float = 0.02
     noak: bool = True
+    power_cycle: str = "rankine"
     overrides: dict = field(default_factory=dict)
     cost_overrides: dict[str, float] = field(default_factory=dict)  # CAS account → M$
     costing_overrides: dict[str, float] = field(
@@ -58,6 +59,7 @@ def run_costing(inp: FusionTeaInput) -> FusionTeaOutput:
     """
     concept = ConfinementConcept(inp.concept)
     fuel = Fuel(inp.fuel)
+    power_cycle = PowerCycle(inp.power_cycle)
 
     # Validate customer-level inputs before costing.
     # Engineering overrides (inp.overrides) are intentionally excluded here
@@ -82,7 +84,9 @@ def run_costing(inp: FusionTeaInput) -> FusionTeaOutput:
     if inp.costing_overrides:
         cc = cc.replace(**inp.costing_overrides)
 
-    model = CostModel(concept=concept, fuel=fuel, costing_constants=cc)
+    model = CostModel(
+        concept=concept, fuel=fuel, costing_constants=cc, power_cycle=power_cycle
+    )
     result = model.forward(
         net_electric_mw=inp.net_electric_mw,
         availability=inp.availability,

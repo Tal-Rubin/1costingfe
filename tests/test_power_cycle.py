@@ -2,6 +2,7 @@ from pathlib import Path
 
 import yaml
 
+from costingfe.adapter import FusionTeaInput, run_costing
 from costingfe.defaults import POWER_CYCLE_DEFAULTS
 from costingfe.types import PowerCycle
 
@@ -212,3 +213,39 @@ def test_bop_coefficients_not_in_costing_yaml():
     assert "heat_rej_per_mw" not in data, (
         "heat_rej_per_mw still in costing_constants.yaml"
     )
+
+
+def test_adapter_with_power_cycle():
+    """Adapter should accept power_cycle string and pass to CostModel."""
+    inp_rankine = FusionTeaInput(
+        concept="tokamak",
+        fuel="dt",
+        net_electric_mw=1000.0,
+        availability=0.85,
+        lifetime_yr=30,
+        power_cycle="rankine",
+    )
+    inp_sco2 = FusionTeaInput(
+        concept="tokamak",
+        fuel="dt",
+        net_electric_mw=1000.0,
+        availability=0.85,
+        lifetime_yr=30,
+        power_cycle="brayton_sco2",
+    )
+    out_rankine = run_costing(inp_rankine)
+    out_sco2 = run_costing(inp_sco2)
+    assert out_sco2.lcoe < out_rankine.lcoe
+
+
+def test_adapter_default_power_cycle():
+    """Adapter should default to rankine when power_cycle not provided."""
+    inp = FusionTeaInput(
+        concept="tokamak",
+        fuel="dt",
+        net_electric_mw=1000.0,
+        availability=0.85,
+        lifetime_yr=30,
+    )
+    out = run_costing(inp)
+    assert out.lcoe > 0
