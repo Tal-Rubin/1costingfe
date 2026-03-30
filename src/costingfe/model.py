@@ -68,10 +68,13 @@ class CostModel:
         concept: ConfinementConcept,
         fuel: Fuel,
         costing_constants: CostingConstants = None,
+        power_cycle: PowerCycle = PowerCycle.RANKINE,
     ):
         self.concept = concept
         self.fuel = fuel
         self.family = CONCEPT_TO_FAMILY[concept]
+        self.power_cycle = power_cycle
+        self._cc_user_provided = costing_constants is not None
         self.cc = costing_constants or load_costing_constants()
         self._eng_defaults = load_engineering_defaults(
             f"{self.family.value}_{concept.value}"
@@ -387,12 +390,18 @@ class CostModel:
         # precedence (via params.update(overrides) below).
         for name in cc_float_fields():
             params.setdefault(name, getattr(self.cc, name))
-        # Inject power-cycle defaults (eta_th, turbine_per_mw, heat_rej_per_mw)
-        # from the Rankine preset as fallbacks.  Task 4 will wire in
-        # user-selectable cycle; for now Rankine is always the default.
-        for name, val in POWER_CYCLE_DEFAULTS[PowerCycle.RANKINE].items():
-            params.setdefault(name, val)
         params.update(overrides)
+        # Apply power cycle preset: inject eta_th and BOP coefficients.
+        # eta_th is no longer in concept YAMLs — the preset is the source
+        # of truth. User explicit kwargs (in `overrides`) always win.
+        cycle_preset = POWER_CYCLE_DEFAULTS[self.power_cycle]
+        if "eta_th" not in overrides:
+            params["eta_th"] = cycle_preset["eta_th"]
+        # BOP coefficients: apply preset unless user provided custom
+        # CostingConstants (which means they want full control).
+        if not self._cc_user_provided:
+            for cc_key in ("turbine_per_mw", "heat_rej_per_mw"):
+                params[cc_key] = cycle_preset[cc_key]
         params.update(
             dict(
                 net_electric_mw=net_electric_mw,

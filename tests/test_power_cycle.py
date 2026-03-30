@@ -79,6 +79,126 @@ def test_eta_th_not_in_concept_yamls():
         assert "eta_th" not in data, f"eta_th still in {fname}"
 
 
+def test_default_cycle_is_rankine():
+    """Omitting power_cycle should default to Rankine."""
+    from costingfe.model import CostModel
+    from costingfe.types import ConfinementConcept, Fuel, PowerCycle
+
+    model = CostModel(concept=ConfinementConcept.TOKAMAK, fuel=Fuel.DT)
+    assert model.power_cycle == PowerCycle.RANKINE
+
+
+def test_rankine_matches_existing_behavior():
+    """Rankine cycle should produce identical results to no-cycle baseline."""
+    from costingfe.model import CostModel
+    from costingfe.types import ConfinementConcept, Fuel, PowerCycle
+
+    model_default = CostModel(concept=ConfinementConcept.TOKAMAK, fuel=Fuel.DT)
+    model_rankine = CostModel(
+        concept=ConfinementConcept.TOKAMAK,
+        fuel=Fuel.DT,
+        power_cycle=PowerCycle.RANKINE,
+    )
+    r_default = model_default.forward(
+        net_electric_mw=1000.0, availability=0.85, lifetime_yr=30
+    )
+    r_rankine = model_rankine.forward(
+        net_electric_mw=1000.0, availability=0.85, lifetime_yr=30
+    )
+    assert abs(r_default.costs.lcoe - r_rankine.costs.lcoe) < 0.01
+
+
+def test_sco2_differs_from_rankine():
+    """sCO2 Brayton should produce different (lower) LCOE than Rankine."""
+    from costingfe.model import CostModel
+    from costingfe.types import ConfinementConcept, Fuel, PowerCycle
+
+    model_rankine = CostModel(
+        concept=ConfinementConcept.TOKAMAK,
+        fuel=Fuel.DT,
+        power_cycle=PowerCycle.RANKINE,
+    )
+    model_sco2 = CostModel(
+        concept=ConfinementConcept.TOKAMAK,
+        fuel=Fuel.DT,
+        power_cycle=PowerCycle.BRAYTON_SCO2,
+    )
+    r_rankine = model_rankine.forward(
+        net_electric_mw=1000.0, availability=0.85, lifetime_yr=30
+    )
+    r_sco2 = model_sco2.forward(
+        net_electric_mw=1000.0, availability=0.85, lifetime_yr=30
+    )
+    assert r_sco2.costs.lcoe < r_rankine.costs.lcoe
+
+
+def test_combined_differs_from_sco2():
+    """Combined cycle should produce different (lower) LCOE than sCO2."""
+    from costingfe.model import CostModel
+    from costingfe.types import ConfinementConcept, Fuel, PowerCycle
+
+    model_sco2 = CostModel(
+        concept=ConfinementConcept.TOKAMAK,
+        fuel=Fuel.DT,
+        power_cycle=PowerCycle.BRAYTON_SCO2,
+    )
+    model_combined = CostModel(
+        concept=ConfinementConcept.TOKAMAK,
+        fuel=Fuel.DT,
+        power_cycle=PowerCycle.COMBINED,
+    )
+    r_sco2 = model_sco2.forward(
+        net_electric_mw=1000.0, availability=0.85, lifetime_yr=30
+    )
+    r_combined = model_combined.forward(
+        net_electric_mw=1000.0, availability=0.85, lifetime_yr=30
+    )
+    assert r_combined.costs.lcoe < r_sco2.costs.lcoe
+
+
+def test_eta_th_override_wins_over_preset():
+    """User-supplied eta_th should override the cycle preset."""
+    from costingfe.model import CostModel
+    from costingfe.types import ConfinementConcept, Fuel, PowerCycle
+
+    model = CostModel(
+        concept=ConfinementConcept.TOKAMAK,
+        fuel=Fuel.DT,
+        power_cycle=PowerCycle.BRAYTON_SCO2,
+    )
+    result = model.forward(
+        net_electric_mw=1000.0,
+        availability=0.85,
+        lifetime_yr=30,
+        eta_th=0.40,
+    )
+    assert abs(result.params["eta_th"] - 0.40) < 1e-6
+
+
+def test_costing_override_wins_over_preset():
+    """User costing_overrides should override the cycle preset coefficients."""
+    from costingfe.defaults import load_costing_constants
+    from costingfe.model import CostModel
+    from costingfe.types import ConfinementConcept, Fuel, PowerCycle
+
+    cc = load_costing_constants()
+    custom_turbine = 0.25
+    cc = cc.replace(turbine_per_mw=custom_turbine)
+    model = CostModel(
+        concept=ConfinementConcept.TOKAMAK,
+        fuel=Fuel.DT,
+        power_cycle=PowerCycle.BRAYTON_SCO2,
+        costing_constants=cc,
+    )
+    result = model.forward(
+        net_electric_mw=1000.0,
+        availability=0.85,
+        lifetime_yr=30,
+    )
+    expected_cas23 = result.power_table.p_et * custom_turbine
+    assert abs(result.costs.cas23 - expected_cas23) < 0.1
+
+
 def test_bop_coefficients_not_in_costing_yaml():
     """turbine_per_mw and heat_rej_per_mw should not be in costing_constants.yaml."""
     defaults_dir = (
