@@ -1431,11 +1431,17 @@ B-11 (enriched) & 10{,}000 & FOAK estimate (B-10 tails) \\
 \subsection{CAS23--26: Balance of Plant Equipment}
 \label{sec:cas23-26}
 
-CAS23--26 cover conventional power-conversion and electrical infrastructure
-that is essentially identical to any large steam-Rankine thermal
-plant.  These accounts are \textbf{fuel-independent}: the choice of fuel
+CAS23--26 cover conventional power-conversion and electrical infrastructure.
+These accounts are \textbf{fuel-independent}: the choice of fuel
 affects the reactor island (CAS22) but not the turbine hall, switchyard,
 or cooling towers.
+
+The model supports three thermal cycles, selected by the user: steam
+Rankine, supercritical CO$_2$ (sCO$_2$) Brayton, and combined cycle
+(gas topping plus steam bottoming).  The cycle determines the thermal
+conversion efficiency $\eta_{\text{th}}$ and the per-MW coefficients for
+CAS23 (turbine plant) and CAS26 (heat rejection).  CAS24 (electrical
+equipment) and CAS25 (miscellaneous plant) are cycle-independent.
 
 Each account scales linearly with gross electric power:
 \begin{equation}
@@ -1444,38 +1450,48 @@ C_{2x} = n_{\text{mod}} \times P_{\text{et}} \times c_{2x}
 \end{equation}
 \noindent where $P_{\text{et}}$ is gross electric output (MW) and $c_{2x}$
 is a per-MW coefficient (M\$/MW, 2024\$).  \Cref{tab:bop} lists the adopted
-values.
+values for each cycle.
 
 \begin{table}[htbp]
-\caption{Balance of plant per-MW coefficients (2024\$).}
+\caption{Balance of plant per-MW coefficients by thermal cycle (2024\$).}
 \label{tab:bop}
 \centering
-\begin{tabular}{llr}
+\begin{tabular}{llrrr}
 \toprule
-CAS & Scope & $c_{2x}$ (M\$/MW) \\
+CAS & Scope & Rankine & sCO$_2$ & Combined \\
 \midrule
-23 & Steam TG, condenser, feedwater & 0.198 \\
-24 & Switchyard, transformers, cabling & 0.084 \\
-25 & Fire protection, compressed air, HVAC & 0.051 \\
-26 & Cooling towers, circulating water & 0.034 \\
+23 & Turbine plant equipment & 0.198 & 0.155 & 0.235 \\
+24 & Switchyard, transformers, cabling & 0.084 & 0.084 & 0.084 \\
+25 & Fire protection, compressed air, HVAC & 0.051 & 0.051 & 0.051 \\
+26 & Cooling towers, circulating water & 0.034 & 0.022 & 0.018 \\
 \midrule
-\multicolumn{2}{l}{\textit{Total BOP}} & \textit{0.367} \\
+& $\eta_{\text{th}}$ & 0.40 & 0.47 & 0.53 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-The coefficients derive from the ARIES cost-account tradition
+The Rankine coefficients derive from the ARIES cost-account tradition
 \citep{waganer2013}, calibrated against the NETL \textit{Cost and
 Performance Baseline for Fossil Energy Plants} \citep{netl2022}.  Pre-inflation
-(2019\$) values are escalated by a CPI factor of 1.22.  At 1~GWe net
-(${\sim}$1.3~GW gross), total BOP cost is ${\sim}$\$477M
-(${\sim}$\$367/kW~gross), consistent with industry benchmarks for steam
-turbine-generator sets (Siemens, GE), switchyard equipment, and mechanical-draft
-cooling towers.
+(2019\$) values are escalated by a CPI factor of 1.22.
+
+The sCO$_2$ Brayton efficiency of $\eta_{\text{th}} = 0.47$ reflects the
+DOE/Sandia target of 45--50\% for recompression Brayton cycles at nuclear
+heat source temperatures (500--700$^\circ$C)
+\citep{doe_qtr2015_sco2,sandia_aec}.  The CAS23 coefficient is 22\% below
+Rankine: sCO$_2$ turbomachinery is ${\sim}$85\% smaller by volume, but
+recuperators add cost, netting ${\sim}$20\% overall reduction
+\citep{ncepu_sco2_comparison}.
+
+The combined cycle efficiency of $\eta_{\text{th}} = 0.53$ is derived from
+NGCC performance ($>$60\%, \citealt{netl2022}), adjusted downward for fusion
+heat source temperatures (${\sim}$600$^\circ$C vs.\ 1500$^\circ$C gas
+turbine inlet).  The CAS23 coefficient is 19\% above Rankine due to dual
+turbomachinery sets (topping plus bottoming) and HRSG.
 
 Cross-checks against the NREL ATB 2024 nuclear cost breakdown (3.9\% of
 total capital for energy conversion, 6.3\% for electrical equipment) confirm
-that the adopted values are conservative---appropriate for NOAK fusion plants
+that the adopted Rankine values are conservative---appropriate for NOAK fusion plants
 using conventional, non-nuclear-grade BOP equipment.
 
 
