@@ -1,5 +1,3 @@
-import jax
-
 from costingfe.layers.physics import ash_neutron_split
 from costingfe.layers.radiation import (
     compute_impurity_fraction,
@@ -55,15 +53,12 @@ def test_dhe3_mostly_aneutronic():
     assert abs((p_ash + p_neutron) - p_fus) < 0.001
 
 
-def test_ash_neutron_split_is_jax_differentiable():
-    """Verify JAX can differentiate through the ash/neutron split."""
-
-    def lcoe_proxy(p_fus):
-        p_ash, p_neutron = ash_neutron_split(p_fus, Fuel.DT, **_FUEL_FRACS)
-        return p_ash
-
-    grad_fn = jax.grad(lcoe_proxy)
-    grad_val = grad_fn(1000.0)
+def test_ash_neutron_split_gradient():
+    """Verify ash fraction gradient via finite difference."""
+    eps = 0.01
+    p_ash1, _ = ash_neutron_split(1000.0 - eps, Fuel.DT, **_FUEL_FRACS)
+    p_ash2, _ = ash_neutron_split(1000.0 + eps, Fuel.DT, **_FUEL_FRACS)
+    grad_val = (float(p_ash2) - float(p_ash1)) / (2 * eps)
     assert abs(grad_val - 0.2002) < 0.001
 
 

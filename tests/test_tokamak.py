@@ -1,7 +1,8 @@
 """Tests for the 0D tokamak plasma model."""
 
-import jax
-import jax.numpy as jnp
+import math
+
+import numpy as np
 
 from costingfe import ConfinementConcept, CostModel, Fuel, PlasmaState
 from costingfe.layers.tokamak import (
@@ -61,8 +62,8 @@ _PB_PHYSICS = dict(
 class TestBoschHale:
     def test_monotonic_below_peak(self):
         """<sigma*v> should increase monotonically from 1 to ~65 keV."""
-        temps = jnp.array([1.0, 5.0, 10.0, 15.0, 20.0, 30.0, 50.0, 65.0])
-        svs = jnp.array([sigma_v_dt(t) for t in temps])
+        temps = np.array([1.0, 5.0, 10.0, 15.0, 20.0, 30.0, 50.0, 65.0])
+        svs = np.array([sigma_v_dt(t) for t in temps])
         for i in range(len(svs) - 1):
             assert svs[i] < svs[i + 1], f"Not monotonic at T={temps[i + 1]}"
 
@@ -76,11 +77,11 @@ class TestBoschHale:
         sv = float(sigma_v_dt(65.0))
         assert 5e-22 < sv < 1.2e-21, f"sigma_v(65 keV) = {sv}"
 
-    def test_jax_differentiable(self):
-        """Should be differentiable with jax.grad."""
-        grad_fn = jax.grad(lambda T: sigma_v_dt(T))
-        g = grad_fn(15.0)
-        assert jnp.isfinite(g)
+    def test_finite_difference_gradient(self):
+        """sigma_v_dt should have positive gradient at 15 keV."""
+        eps = 0.01
+        g = (float(sigma_v_dt(15.0 + eps)) - float(sigma_v_dt(15.0 - eps))) / (2 * eps)
+        assert math.isfinite(g)
         assert g > 0  # increasing at 15 keV
 
 
@@ -100,7 +101,7 @@ class TestPlasmaCurrentDensity:
     def test_greenwald_density(self):
         """n_GW = I_p / (pi * a^2) in 10^20 m^-3."""
         n_GW = float(compute_greenwald_density(I_p_MA=15.0, a=2.0))
-        expected = 15.0 / (jnp.pi * 2.0**2)
+        expected = 15.0 / (np.pi * 2.0**2)
         assert abs(n_GW - expected) < 0.01
 
 
@@ -492,32 +493,31 @@ class TestBackwardCompat:
 
 
 # ---------------------------------------------------------------------------
-# 12. JAX autodiff through 0D pipeline
+# 12. Finite-difference gradient checks
 # ---------------------------------------------------------------------------
-class TestJAXAutodiff:
+class TestFiniteDiffGradients:
     def test_sigma_v_grad(self):
         """sigma_v_dt should have finite positive gradient at 15 keV."""
-        g = jax.grad(sigma_v_dt)(15.0)
-        assert jnp.isfinite(g)
+        eps = 0.01
+        g = (float(sigma_v_dt(15.0 + eps)) - float(sigma_v_dt(15.0 - eps))) / (2 * eps)
+        assert math.isfinite(g)
         assert g > 0
 
     def test_fusion_power_grad(self):
         """Fusion power should have finite gradient w.r.t. T_e."""
-
-        def p_fus_fn(T):
-            return compute_fusion_power(n_e=1e20, T_i=T, V_plasma=500.0)
-
-        g = jax.grad(p_fus_fn)(15.0)
-        assert jnp.isfinite(g)
+        eps = 0.01
+        f1 = float(compute_fusion_power(n_e=1e20, T_i=15.0 - eps, V_plasma=500.0))
+        f2 = float(compute_fusion_power(n_e=1e20, T_i=15.0 + eps, V_plasma=500.0))
+        g = (f2 - f1) / (2 * eps)
+        assert math.isfinite(g)
 
     def test_beta_N_grad(self):
         """beta_N should have finite gradient w.r.t. T_e."""
-
-        def beta_fn(T):
-            return compute_beta_N(n_e=1e20, T_i=T, B=5.0, I_p_MA=15.0, a=2.0)
-
-        g = jax.grad(beta_fn)(15.0)
-        assert jnp.isfinite(g)
+        eps = 0.01
+        b1 = float(compute_beta_N(n_e=1e20, T_i=15.0 - eps, B=5.0, I_p_MA=15.0, a=2.0))
+        b2 = float(compute_beta_N(n_e=1e20, T_i=15.0 + eps, B=5.0, I_p_MA=15.0, a=2.0))
+        g = (b2 - b1) / (2 * eps)
+        assert math.isfinite(g)
 
 
 # ---------------------------------------------------------------------------
@@ -546,14 +546,13 @@ class TestDisruptionRate:
         r3 = float(compute_disruption_rate(f_GW=0.95, beta_N=2.5, q95=3.5))
         assert r1 < r2 < r3
 
-    def test_jax_differentiable(self):
-        """disruption_rate should be differentiable w.r.t. f_GW."""
-
-        def rate_fn(f_GW):
-            return compute_disruption_rate(f_GW=f_GW, beta_N=2.5, q95=3.5)
-
-        g = jax.grad(rate_fn)(0.85)
-        assert jnp.isfinite(g)
+    def test_finite_diff_gradient(self):
+        """disruption_rate should have positive gradient w.r.t. f_GW."""
+        eps = 0.001
+        r1 = float(compute_disruption_rate(f_GW=0.85 - eps, beta_N=2.5, q95=3.5))
+        r2 = float(compute_disruption_rate(f_GW=0.85 + eps, beta_N=2.5, q95=3.5))
+        g = (r2 - r1) / (2 * eps)
+        assert math.isfinite(g)
         assert g > 0  # rate increases with f_GW
 
 

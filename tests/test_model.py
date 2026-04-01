@@ -71,7 +71,7 @@ def test_sensitivity_ife():
     assert "p_input" not in sens["engineering"]  # MFE-specific param
 
 
-def test_sensitivity_jax_grad_matches_finite_diff():
+def test_sensitivity_grad_matches_finite_diff():
     """JAX grad elasticities should be close to finite-difference estimates."""
     model = CostModel(concept=ConfinementConcept.TOKAMAK, fuel=Fuel.DT)
     result = model.forward(net_electric_mw=1000.0, availability=0.85, lifetime_yr=30)

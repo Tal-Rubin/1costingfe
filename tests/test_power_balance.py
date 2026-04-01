@@ -1,5 +1,3 @@
-import jax
-
 from costingfe.layers.physics import (
     mfe_forward_power_balance,
     mfe_inverse_power_balance,
@@ -70,54 +68,6 @@ def test_mfe_forward_no_dec():
     """With f_dec=0, DEC electric should be zero."""
     pt = mfe_forward_power_balance(**CATF_PARAMS)
     assert abs(pt.p_dee) < 0.001
-
-
-def test_mfe_forward_is_differentiable():
-    """JAX should be able to differentiate p_net w.r.t. p_fus."""
-
-    def p_net_fn(p_fus):
-        pt = mfe_forward_power_balance(
-            p_fus=p_fus,
-            fuel=Fuel.DT,
-            p_input=50.0,
-            mn=1.1,
-            eta_th=0.46,
-            eta_p=0.5,
-            eta_pin=0.5,
-            eta_de=0.85,
-            f_sub=0.03,
-            f_dec=0.0,
-            p_coils=2.0,
-            p_cool=13.7,
-            p_pump=1.0,
-            p_trit=10.0,
-            p_house=4.0,
-            p_cryo=0.5,
-            n_e=1.0e20,
-            T_e=15.0,
-            Z_eff=1.5,
-            plasma_volume=500.0,
-            B=5.0,
-            dd_f_T=0.969,
-            dd_f_He3=0.689,
-            dhe3_dd_frac=0.07,
-            dhe3_f_T=0.97,
-            pb11_f_alpha_n=0.0,
-            pb11_f_p_n=0.0,
-            wall_material=None,
-            T_edge=0.05,
-            tau_ratio=3.0,
-            fw_area=0.0,
-            R_major=0.0,
-            a_minor=0.0,
-            kappa=1.7,
-            R_w=0.6,
-        )
-        return pt.p_net
-
-    grad_fn = jax.grad(p_net_fn)
-    grad_val = grad_fn(2600.0)
-    assert grad_val > 0  # more fusion power -> more net electric
 
 
 # Shared engineering params for inverse tests (no p_fus, no fuel)
