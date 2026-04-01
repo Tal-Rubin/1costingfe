@@ -654,10 +654,16 @@ class CostModel:
             )
 
         c90 = cas90_financial(total_capital, interest_rate, lifetime_yr)
+        # For IFE/MIF, C220108 is the target factory (capital equipment),
+        # not the divertor — it does not need periodic replacement.
+        repl_accounts = cc.replaceable_accounts
+        if self.family.value != "mfe":
+            repl_accounts = tuple(a for a in repl_accounts if a != "C220108")
+
         c70, c71, c72 = cas70_om(
             cc,
             cas22_detail=c22_detail,
-            replaceable_accounts=cc.replaceable_accounts,
+            replaceable_accounts=repl_accounts,
             n_mod=n_mod,
             p_net=pt.p_net,
             availability=avail_eff,
