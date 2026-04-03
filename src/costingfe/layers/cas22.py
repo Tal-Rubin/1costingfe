@@ -15,6 +15,8 @@ All costs in M$. Source: pyFECONs costing/calculations/cas22/
 
 import math
 
+import jax.numpy as jnp
+
 from costingfe.defaults import CostingConstants
 from costingfe.types import CoilMaterial, ConfinementConcept, ConfinementFamily, Fuel
 
@@ -73,6 +75,8 @@ def cas22_reactor_plant_equipment(
     p_icrf: float,
     p_ecrh: float,
     p_lhcd: float,
+    f_dec: float,
+    p_dee: float,
 ) -> dict[str, float]:
     """Compute all CAS22 sub-accounts. Returns dict of account_code -> M$.
 
@@ -178,12 +182,25 @@ def cas22_reactor_plant_equipment(
         c220108 = cc.target_factory_base * (p_et / 1000.0) ** 0.7
 
     # -----------------------------------------------------------------------
-    # 220109: Direct Energy Converter — excluded for tokamak/stellarator.
-    # Relevant only for mirror/FRC concepts with charged-particle exhaust.
-    # Override via cost_overrides["C220109"] for custom configurations.
-    # See docs/account_justification/CAS22_plant_systems.md
+    # 220109: Direct Energy Converter — add-on for linear devices
+    # (mirrors, steady-state FRCs) with directed axial exhaust.
+    # Covers: grid/collector modules, DC-AC power conditioning,
+    # incremental vacuum/cryo, incremental tank volume, heat collection.
+    # Applicable to venetian blind, TWDEC, or ICC — cost ranges overlap;
+    # efficiency differences flow through eta_de in the physics layer.
+    # Gated on f_dec > 0 (no fuel gating — user decides economic viability).
+    # See docs/account_justification/CAS220109_direct_energy_converter.md
     # -----------------------------------------------------------------------
-    c220109 = 0.0
+    P_DEE_REF = 400.0  # MW reference DEC electric output
+    # Double-where pattern avoids NaN gradient from x**0.7 at x=0:
+    # inner jnp.where ensures p_dee_safe >= 1.0 inside the exponent so the
+    # gradient is finite; outer jnp.where zeroes the result when p_dee=0.
+    p_dee_safe = jnp.where(p_dee > 0, p_dee, 1.0)
+    c220109 = jnp.where(
+        p_dee > 0,
+        cc.dec_base * (p_dee_safe / P_DEE_REF) ** 0.7,
+        0.0,
+    )
 
     # -----------------------------------------------------------------------
     # 220110: Remote Handling & Maintenance Equipment

@@ -555,6 +555,8 @@ class CostModel:
             p_ecrh=p_ecrh,
             p_icrf=p_icrf,
             p_lhcd=p_lhcd,
+            f_dec=params.get("f_dec", 0.0),
+            p_dee=pt.p_dee,
         )
         _PER_MODULE_KEYS = {
             "C220101",

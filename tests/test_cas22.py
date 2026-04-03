@@ -41,6 +41,8 @@ def _make_cas22(fuel=Fuel.DT, n_mod=1, blanket_t=0.70):
         p_icrf=0.0,
         p_ecrh=0.0,
         p_lhcd=0.0,
+        f_dec=0.0,
+        p_dee=0.0,
     )
 
 
@@ -162,6 +164,8 @@ def _make_cas22_with_family(family=ConfinementFamily.MFE):
         p_icrf=0.0,
         p_ecrh=0.0,
         p_lhcd=0.0,
+        f_dec=0.0,
+        p_dee=0.0,
     )
 
 
@@ -250,6 +254,8 @@ def _make_cas22_coil(
         p_icrf=0.0,
         p_ecrh=0.0,
         p_lhcd=0.0,
+        f_dec=0.0,
+        p_dee=0.0,
     )
 
 
@@ -332,6 +338,8 @@ def _make_cas22_heating(p_nbi=50.0, p_icrf=0.0, p_ecrh=0.0, p_lhcd=0.0):
         p_icrf=p_icrf,
         p_ecrh=p_ecrh,
         p_lhcd=p_lhcd,
+        f_dec=0.0,
+        p_dee=0.0,
     )
 
 
@@ -409,6 +417,8 @@ def test_cas220110_concept_scales():
         p_icrf=0.0,
         p_ecrh=0.0,
         p_lhcd=0.0,
+        f_dec=0.0,
+        p_dee=0.0,
     )
     mir = cas22_reactor_plant_equipment(
         CC,
@@ -433,5 +443,79 @@ def test_cas220110_concept_scales():
         p_icrf=0.0,
         p_ecrh=0.0,
         p_lhcd=0.0,
+        f_dec=0.0,
+        p_dee=0.0,
     )
     assert mir["C220110"] < tok["C220110"]
+
+
+# ---- CAS220109: Direct Energy Converter ----
+
+
+def _make_cas22_dec(f_dec=0.3, p_dee=300.0):
+    """Helper for DEC tests — mirror with DEC."""
+    rb = RadialBuild(R0=6.2, plasma_t=2.0, elon=1.7, blanket_t=0.70)
+    geo = compute_geometry(rb, ConfinementConcept.TOKAMAK)
+    return cas22_reactor_plant_equipment(
+        CC,
+        p_net=1000.0,
+        p_th=2500.0,
+        p_et=1100.0,
+        p_fus=2300.0,
+        p_cryo=0.5,
+        n_mod=1,
+        fuel=Fuel.DHE3,
+        noak=True,
+        blanket_vol=geo.firstwall_vol + geo.blanket_vol + geo.reflector_vol,
+        shield_vol=geo.ht_shield_vol + geo.lt_shield_vol,
+        structure_vol=geo.structure_vol,
+        vessel_vol=geo.vessel_vol,
+        family=ConfinementFamily.MFE,
+        concept=ConfinementConcept.MIRROR,
+        b_max=12.0,
+        r_coil=1.85,
+        coil_material=CoilMaterial.REBCO_HTS,
+        p_nbi=50.0,
+        p_icrf=0.0,
+        p_ecrh=0.0,
+        p_lhcd=0.0,
+        f_dec=f_dec,
+        p_dee=p_dee,
+    )
+
+
+def test_c220109_nonzero_when_dec_active():
+    """C220109 should be nonzero when f_dec > 0 and p_dee > 0."""
+    result = _make_cas22_dec(f_dec=0.3, p_dee=300.0)
+    assert result["C220109"] > 0
+
+
+def test_c220109_zero_when_no_dec():
+    """C220109 should be zero when f_dec = 0."""
+    result = _make_cas22_dec(f_dec=0.0, p_dee=0.0)
+    assert result["C220109"] == 0.0
+
+
+def test_c220109_scales_with_p_dee():
+    """Higher DEC output should increase C220109."""
+    low = _make_cas22_dec(f_dec=0.3, p_dee=200.0)
+    high = _make_cas22_dec(f_dec=0.3, p_dee=600.0)
+    assert high["C220109"] > low["C220109"]
+
+
+def test_c220109_scaling_exponent():
+    """C220109 should scale as (p_dee / P_DEE_REF) ** 0.7."""
+    result = _make_cas22_dec(f_dec=0.3, p_dee=400.0)
+    # At p_dee = P_DEE_REF = 400, scaling factor is 1.0
+    expected = CC.dec_base * 1.0
+    assert abs(result["C220109"] - expected) < 0.01
+
+
+def test_c220109_included_in_total():
+    """C220109 should be included in C220000 total."""
+    with_dec = _make_cas22_dec(f_dec=0.3, p_dee=400.0)
+    without_dec = _make_cas22_dec(f_dec=0.0, p_dee=0.0)
+    assert with_dec["C220000"] > without_dec["C220000"]
+    diff = with_dec["C220000"] - without_dec["C220000"]
+    # Difference should include C220109 plus its share of installation labor
+    assert diff > with_dec["C220109"]

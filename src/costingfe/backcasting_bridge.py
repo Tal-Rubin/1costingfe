@@ -109,6 +109,8 @@ def generate_subsystems(
         p_icrf=params.get("p_icrf", 0.0),
         p_ecrh=params.get("p_ecrh", 0.0),
         p_lhcd=params.get("p_lhcd", 0.0),
+        f_dec=params.get("f_dec", 0.0),
+        p_dee=float(pt.p_dee),
     )
 
     # O&M split: distribute CAS70 proportional to capital cost
