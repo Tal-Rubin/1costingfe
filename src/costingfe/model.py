@@ -40,6 +40,8 @@ from costingfe.layers.physics import (
     mfe_inverse_power_balance,
     mif_forward_power_balance,
     mif_inverse_power_balance,
+    pulsed_thermal_forward,
+    pulsed_thermal_inverse,
 )
 from costingfe.layers.tokamak import (
     DisruptionModel,
@@ -183,10 +185,42 @@ class CostModel:
             )
 
         elif self.family == ConfinementFamily.PULSED:
-            # Transitional dispatch: use MIF functions if p_driver present,
-            # otherwise IFE functions.  Will be replaced by unified pulsed
-            # power balance in a later task.
-            if "p_driver" in params and params["p_driver"]:
+            # Unified pulsed balance (e_driver_mj present) or legacy dispatch
+            if "e_driver_mj" in params and params.get("e_driver_mj"):
+                fuel_frac_kw = dict(
+                    dd_f_T=params["dd_f_T"],
+                    dd_f_He3=params["dd_f_He3"],
+                    dhe3_dd_frac=params["dhe3_dd_frac"],
+                    dhe3_f_T=params["dhe3_f_T"],
+                    pb11_f_alpha_n=params["pb11_f_alpha_n"],
+                    pb11_f_p_n=params["pb11_f_p_n"],
+                )
+                pulsed_kw = dict(
+                    fuel=self.fuel,
+                    e_driver_mj=params["e_driver_mj"],
+                    f_rep=params["f_rep"],
+                    mn=params["mn"],
+                    eta_th=params["eta_th"],
+                    eta_pin=params["eta_pin"],
+                    f_rad=params["f_rad"],
+                    f_sub=params["f_sub"],
+                    p_pump=params["p_pump"],
+                    p_trit=params["p_trit"],
+                    p_house=params["p_house"],
+                    p_cryo=params["p_cryo"],
+                    p_target=params["p_target"],
+                    p_coils=params.get("p_coils", 0.0),
+                    **fuel_frac_kw,
+                )
+                p_fus = pulsed_thermal_inverse(
+                    p_net_target=p_net_per_mod,
+                    **pulsed_kw,
+                )
+                pt = pulsed_thermal_forward(
+                    p_fus=p_fus,
+                    **pulsed_kw,
+                )
+            elif "p_driver" in params and params["p_driver"]:
                 p_fus = mif_inverse_power_balance(
                     p_net_target=p_net_per_mod,
                     fuel=self.fuel,

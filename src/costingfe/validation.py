@@ -92,18 +92,22 @@ class CostingInput(BaseModel):
     R0: float | None = None
     elon: float | None = None
 
-    # IFE only
+    # IFE only (legacy — kept for backward compatibility)
     p_implosion: float | None = None
     p_ignition: float | None = None
     eta_pin1: float | None = None
     eta_pin2: float | None = None
     p_target: float | None = None  # shared with MIF
 
-    # MIF only
+    # MIF only (legacy — kept for backward compatibility)
     p_driver: float | None = None
     # eta_pin: already declared above (shared MFE/MIF)
     # p_target: already declared above (shared IFE/MIF)
     # p_coils: already declared above (shared MFE/MIF)
+
+    # Pulsed (new unified parameter set)
+    e_driver_mj: float | None = None
+    f_rep: float | None = None
 
     # Plasma parameters (MFE radiation calculation)
     n_e: float | None = None
@@ -122,7 +126,6 @@ class CostingInput(BaseModel):
     # --- Tier 2: family-required parameter lists ---
     _COMMON_REQUIRED = [
         "mn",
-        "eta_p",
         "f_sub",
         "p_pump",
         "p_trit",
@@ -137,6 +140,7 @@ class CostingInput(BaseModel):
     _MFE_REQUIRED = [
         "p_input",
         "eta_pin",
+        "eta_p",
         "eta_de",
         "f_dec",
         "p_coils",
@@ -145,6 +149,7 @@ class CostingInput(BaseModel):
         "elon",
     ]
     _IFE_REQUIRED = [
+        "eta_p",
         "p_implosion",
         "p_ignition",
         "eta_pin1",
@@ -152,12 +157,19 @@ class CostingInput(BaseModel):
         "p_target",
     ]
     _MIF_REQUIRED = [
+        "eta_p",
         "p_driver",
         "eta_pin",
         "p_target",
         "p_coils",
     ]
-    # Pulsed: IFE-style or MIF-style params (determined by presence of p_driver)
+    # Pulsed: new unified params or legacy IFE/MIF params
+    _PULSED_REQUIRED = [
+        "e_driver_mj",
+        "f_rep",
+        "eta_pin",
+        "p_target",
+    ]
     _PULSED_IFE_REQUIRED = [
         "p_implosion",
         "p_ignition",
@@ -182,14 +194,17 @@ class CostingInput(BaseModel):
             + self._MFE_REQUIRED
             + self._IFE_REQUIRED
             + self._MIF_REQUIRED
+            + self._PULSED_REQUIRED
         )
         any_set = any(getattr(self, k) is not None for k in all_eng)
         if not any_set:
             return self
 
         if family == ConfinementFamily.PULSED:
-            # Transitional: dispatch to IFE or MIF required list
-            if self.p_driver is not None:
+            # New unified pulsed params take priority; fall back to legacy
+            if self.e_driver_mj is not None:
+                family_keys = self._PULSED_REQUIRED
+            elif self.p_driver is not None:
                 family_keys = self._PULSED_MIF_REQUIRED
             else:
                 family_keys = self._PULSED_IFE_REQUIRED
