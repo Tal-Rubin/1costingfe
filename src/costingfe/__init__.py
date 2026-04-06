@@ -9,6 +9,9 @@ from dataclasses import dataclass
 from costingfe.layers.tokamak import PlasmaState as PlasmaState
 from costingfe.model import CostModel
 from costingfe.types import (
+    CONCEPT_DEFAULT_CONVERSION as CONCEPT_DEFAULT_CONVERSION,
+)
+from costingfe.types import (
     CONCEPT_TO_FAMILY as CONCEPT_TO_FAMILY,
 )
 from costingfe.types import (
@@ -27,6 +30,9 @@ from costingfe.types import (
 )
 from costingfe.types import (
     PowerTable as PowerTable,
+)
+from costingfe.types import (
+    PulsedConversion as PulsedConversion,
 )
 from costingfe.validation import CostingInput as CostingInput
 

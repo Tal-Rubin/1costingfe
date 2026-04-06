@@ -157,6 +157,20 @@ class CostingInput(BaseModel):
         "p_target",
         "p_coils",
     ]
+    # Pulsed: IFE-style or MIF-style params (determined by presence of p_driver)
+    _PULSED_IFE_REQUIRED = [
+        "p_implosion",
+        "p_ignition",
+        "eta_pin1",
+        "eta_pin2",
+        "p_target",
+    ]
+    _PULSED_MIF_REQUIRED = [
+        "p_driver",
+        "eta_pin",
+        "p_target",
+        "p_coils",
+    ]
 
     @model_validator(mode="after")
     def check_family_required_params(self):
@@ -173,12 +187,17 @@ class CostingInput(BaseModel):
         if not any_set:
             return self
 
-        family_required = {
-            ConfinementFamily.MFE: self._MFE_REQUIRED,
-            ConfinementFamily.IFE: self._IFE_REQUIRED,
-            ConfinementFamily.MIF: self._MIF_REQUIRED,
-        }
-        required = self._COMMON_REQUIRED + family_required.get(family, [])
+        if family == ConfinementFamily.PULSED:
+            # Transitional: dispatch to IFE or MIF required list
+            if self.p_driver is not None:
+                family_keys = self._PULSED_MIF_REQUIRED
+            else:
+                family_keys = self._PULSED_IFE_REQUIRED
+        else:
+            family_keys = (
+                self._MFE_REQUIRED if family == ConfinementFamily.STEADY_STATE else []
+            )
+        required = self._COMMON_REQUIRED + family_keys
 
         missing = [k for k in required if getattr(self, k) is None]
         if missing:
@@ -235,12 +254,14 @@ class CostingInput(BaseModel):
         if any(getattr(self, k) is None for k in self._COMMON_REQUIRED):
             return self
 
-        if family == ConfinementFamily.MFE:
+        if family == ConfinementFamily.STEADY_STATE:
             self._check_mfe_physics()
-        elif family == ConfinementFamily.IFE:
-            self._check_ife_physics()
-        elif family == ConfinementFamily.MIF:
-            self._check_mif_physics()
+        elif family == ConfinementFamily.PULSED:
+            # Transitional: dispatch to IFE or MIF checks based on params
+            if self.p_driver is not None:
+                self._check_mif_physics()
+            else:
+                self._check_ife_physics()
 
         return self
 

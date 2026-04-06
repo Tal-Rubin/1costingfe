@@ -89,7 +89,7 @@ class CostModel:
         if use_0d and self.concept == ConfinementConcept.TOKAMAK:
             return self._power_balance_0d(params, n_mod)
 
-        if self.family == ConfinementFamily.MFE:
+        if self.family == ConfinementFamily.STEADY_STATE:
             # Parse impurity model params
             wm_raw = params.get("wall_material")
             wall_mat = None
@@ -182,75 +182,78 @@ class CostModel:
                 **sync_kw,
             )
 
-        elif self.family == ConfinementFamily.IFE:
-            p_fus = ife_inverse_power_balance(
-                p_net_target=p_net_per_mod,
-                fuel=self.fuel,
-                p_implosion=params["p_implosion"],
-                p_ignition=params["p_ignition"],
-                mn=params["mn"],
-                eta_th=params["eta_th"],
-                eta_p=params["eta_p"],
-                eta_pin1=params["eta_pin1"],
-                eta_pin2=params["eta_pin2"],
-                f_sub=params["f_sub"],
-                p_pump=params["p_pump"],
-                p_trit=params["p_trit"],
-                p_house=params["p_house"],
-                p_cryo=params["p_cryo"],
-                p_target=params["p_target"],
-            )
-            pt = ife_forward_power_balance(
-                p_fus=p_fus,
-                fuel=self.fuel,
-                p_implosion=params["p_implosion"],
-                p_ignition=params["p_ignition"],
-                mn=params["mn"],
-                eta_th=params["eta_th"],
-                eta_p=params["eta_p"],
-                eta_pin1=params["eta_pin1"],
-                eta_pin2=params["eta_pin2"],
-                f_sub=params["f_sub"],
-                p_pump=params["p_pump"],
-                p_trit=params["p_trit"],
-                p_house=params["p_house"],
-                p_cryo=params["p_cryo"],
-                p_target=params["p_target"],
-            )
-
-        elif self.family == ConfinementFamily.MIF:
-            p_fus = mif_inverse_power_balance(
-                p_net_target=p_net_per_mod,
-                fuel=self.fuel,
-                p_driver=params["p_driver"],
-                mn=params["mn"],
-                eta_th=params["eta_th"],
-                eta_p=params["eta_p"],
-                eta_pin=params["eta_pin"],
-                f_sub=params["f_sub"],
-                p_pump=params["p_pump"],
-                p_trit=params["p_trit"],
-                p_house=params["p_house"],
-                p_cryo=params["p_cryo"],
-                p_target=params["p_target"],
-                p_coils=params.get("p_coils", 0.0),
-            )
-            pt = mif_forward_power_balance(
-                p_fus=p_fus,
-                fuel=self.fuel,
-                p_driver=params["p_driver"],
-                mn=params["mn"],
-                eta_th=params["eta_th"],
-                eta_p=params["eta_p"],
-                eta_pin=params["eta_pin"],
-                f_sub=params["f_sub"],
-                p_pump=params["p_pump"],
-                p_trit=params["p_trit"],
-                p_house=params["p_house"],
-                p_cryo=params["p_cryo"],
-                p_target=params["p_target"],
-                p_coils=params.get("p_coils", 0.0),
-            )
+        elif self.family == ConfinementFamily.PULSED:
+            # Transitional dispatch: use MIF functions if p_driver present,
+            # otherwise IFE functions.  Will be replaced by unified pulsed
+            # power balance in a later task.
+            if "p_driver" in params and params["p_driver"]:
+                p_fus = mif_inverse_power_balance(
+                    p_net_target=p_net_per_mod,
+                    fuel=self.fuel,
+                    p_driver=params["p_driver"],
+                    mn=params["mn"],
+                    eta_th=params["eta_th"],
+                    eta_p=params["eta_p"],
+                    eta_pin=params["eta_pin"],
+                    f_sub=params["f_sub"],
+                    p_pump=params["p_pump"],
+                    p_trit=params["p_trit"],
+                    p_house=params["p_house"],
+                    p_cryo=params["p_cryo"],
+                    p_target=params["p_target"],
+                    p_coils=params.get("p_coils", 0.0),
+                )
+                pt = mif_forward_power_balance(
+                    p_fus=p_fus,
+                    fuel=self.fuel,
+                    p_driver=params["p_driver"],
+                    mn=params["mn"],
+                    eta_th=params["eta_th"],
+                    eta_p=params["eta_p"],
+                    eta_pin=params["eta_pin"],
+                    f_sub=params["f_sub"],
+                    p_pump=params["p_pump"],
+                    p_trit=params["p_trit"],
+                    p_house=params["p_house"],
+                    p_cryo=params["p_cryo"],
+                    p_target=params["p_target"],
+                    p_coils=params.get("p_coils", 0.0),
+                )
+            else:
+                p_fus = ife_inverse_power_balance(
+                    p_net_target=p_net_per_mod,
+                    fuel=self.fuel,
+                    p_implosion=params["p_implosion"],
+                    p_ignition=params["p_ignition"],
+                    mn=params["mn"],
+                    eta_th=params["eta_th"],
+                    eta_p=params["eta_p"],
+                    eta_pin1=params["eta_pin1"],
+                    eta_pin2=params["eta_pin2"],
+                    f_sub=params["f_sub"],
+                    p_pump=params["p_pump"],
+                    p_trit=params["p_trit"],
+                    p_house=params["p_house"],
+                    p_cryo=params["p_cryo"],
+                    p_target=params["p_target"],
+                )
+                pt = ife_forward_power_balance(
+                    p_fus=p_fus,
+                    fuel=self.fuel,
+                    p_implosion=params["p_implosion"],
+                    p_ignition=params["p_ignition"],
+                    mn=params["mn"],
+                    eta_th=params["eta_th"],
+                    eta_p=params["eta_p"],
+                    eta_pin1=params["eta_pin1"],
+                    eta_pin2=params["eta_pin2"],
+                    f_sub=params["f_sub"],
+                    p_pump=params["p_pump"],
+                    p_trit=params["p_trit"],
+                    p_house=params["p_house"],
+                    p_cryo=params["p_cryo"],
+                    p_target=params["p_target"],
+                )
 
         else:
             raise ValueError(f"Unknown confinement family: {self.family}")
@@ -659,7 +662,7 @@ class CostModel:
         # For IFE/MIF, C220108 is the target factory (capital equipment),
         # not the divertor — it does not need periodic replacement.
         repl_accounts = cc.replaceable_accounts
-        if self.family.value != "mfe":
+        if self.family != ConfinementFamily.STEADY_STATE:
             repl_accounts = tuple(a for a in repl_accounts if a != "C220108")
 
         c70, c71, c72 = cas70_om(
@@ -760,7 +763,7 @@ class CostModel:
             "pb11_f_p_n",
         ]
         family_specific = {
-            ConfinementFamily.MFE: [
+            ConfinementFamily.STEADY_STATE: [
                 "p_input",
                 "eta_pin",
                 "eta_de",
@@ -798,14 +801,11 @@ class CostModel:
                 "disruption_damage",
                 "disruption_downtime",
             ],
-            ConfinementFamily.IFE: [
+            ConfinementFamily.PULSED: [
                 "p_implosion",
                 "p_ignition",
                 "eta_pin1",
                 "eta_pin2",
-                "p_target",
-            ],
-            ConfinementFamily.MIF: [
                 "p_driver",
                 "eta_pin",
                 "p_target",

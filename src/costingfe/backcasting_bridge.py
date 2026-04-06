@@ -26,9 +26,8 @@ from costingfe.types import (
 
 # Map 1costingfe concepts to fusion-backcasting confinement types
 _FAMILY_TO_CONFINEMENT = {
-    ConfinementFamily.MFE: "MCF",
-    ConfinementFamily.IFE: "ICF",
-    ConfinementFamily.MIF: "MCF",  # MIF uses magnetic guide fields
+    ConfinementFamily.STEADY_STATE: "MCF",
+    ConfinementFamily.PULSED: "ICF",
 }
 
 # Map 1costingfe fuels to fusion-backcasting fuel types

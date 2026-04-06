@@ -206,8 +206,9 @@ class TestTier2FamilyRequiredParams:
                 p_target=1.0,
             )
 
-    def test_mif_missing_p_driver_rejected(self):
-        with pytest.raises(ValidationError, match="p_driver"):
+    def test_pulsed_mif_missing_p_driver_uses_ife_validation(self):
+        """Without p_driver, pulsed validation uses IFE-style required list."""
+        with pytest.raises(ValidationError, match="p_implosion"):
             CostingInput(
                 concept=ConfinementConcept.MAG_TARGET,
                 fuel=Fuel.DT,

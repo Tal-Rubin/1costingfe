@@ -176,7 +176,7 @@ def cas22_reactor_plant_equipment(
     # IFE/MIF: high-rep-rate target manufacturing infrastructure
     # See docs/account_justification/CAS22_plant_systems.md
     # -----------------------------------------------------------------------
-    if family == ConfinementFamily.MFE:
+    if family == ConfinementFamily.STEADY_STATE:
         c220108 = cc.divertor_base * (p_th / 1000.0) ** 0.5
     else:  # IFE or MIF — target factory
         c220108 = cc.target_factory_base * (p_et / 1000.0) ** 0.7
