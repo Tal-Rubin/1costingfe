@@ -1,6 +1,6 @@
 [project]
 name = "costingfe"
-version = "0.1.0"
+version = "0.2.0"
 description = "Numpy-only fusion power plant costing framework (no JAX)"
 license = "MIT"
 requires-python = ">=3.10"
