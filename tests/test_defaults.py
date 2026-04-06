@@ -14,7 +14,7 @@ def test_load_costing_constants():
 
 def test_load_engineering_defaults():
     """Should load MFE tokamak defaults."""
-    ed = load_engineering_defaults("mfe_tokamak")
+    ed = load_engineering_defaults("steady_state_tokamak")
     assert ed["p_input"] > 0
     # eta_th is no longer in the concept YAML — it comes from POWER_CYCLE_DEFAULTS
     assert "eta_th" not in ed

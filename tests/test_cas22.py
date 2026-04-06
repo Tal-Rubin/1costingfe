@@ -32,7 +32,7 @@ def _make_cas22(fuel=Fuel.DT, n_mod=1, blanket_t=0.70):
         shield_vol=geo.ht_shield_vol + geo.lt_shield_vol,
         structure_vol=geo.structure_vol,
         vessel_vol=geo.vessel_vol,
-        family=ConfinementFamily.MFE,
+        family=ConfinementFamily.STEADY_STATE,
         concept=ConfinementConcept.TOKAMAK,
         b_max=12.0,
         r_coil=1.85,
@@ -139,7 +139,7 @@ def test_cas22_structure_volume_based():
 # ---- CAS220108: Divertor vs Target Factory ----
 
 
-def _make_cas22_with_family(family=ConfinementFamily.MFE):
+def _make_cas22_with_family(family=ConfinementFamily.STEADY_STATE):
     """Helper to compute CAS22 with a specific confinement family."""
     return cas22_reactor_plant_equipment(
         CC,
@@ -171,15 +171,15 @@ def _make_cas22_with_family(family=ConfinementFamily.MFE):
 
 def test_cas220108_mfe_uses_divertor():
     """MFE should use divertor_base for CAS220108."""
-    result = _make_cas22_with_family(ConfinementFamily.MFE)
+    result = _make_cas22_with_family(ConfinementFamily.STEADY_STATE)
     expected = CC.divertor_base * (2500.0 / 1000.0) ** 0.5
     assert abs(result["C220108"] - expected) < 0.01
 
 
 def test_cas220108_ife_uses_target_factory():
     """IFE should use target_factory_base (larger than divertor)."""
-    mfe = _make_cas22_with_family(ConfinementFamily.MFE)
-    ife = _make_cas22_with_family(ConfinementFamily.IFE)
+    mfe = _make_cas22_with_family(ConfinementFamily.STEADY_STATE)
+    ife = _make_cas22_with_family(ConfinementFamily.PULSED)
     msg = "Target factory should cost more than divertor"
     assert ife["C220108"] > mfe["C220108"], msg
     expected = CC.target_factory_base * (1100.0 / 1000.0) ** 0.7
@@ -245,7 +245,7 @@ def _make_cas22_coil(
         shield_vol=geo.ht_shield_vol + geo.lt_shield_vol,
         structure_vol=geo.structure_vol,
         vessel_vol=geo.vessel_vol,
-        family=ConfinementFamily.MFE,
+        family=ConfinementFamily.STEADY_STATE,
         concept=concept,
         b_max=b_max,
         r_coil=r_coil,
@@ -329,7 +329,7 @@ def _make_cas22_heating(p_nbi=50.0, p_icrf=0.0, p_ecrh=0.0, p_lhcd=0.0):
         shield_vol=SHIELD_VOL,
         structure_vol=STRUCTURE_VOL,
         vessel_vol=VESSEL_VOL,
-        family=ConfinementFamily.MFE,
+        family=ConfinementFamily.STEADY_STATE,
         concept=ConfinementConcept.TOKAMAK,
         b_max=12.0,
         r_coil=1.85,
@@ -408,7 +408,7 @@ def test_cas220110_concept_scales():
         shield_vol=SHIELD_VOL,
         structure_vol=STRUCTURE_VOL,
         vessel_vol=VESSEL_VOL,
-        family=ConfinementFamily.MFE,
+        family=ConfinementFamily.STEADY_STATE,
         concept=ConfinementConcept.TOKAMAK,
         b_max=12.0,
         r_coil=1.85,
@@ -434,7 +434,7 @@ def test_cas220110_concept_scales():
         shield_vol=SHIELD_VOL,
         structure_vol=STRUCTURE_VOL,
         vessel_vol=VESSEL_VOL,
-        family=ConfinementFamily.MFE,
+        family=ConfinementFamily.STEADY_STATE,
         concept=ConfinementConcept.MIRROR,
         b_max=12.0,
         r_coil=1.85,
@@ -470,7 +470,7 @@ def _make_cas22_dec(f_dec=0.3, p_dee=300.0):
         shield_vol=geo.ht_shield_vol + geo.lt_shield_vol,
         structure_vol=geo.structure_vol,
         vessel_vol=geo.vessel_vol,
-        family=ConfinementFamily.MFE,
+        family=ConfinementFamily.STEADY_STATE,
         concept=ConfinementConcept.MIRROR,
         b_max=12.0,
         r_coil=1.85,

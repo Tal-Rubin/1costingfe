@@ -67,7 +67,7 @@ def test_sensitivity_ife():
     model = CostModel(concept=ConfinementConcept.LASER_IFE, fuel=Fuel.DT)
     result = model.forward(net_electric_mw=1000.0, availability=0.85, lifetime_yr=30)
     sens = model.sensitivity(result.params)
-    assert "eta_pin1" in sens["engineering"]  # IFE-specific param
+    assert "eta_pin" in sens["engineering"]  # Pulsed driver efficiency
     assert "p_input" not in sens["engineering"]  # MFE-specific param
 
 
