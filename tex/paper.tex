@@ -936,13 +936,10 @@ $\eta_{\text{th}} = 0$ the concept is purely inductive and all
 thermal loads (pumps, BOP) are zeroed automatically.
 
 For inductive DEC, the capacitor bank is costed on a \$/J stored-energy
-basis (Account~22.01.07): $C_{220107} = c_{\text{cap}} \times
-E_{\text{stored}}$, where $c_{\text{cap}}$ is the all-in installed cost
-per joule (capacitors, switches, charging supplies, buswork).  The NOAK
-default is \$0.50/J, reflecting mature high-volume manufacturing of
-advanced-dielectric capacitors---a commercial viability requirement, not
-a current capability (present lab-scale pricing is \$20--50/J).
-Sensitivity to this parameter dominates the LCOE for pulsed DEC concepts.
+basis (Account~22.01.07, \cref{sec:cas2207}): $C_{220107} = c_{\text{cap}}
+\times E_{\text{stored}}$, where $c_{\text{cap}}$ is the all-in installed
+cost per joule.  The NOAK default and its justification are discussed in
+\cref{sec:cas2207}.
 
 For the DEC inverse, the model takes the scientific gain $Q_{\text{sci}}$
 as input and derives the required stored energy per pulse:
@@ -1410,6 +1407,52 @@ industrial supply chain requiring \$10{,}000/kg falling to \$75/kg---the
 REBCO cost trajectory is a manufacturing learning curve for an
 existing product, making the aggressive target more defensible.
 
+
+%% ------------------------------------------------------------
+\subsection{CAS22.01.07: Power Supplies}
+\label{sec:cas2207}
+
+CAS22.01.07 covers the electrical power supply systems that drive the
+fusion core: magnet power supplies, pulsed power drivers, and associated
+switchgear.  The account has two modes.
+
+\subsubsection{Steady-state MFE.}
+For tokamaks, stellarators, and mirrors, the cost scales with gross
+electric output:
+\begin{equation}
+  C_{220107} = 80 \times (P_{\text{et}} / 1000)^{0.7} \quad [\text{M\$}]
+\end{equation}
+The \$80M reference at 1~GWe originates from the ARIES-CS design study
+(\$70.6M in 2004\$ for a 1.3~GWe stellarator, approximately \$78/kW in
+2024\$).  Cross-checks against GW-scale HVDC converter stations
+(\$100--250/kW installed, Siemens, ABB) and utility-scale solar inverters
+(\$30--50/kW, NREL 2024) bracket the figure: fusion magnet supplies
+operate at lower voltage and higher current than HVDC, which is the
+cheaper regime for power electronics.  No direct vendor quote exists at
+fusion-relevant parameters (1--10~kV, 10--100~kA, 100+~MW).
+Uncertainty: $\pm$20\%.
+
+\subsubsection{Pulsed inductive DEC.}
+For pulsed MCF/MIF concepts where the capacitor bank is both the driver
+and the energy recovery system, the cost scales with stored energy per
+pulse on a \$/J basis:
+\begin{equation}
+  C_{220107} = c_{\text{cap}} \times E_{\text{stored}} \quad [\text{M\$}]
+\end{equation}
+where $c_{\text{cap}} = 0.50$~\$/J is the NOAK all-in installed cost
+(capacitors, switches, charging supplies, buswork).  This is an
+aggressive target: present lab-scale pricing is \$20--50/J, a 40--100$\times$
+gap.  The CATF IWG extension \citep{woodruff2026b} recommends
+\$1.5--4/J for NOAK.  The \$0.50/J default assumes advanced-dielectric
+capacitors manufactured at high volume---a commercial viability
+requirement, not a current capability.
+
+Capacitor banks require scheduled replacement (CAS72).  At $f_{\text{rep}}
+= 1$~Hz and 85\% availability, the bank executes 27~million cycles per
+year.  At the NOAK baseline lifetime of $10^8$ shots, replacement occurs
+every 3.7~years.  The annualized replacement cost is computed as a
+present-value sum of discrete replacements over the plant lifetime,
+discounted at the project interest rate.
 
 %% ------------------------------------------------------------
 \subsection{CAS22.01.10: Remote Handling \& Maintenance Equipment}
