@@ -2,8 +2,8 @@
 'The Lower Bound for Fusion Energy Cost'
 
 Shows LCOE floor by scenario for DT (full/half/zero staff), D-He3
-(excl. fuel), and pB11, with the 1-cent target line and budget
-annotations on bars near or below the target.
+(full/zero staff, excl. fuel), and pB11 (full/zero staff), with the
+1-cent target line and budget annotations.
 """
 
 import matplotlib.pyplot as plt
@@ -38,10 +38,6 @@ scenarios = [
         dict(net_electric_mw=1000.0, availability=0.85, lifetime_yr=30),
     ),
     (
-        "2 GWe\nbaseline",
-        dict(net_electric_mw=2000.0, availability=0.85, lifetime_yr=30),
-    ),
-    (
         "2 GWe\naggressive",
         dict(
             net_electric_mw=2000.0,
@@ -61,104 +57,111 @@ scenarios = [
             construction_time_yr=3.0,
         ),
     ),
-    (
-        "5 GWe\nmega",
-        dict(
-            net_electric_mw=5000.0,
-            availability=0.95,
-            lifetime_yr=50,
-            interest_rate=0.02,
-            construction_time_yr=3.0,
-        ),
-    ),
 ]
 
-# Collect data: 5 series
+# Collect data: 7 series
 dt_full = []
 dt_half = []
 dt_zero = []
-dhe3_bop = []  # excluding fuel cost
+dhe3_full = []  # excluding fuel cost
+dhe3_zero = []
 pb_full = []
+pb_zero = []
 labels = []
 
 for label, kw in scenarios:
     labels.append(label)
     energy = 8760 * kw["net_electric_mw"] * kw["availability"]
 
-    # D-T full staffing
+    # D-T
     r_dt = m_dt.forward(**kw, inflation_rate=INFLATION, cost_overrides=FREE_CORE)
-    om = r_dt.costs.cas70 * 1e6 / energy
-    staff = r_dt.costs.cas71 * 1e6 / energy
+    staff_dt = r_dt.costs.cas71 * 1e6 / energy
     dt_full.append(float(r_dt.costs.lcoe))
-    dt_half.append(float(r_dt.costs.lcoe - staff * 0.5))
-    dt_zero.append(float(r_dt.costs.lcoe - staff))
+    dt_half.append(float(r_dt.costs.lcoe - staff_dt * 0.5))
+    dt_zero.append(float(r_dt.costs.lcoe - staff_dt))
 
     # D-He3 BOP only (subtract fuel)
     r_dhe3 = m_dhe3.forward(**kw, inflation_rate=INFLATION, cost_overrides=FREE_CORE)
     fuel_mwh = r_dhe3.costs.cas80 * 1e6 / energy
-    dhe3_bop.append(float(r_dhe3.costs.lcoe - fuel_mwh))
+    staff_dhe3 = r_dhe3.costs.cas71 * 1e6 / energy
+    bop = float(r_dhe3.costs.lcoe - fuel_mwh)
+    dhe3_full.append(bop)
+    dhe3_zero.append(bop - staff_dhe3)
 
     # p-B11
     r_pb = m_pb11.forward(**kw, inflation_rate=INFLATION, cost_overrides=FREE_CORE)
+    staff_pb = r_pb.costs.cas71 * 1e6 / energy
     pb_full.append(float(r_pb.costs.lcoe))
+    pb_zero.append(float(r_pb.costs.lcoe - staff_pb))
 
 x = np.arange(len(labels))
-n_series = 5
-total_width = 0.8
+n_series = 7
+total_width = 0.85
 w = total_width / n_series
 
 series = [
-    (x - 2 * w, dt_full, "D-T", "#c44e52"),
-    (x - 1 * w, dt_half, "D-T (half staff)", "#e89c9e"),
-    (x + 0 * w, dt_zero, "D-T (zero staff)", "#f2cdce"),
-    (x + 1 * w, dhe3_bop, "D-He3 (excl. fuel)", "#8dbb72"),
+    (x - 3 * w, dt_full, "D-T", "#c44e52"),
+    (x - 2 * w, dt_half, "D-T (half staff)", "#d4787b"),
+    (x - 1 * w, dt_zero, "D-T (zero staff)", "#e89c9e"),
+    (x + 0 * w, dhe3_full, "D-He3 (excl. fuel)", "#5a9a3c"),
+    (x + 1 * w, dhe3_zero, "D-He3 (zero staff)", "#8dbb72"),
     (x + 2 * w, pb_full, "p-B11", "#4c72b0"),
+    (x + 3 * w, pb_zero, "p-B11 (zero staff)", "#7295c4"),
 ]
 
-fig, ax = plt.subplots(figsize=(12, 6.5))
-
-TARGET_CKW = TARGET / 10  # 1 cent/kWh
+fig, ax = plt.subplots(figsize=(12, 7))
 
 for pos, vals, lbl, color in series:
-    vals_ckw = [v / 10 for v in vals]
-    ax.bar(pos, vals_ckw, w, label=lbl, color=color, edgecolor="white", linewidth=0.5)
+    ax.bar(
+        pos,
+        vals,
+        w,
+        label=lbl,
+        color=color,
+        edgecolor="white",
+        linewidth=0.5,
+    )
 
 # 1-cent target line
-ax.axhline(y=TARGET_CKW, color="black", linestyle="--", linewidth=1.5, zorder=5)
+ax.axhline(y=TARGET, color="black", linestyle="--", linewidth=1.5, zorder=5)
 ax.text(
     len(labels) - 0.5,
-    TARGET_CKW + 0.03,
-    "1 cent target",
+    TARGET + 0.3,
+    "$10/MWh target",
     ha="right",
-    fontsize=10,
+    fontsize=13,
     fontstyle="italic",
 )
 
-# Annotate budget only on bars near or below the target
+# Annotate all bars with budget
 for pos, vals, lbl, color in series:
     for i, v in enumerate(vals):
         budget = TARGET - v
-        if True:  # annotate all bars
-            budget_ckw = budget / 10
-            sign = "+" if budget_ckw >= 0 else ""
-            ax.annotate(
-                f"{sign}{budget_ckw:.2f}",
-                xy=(pos[i], v / 10),
-                xytext=(0, 5),
-                textcoords="offset points",
-                ha="center",
-                fontsize=7,
-                color=color,
-                fontweight="bold",
-            )
+        if budget >= 0:
+            text = f"+${budget:.1f}"
+        else:
+            text = f"-${-budget:.1f}"
+        ax.annotate(
+            text,
+            xy=(pos[i], v),
+            xytext=(0, 4),
+            textcoords="offset points",
+            ha="center",
+            fontsize=8.5,
+            color=color,
+            fontweight="bold",
+        )
 
-ax.set_ylabel("LCOE floor (\u00a2/kWh)", fontsize=12)
-ax.set_xlabel("Scenario", fontsize=12)
-ax.set_title("Free-core LCOE floor: fuel choice, scale, and staffing", fontsize=14)
+ax.set_ylabel("LCOE floor ($/MWh)", fontsize=14)
+ax.set_xlabel("Scenario", fontsize=14)
+ax.set_title(
+    "Free-core LCOE floor: fuel choice, scale, and staffing",
+    fontsize=16,
+)
 ax.set_xticks(x)
-ax.set_xticklabels(labels, fontsize=9)
-ax.legend(fontsize=9, loc="upper right", ncol=2)
-ax.set_ylim(0, max(dt_full) / 10 * 1.12)
+ax.set_xticklabels(labels, fontsize=12)
+ax.legend(fontsize=10, loc="upper right", ncol=3)
+ax.set_ylim(0, max(dt_full) * 1.12)
 ax.grid(axis="y", alpha=0.3)
 
 fig.tight_layout()

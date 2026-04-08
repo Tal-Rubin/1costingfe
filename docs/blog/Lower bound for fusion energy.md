@@ -80,7 +80,7 @@ But how much does staffing actually need to fall? At the aggressive 5 GWe condit
 | 2 GWe, 95%, 3%, 50yr, 3yr | \$13.7/MWh | \$5.8/MWh | 53% of current (40 FTE) |
 | 5 GWe, 95%, 2%, 50yr, 3yr | \$9.6/MWh | \$4.3/MWh | 108% of current (no cuts needed) |
 
-Halving D-T staffing from 78 to 39 FTE is not lights-out operation. It is a moderate automation scenario: SCADA-automated grid dispatch, reduced shift coverage, streamlined radiation protection procedures. The radiation-specific roles resist full elimination (as long as humans enter the plant, health physics coverage is required; as long as tritium is on site, accountability is required), but a 50% reduction is within reach of current industrial automation technology.
+Halving D-T staffing from 78 to 39 FTE is not lights-out operation. It is a moderate automation scenario: SCADA-automated grid dispatch, reduced shift coverage, streamlined radiation protection procedures. The radiation-specific roles resist full elimination (as long as humans enter the plant, health physics coverage is required; as long as tritium is on site, accountability is required), but a 50% reduction is within reach of current industrial automation technology. The capital cost of the automation itself (SCADA upgrades, remote monitoring, robotic inspection) is on the order of \$15-30M, adding less than \$0.2/MWh at these conditions, small relative to the \$4/MWh saved.
 
 This means D-T *can* reach 1 cent at aggressive conditions, but only with large scale (2+ GWe), favorable financing, and moderate staffing automation. The margin is thin and leaves essentially no budget for the core. Compare this to p-B11, which reaches 1 cent at full staffing (see below).
 
