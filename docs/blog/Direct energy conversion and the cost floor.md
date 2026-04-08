@@ -1,6 +1,6 @@
 # Direct Energy Conversion and the Cost Floor
 
-In the [previous dispatch](Lower%20bound%20for%20fusion%20energy.md), we found that the balance-of-plant (buildings, turbines, staffing, and financing) creates a hard floor on fusion electricity cost, even if the fusion core is free. For a p-B11 plant at 1 GWe, that floor is \$17/MWh with a supercritical CO2 Brayton cycle. The post ended with a promise: direct energy conversion (DEC) could circumvent the floor entirely. This dispatch delivers on that promise, or rather, tempers it with numbers.
+In the [previous dispatch](Fusion's%20cost%20floor%20what%20if%20the%20core%20were%20free.md), we found that the balance-of-plant (buildings, turbines, staffing, and financing) creates a hard floor on fusion electricity cost, even if the fusion core is free. For a p-B11 plant at 1 GWe, that floor is \$17/MWh with a supercritical CO2 Brayton cycle. The post ended with a promise: direct energy conversion (DEC) could circumvent the floor entirely. This dispatch delivers on that promise, or rather, tempers it with numbers.
 
 ## What Direct Energy Conversion Does
 
@@ -14,7 +14,7 @@ Photons are a separate problem. For p-B11, bremsstrahlung is severe: the high pl
 
 ## Three Architectures
 
-We modeled three DEC architectures with a free fusion core, using the same methodology as the [previous dispatch](Lower%20bound%20for%20fusion%20energy.md). Numbers can be reproduced with the [companion script](https://github.com/1cfe/1costingfe/blob/master/examples/dec_blog_numbers.py).
+We modeled three DEC architectures with a free fusion core, using the same methodology as the [previous dispatch](Fusion's%20cost%20floor%20what%20if%20the%20core%20were%20free.md). Numbers can be reproduced with the [companion script](https://github.com/1cfe/1costingfe/blob/master/examples/dec_blog_numbers.py).
 
 ### 1. Steady-State Mirror + Venetian Blind DEC
 
