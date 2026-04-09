@@ -29,7 +29,9 @@ from costingfe.types import (
 # Concept-dependent coil defaults (from pyFECONs cas220103_coils.py)
 # markup: manufacturing complexity multiplier over raw conductor cost
 # path_factor: extra coil path length for 3D geometries (stellarator)
+# None → no confinement magnets (IFE drivers, magnet-free pulsed concepts)
 _COIL_DEFAULTS = {
+    # MFE / electrostatic — full confinement magnets
     ConfinementConcept.TOKAMAK: {"markup": 8.0, "path_factor": 1.0},
     ConfinementConcept.STELLARATOR: {"markup": 12.0, "path_factor": 2.0},
     ConfinementConcept.MIRROR: {"markup": 2.5, "path_factor": 1.0},
@@ -37,6 +39,16 @@ _COIL_DEFAULTS = {
     ConfinementConcept.THETA_PINCH: {"markup": 1.5, "path_factor": 1.0},
     ConfinementConcept.ORBITRON: {"markup": 1.5, "path_factor": 1.0},
     ConfinementConcept.POLYWELL: {"markup": 2.0, "path_factor": 1.0},
+    # MIF — guide-field solenoids (simpler, smaller than full confinement)
+    ConfinementConcept.MAG_TARGET: {"markup": 1.5, "path_factor": 1.0},
+    ConfinementConcept.PLASMA_JET: {"markup": 1.5, "path_factor": 1.0},
+    ConfinementConcept.MAGLIF: {"markup": 2.0, "path_factor": 1.0},
+    # IFE / magnet-free pulsed — no confinement magnets
+    ConfinementConcept.LASER_IFE: None,
+    ConfinementConcept.ZPINCH: None,
+    ConfinementConcept.HEAVY_ION: None,
+    ConfinementConcept.DENSE_PLASMA_FOCUS: None,
+    ConfinementConcept.STAGED_ZPINCH: None,
 }
 
 _MU0 = 4 * math.pi * 1e-7  # Vacuum permeability (T·m/A)
@@ -145,13 +157,17 @@ def cas22_reactor_plant_equipment(
     # Markup captures winding, insulation, quench protection, cryostat, testing
     # See docs/account_justification/CAS22_reactor_components.md
     # -----------------------------------------------------------------------
-    defaults = _COIL_DEFAULTS.get(concept, _COIL_DEFAULTS[ConfinementConcept.TOKAMAK])
-    coil_markup = defaults["markup"]
-    path_factor = defaults["path_factor"]
-    G = _compute_geometry_factor(concept, path_factor)
-    total_kAm = G * b_max * r_coil**2 / (_MU0 * 1000)
-    conductor_cost = total_kAm * coil_material.default_cost_per_kAm / 1e6
-    c220103 = conductor_cost * coil_markup
+    defaults = _COIL_DEFAULTS.get(concept)
+    if defaults is None:
+        # No confinement magnets (IFE drivers, magnet-free pulsed)
+        c220103 = 0.0
+    else:
+        coil_markup = defaults["markup"]
+        path_factor = defaults["path_factor"]
+        G = _compute_geometry_factor(concept, path_factor)
+        total_kAm = G * b_max * r_coil**2 / (_MU0 * 1000)
+        conductor_cost = total_kAm * coil_material.default_cost_per_kAm / 1e6
+        c220103 = conductor_cost * coil_markup
 
     # -----------------------------------------------------------------------
     # 220104: Supplementary Heating — vendor-purchased turnkey systems
