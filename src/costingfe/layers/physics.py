@@ -856,7 +856,7 @@ def pulsed_dec_forward(
 def pulsed_dec_inverse(
     p_net_target: float,
     fuel: Fuel,
-    q_sci: float,
+    q_eng: float,
     f_rep: float,
     mn: float,
     eta_th: float,
@@ -878,19 +878,37 @@ def pulsed_dec_inverse(
     pb11_f_alpha_n: float = 0.0,
     pb11_f_p_n: float = 0.0,
 ) -> tuple[float, float]:
-    """Inverse pulsed DEC: target P_net + Q_sci -> required e_driver_mj and P_fus.
+    """Inverse pulsed DEC: target P_net + Q_eng -> required P_fus and e_driver_mj.
 
-    For inductive DEC, the cap bank size (e_driver_mj) is the design variable,
-    not an independent input. Given a target net power and scientific gain,
-    this function derives the required driver energy per pulse and fusion power.
-
-    All energy terms scale with P_driver, so the inversion is linear:
-        P_net = a * P_driver - b  =>  P_driver = (P_net + b) / a
-    Then: e_driver_mj = P_driver / f_rep, P_fus = Q_sci * P_driver.
+    Derives driver energy from q_eng (DEC recirculating = charging losses only),
+    then solves linearly for P_fus from the gross electric balance.
 
     Returns (p_fus, e_driver_mj).
     """
-    fuel_frac_kw = dict(
+    # Step 1: Derive gross electric and recirculating from q_eng
+    p_et = p_net_target * q_eng / (q_eng - 1.0)
+    p_recirc = p_et / q_eng
+
+    # Step 2: Solve for p_driver from recirculating budget
+    # p_recirc = p_driver*(1/eta_pin - 1) + pump_term + f_sub*p_et
+    #          + p_aux + p_cryo + p_target + p_coils
+    pump_term = jnp.where(eta_th > 0, p_pump, 0.0)
+    p_aux = p_trit + p_house
+    fixed_loads = pump_term + f_sub * p_et + p_aux + p_cryo + p_target + p_coils
+    p_driver = (p_recirc - fixed_loads) / (1.0 / eta_pin - 1.0)
+    e_driver_mj = p_driver / f_rep
+
+    # Step 3: Solve for p_fus from the gross electric balance
+    # p_et = p_dee + p_the
+    # p_dee = eta_dec*(p_driver + p_pdv) - p_driver
+    #       where p_pdv = f_pdv * f_ch * (1-f_rad) * p_fus
+    # p_the = eta_th * p_th
+    #       where p_th = mn*neutron_frac*p_fus + f_ch*f_rad*p_fus
+    #                   + f_ch*(1-f_rad)*(1-f_pdv)*p_fus  (undirected)
+    #                   + (1-eta_dec)*(p_driver + p_pdv)   (DEC waste)
+    #                   + pump_term
+    f_ch = _charged_particle_fraction(
+        fuel,
         dd_f_T=dd_f_T,
         dd_f_He3=dd_f_He3,
         dhe3_dd_frac=dhe3_dd_frac,
@@ -898,51 +916,28 @@ def pulsed_dec_inverse(
         pb11_f_alpha_n=pb11_f_alpha_n,
         pb11_f_p_n=pb11_f_p_n,
     )
-    f_ch = _charged_particle_fraction(fuel, **fuel_frac_kw)
-    ash_frac = f_ch
-    neutron_frac = 1.0 - ash_frac
+    neutron_frac = 1.0 - f_ch
 
-    # All terms expressed per unit P_driver:
-    # P_fus = Q_sci * P_driver
-    # P_ash = Q_sci * f_ch * P_driver
-    # P_charged_net = Q_sci * f_ch * (1 - f_rad) * P_driver
-    # P_pdv = f_pdv * P_charged_net
-    # P_recovered = eta_dec * (P_driver + P_pdv)
-    # P_dee = P_recovered - P_driver
-    q_cn = q_sci * f_ch * (1.0 - f_rad)  # charged_net per P_driver
-    q_pdv = f_pdv * q_cn  # PdV per P_driver
+    # Coefficients of p_fus in p_dee
+    cn = f_ch * (1.0 - f_rad)  # charged_net fraction
+    pdv_coeff = f_pdv * cn  # p_pdv per p_fus
+    # p_dee = eta_dec*(p_driver + pdv_coeff*p_fus) - p_driver
+    # p_dee contribution from p_fus: eta_dec * pdv_coeff * p_fus
+    # p_dee constant: eta_dec*p_driver - p_driver = (eta_dec - 1)*p_driver
+    dee_fus_coeff = eta_dec * pdv_coeff
+    dee_const = (eta_dec - 1.0) * p_driver
 
-    # DEC electric per P_driver
-    p_dee_per = eta_dec * (1.0 + q_pdv) - 1.0
+    # Coefficients of p_fus in p_the
+    # p_th = mn*neutron_frac*p_fus + f_ch*f_rad*p_fus + cn*(1-f_pdv)*p_fus
+    #      + (1-eta_dec)*(p_driver + pdv_coeff*p_fus) + pump_term
+    undirected_coeff = cn * (1.0 - f_pdv)
+    dec_waste_fus = (1.0 - eta_dec) * pdv_coeff
+    th_fus_coeff = mn * neutron_frac + f_ch * f_rad + undirected_coeff + dec_waste_fus
+    th_const = (1.0 - eta_dec) * p_driver + pump_term
+    the_fus_coeff = eta_th * th_fus_coeff
+    the_const = eta_th * th_const
 
-    # Thermal per P_driver
-    q_undirected = q_cn - q_pdv
-    q_dec_waste = (1.0 - eta_dec) * (1.0 + q_pdv)
-    q_rad = q_sci * f_ch * f_rad
-    pump_term = jnp.where(eta_th > 0, p_pump, 0.0)
-    p_th_per = mn * q_sci * neutron_frac + q_rad + q_undirected + q_dec_waste
-    p_the_per = eta_th * p_th_per
-
-    # Gross electric per P_driver
-    p_et_per = p_dee_per + p_the_per
-
-    # Recirculating per P_driver
-    p_sub_per = f_sub * p_et_per
-    p_recirc_per = (1.0 / eta_pin - 1.0) + p_sub_per
-
-    # Net electric per P_driver (= a)
-    a = p_et_per - p_recirc_per
-
-    # Fixed loads (independent of P_driver) (= b)
-    p_aux = p_trit + p_house
-    # Thermal constant: pump heat contributes to p_th but only if eta_th > 0
-    p_th_const = pump_term
-    p_the_const = eta_th * p_th_const
-    p_et_const = p_the_const
-    b = pump_term + f_sub * p_et_const + p_aux + p_cryo + p_target + p_coils
-
-    # P_net = a * P_driver - b  =>  P_driver = (P_net + b) / a
-    p_driver = (p_net_target + b) / a
-    e_driver_mj = p_driver / f_rep
-    p_fus = q_sci * p_driver
+    # p_et = dee_const + dee_fus_coeff*p_fus + the_const + the_fus_coeff*p_fus
+    # Solve: p_fus = (p_et - dee_const - the_const) / (dee_fus_coeff + the_fus_coeff)
+    p_fus = (p_et - dee_const - the_const) / (dee_fus_coeff + the_fus_coeff)
     return p_fus, e_driver_mj
