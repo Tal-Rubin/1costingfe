@@ -17,17 +17,16 @@ associated switchgear. It does not cover the grid-tie inverter
 (C220109), building electrical systems (CAS24), or auxiliary plant
 power.
 
-The account has two modes, selected by `PulsedConversion`:
+The account has two modes, selected by confinement family:
 
-1. **Steady-state MFE** (`PulsedConversion.NONE` or
-   `PulsedConversion.ELECTROSTATIC_DEC`): High-current DC supplies
-   for superconducting magnets, plus pulsed power for heating
+1. **Steady-state MFE**: High-current DC supplies for
+   superconducting magnets, plus pulsed power for heating
    systems. Cost scales with gross electric output.
-2. **Pulsed inductive DEC** (`PulsedConversion.INDUCTIVE_DEC`):
-   The capacitor bank IS the dominant cost — it serves as both
-   the pulsed driver (compression stroke) and the energy recovery
-   system (expansion stroke). Cost scales with stored energy per
-   pulse.
+2. **All pulsed concepts**: The capacitor bank / pulsed power
+   system is the dominant electrical infrastructure cost.
+   Cost scales with stored energy per pulse on a $/J basis.
+   For inductive DEC concepts, the same bank also serves as
+   the energy recovery system.
 
 ---
 
@@ -86,19 +85,18 @@ would reduce this uncertainty.
 
 ---
 
-## Mode 2: Pulsed Inductive DEC
+## Mode 2: All Pulsed Concepts
 
 ### Why a different cost basis
 
-For pulsed MCF/MIF concepts (FRCs, theta-pinches, magnetized
-target fusion), the capacitor bank is the dominant capital cost
-item — not a secondary electrical system. The same bank that
-drives the compression stroke recovers energy on the expansion
-stroke (inductive DEC). The MFE scaling formula
+For pulsed concepts (IFE, MIF, pulsed MCF), the capacitor bank
+or pulsed power system is the dominant electrical infrastructure
+cost — not a secondary system. The MFE scaling formula
 (`power_supplies_base * p_et^0.7`) was calibrated for magnet
 power supplies and substantially underestimates pulsed-power
-driver costs, because it scales with output power rather than
-stored energy.
+costs, because it scales with output power rather than stored
+energy. For inductive DEC concepts, the same bank also serves
+as the energy recovery system.
 
 The correct basis is \$/J of stored energy per pulse, as
 recommended by the CATF IWG extension to the fusion costing
