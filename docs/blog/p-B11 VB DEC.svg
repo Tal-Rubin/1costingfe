@@ -71,8 +71,8 @@
 <text id="label3" class="for_r3" text-anchor="middle" x="368.3" y="136.44663" font-weight="400" font-size="14.4px" dy="-4.12">Bremsstrahlung → Thermal (sCO2)<tspan x="368.3" dy="19.32" font-weight="400" font-size="17.6px">2,012</tspan></text>
 <rect id="label4_bg" class="for_r4" x="300.36666" y="211.50419" width="135.86666" height="42.52001" rx="4" fill="#fff" fill-opacity="0.75" stroke="none" stroke-width="0" stroke-opacity="0"></rect>
 <text id="label4" class="for_r4" text-anchor="middle" x="368.3" y="233.22419" font-weight="400" font-size="14.4px" dy="-4.12">Venetian Blind DEC<tspan x="368.3" dy="19.32" font-weight="400" font-size="17.6px">307</tspan></text>
-<rect id="label5_bg" class="for_r5" x="311.99999" y="245.85873" width="112.6" height="42.52003" rx="4" fill="#fff" fill-opacity="0.75" stroke="none" stroke-width="0" stroke-opacity="0"></rect>
-<text id="label5" class="for_r5" text-anchor="middle" x="368.3" y="267.57874" font-weight="400" font-size="14.4px" dy="-4.12">Thermal (sCO2)<tspan x="368.3" dy="19.32" font-weight="400" font-size="17.6px">34</tspan></text>
+<rect id="label5_bg" class="for_r5" x="311.99999" y="258" width="112.6" height="42.52003" rx="4" fill="#fff" fill-opacity="0.75" stroke="none" stroke-width="0" stroke-opacity="0"></rect>
+<text id="label5" class="for_r5" text-anchor="middle" x="368.3" y="279.72" font-weight="400" font-size="14.4px" dy="-4.12">Thermal (sCO2)<tspan x="368.3" dy="19.32" font-weight="400" font-size="17.6px">34</tspan></text>
 <rect id="label6_bg" class="for_r6" x="500.46666" y="79.75591" width="98.96666" height="42.52" rx="4" fill="#fff" fill-opacity="0.75" stroke="none" stroke-width="0" stroke-opacity="0"></rect>
 <text id="label6" class="for_r6" text-anchor="middle" x="549.95" y="101.47591" font-weight="400" font-size="14.4px" dy="-4.12">Gross Electric<tspan x="549.95" dy="19.32" font-weight="400" font-size="17.6px">1,146</tspan></text>
 <rect id="label7_bg" class="for_r7" x="556.81667" y="177.60645" width="84.05001" height="42.52001" rx="4" fill="#fff" fill-opacity="0.75" stroke="none" stroke-width="0" stroke-opacity="0"></rect>
