@@ -175,6 +175,44 @@ class CostResult:
     lcoe: float = 0.0  # $/MWh
     overnight_cost: float = 0.0  # $/kW
 
+    _LABELS = {
+        "cas10": ("CAS10", "Pre-construction"),
+        "cas21": ("CAS21", "Buildings"),
+        "cas22": ("CAS22", "Reactor plant equipment"),
+        "cas23": ("CAS23", "Turbine plant equipment"),
+        "cas24": ("CAS24", "Electric plant equipment"),
+        "cas25": ("CAS25", "Misc plant equipment"),
+        "cas26": ("CAS26", "Heat rejection"),
+        "cas27": ("CAS27", "Special materials"),
+        "cas28": ("CAS28", "Digital twin"),
+        "cas29": ("CAS29", "Contingency"),
+        "cas20": ("CAS20", "Total direct costs"),
+        "cas30": ("CAS30", "Indirect service costs"),
+        "cas40": ("CAS40", "Owner's costs"),
+        "cas50": ("CAS50", "Supplementary costs"),
+        "cas60": ("CAS60", "Interest during construction"),
+        "cas70": ("CAS70", "O&M + replacement (ann.)"),
+        "cas71": ("  71", "  O&M (ann.)"),
+        "cas72": ("  72", "  Scheduled replacement (ann.)"),
+        "cas80": ("CAS80", "Fuel (ann.)"),
+        "cas90": ("CAS90", "Financial (ann.)"),
+    }
+
+    def __str__(self) -> str:
+        lines = []
+        lines.append(f"{'Code':<8} {'Account':<30} {'M$':>10}")
+        lines.append("-" * 50)
+        for attr, (code, label) in self._LABELS.items():
+            val = float(getattr(self, attr))
+            lines.append(f"{code:<8} {label:<30} {val:>10.1f}")
+        lines.append("-" * 50)
+        lines.append(f"{'':8} {'Total capital':<30} {float(self.total_capital):>10.1f}")
+        lines.append(
+            f"{'':8} {'Overnight ($/kW)':<30} {float(self.overnight_cost):>10.0f}"
+        )
+        lines.append(f"{'':8} {'LCOE ($/MWh)':<30} {float(self.lcoe):>10.1f}")
+        return "\n".join(lines)
+
 
 @dataclass
 class ForwardResult:
