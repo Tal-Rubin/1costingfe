@@ -239,9 +239,12 @@ for label, f_dec, eta_de in configs_dhe3:
 r_th_dhe3 = m_dhe3.forward(
     **BASE_KW, inflation_rate=INFLATION, cost_overrides=FREE_CORE_DHE3
 )
-inv_dhe3 = 150.0
+inv_dhe3 = 250.0
 cas21_p_dhe3 = float(r_th_dhe3.costs.cas21) * 0.75
 cas26_p_dhe3 = float(r_th_dhe3.costs.cas26) * 0.15
+# Deduct synchronous-generator GSU (~$15M) and sync/protection gear (~$3M)
+# from CAS24: pulsed inductive has no synchronous generator.
+cas24_p_dhe3 = float(r_th_dhe3.costs.cas24) - 18.0
 r_p_dhe3 = m_dhe3.forward(
     **BASE_KW,
     inflation_rate=INFLATION,
@@ -251,6 +254,7 @@ r_p_dhe3 = m_dhe3.forward(
         "CAS22": inv_dhe3,
         "CAS27": 0.0,
         "CAS23": 0.0,
+        "CAS24": cas24_p_dhe3,
         "CAS26": cas26_p_dhe3,
         "CAS21": cas21_p_dhe3,
     },
