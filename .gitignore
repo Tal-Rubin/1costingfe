@@ -8,9 +8,13 @@ dist/
 build/
 
 # LaTeX build artifacts
-tex/*.aux
-tex/*.bbl
-tex/*.blg
-tex/*.log
-tex/*.out
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.synctex.gz
+*.toc
 tex/*.pdf

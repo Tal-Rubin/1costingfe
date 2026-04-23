@@ -143,7 +143,27 @@ energy_base = 8760 * 1000.0 * 0.85
 
 r_dhe3_th = m_dhe3.forward(**BASE_KW, inflation_rate=INFLATION)
 r_dhe3_vb = m_dhe3.forward(**BASE_KW, inflation_rate=INFLATION, f_dec=0.9, eta_de=0.60)
-r_dhe3_pi = m_dhe3.forward(**BASE_KW, inflation_rate=INFLATION, f_dec=0.95, eta_de=0.85)
+
+# Pulsed inductive (fully costed): swap the model's electrostatic-DEC
+# hardware cost (which is the VB formula it applies by default for mirrors)
+# for $593M of pulsed DEC hardware, zero the turbine, and reduce buildings,
+# heat rejection, and electrical plant (no synchronous generator / GSU).
+r_pi_raw = m_dhe3.forward(**BASE_KW, inflation_rate=INFLATION, f_dec=0.95, eta_de=0.85)
+vb_dec_cost = float(r_pi_raw.cas22_detail.get("C220109", 0.0))
+pi_cas22 = float(r_pi_raw.costs.cas22) - vb_dec_cost + 593.0
+r_dhe3_pi = m_dhe3.forward(
+    **BASE_KW,
+    inflation_rate=INFLATION,
+    f_dec=0.95,
+    eta_de=0.85,
+    cost_overrides={
+        "CAS22": pi_cas22,
+        "CAS23": 0.0,
+        "CAS21": float(r_pi_raw.costs.cas21) * 0.75,
+        "CAS26": float(r_pi_raw.costs.cas26) * 0.15,
+        "CAS24": float(r_pi_raw.costs.cas24) - 18.0,
+    },
+)
 
 print(f"  {'Configuration':<35} {'LCOE':>7} {'Core':>8} {'Fuel':>7}")
 print("-" * 62)
@@ -239,7 +259,15 @@ for label, f_dec, eta_de in configs_dhe3:
 r_th_dhe3 = m_dhe3.forward(
     **BASE_KW, inflation_rate=INFLATION, cost_overrides=FREE_CORE_DHE3
 )
-inv_dhe3 = 250.0
+# Pulsed DEC hardware (C220109), dual-cap topology, 1 GWe D-He3:
+#   Recovery cap bank  = $0.50/J x 702.6 MJ stored                 = $351M
+#   DC-DC links        = $75/kW x 1034 MW gross                    = $78M
+#   Grid inverter      = $150/kW x 1000 MW net                     = $150M
+#   Controls / FPGA    = 4% of compression bank                    = $14M
+#                                                                  -------
+#                                                                   $593M
+# Compression bank itself is in C220107 (driver, free in this run).
+inv_dhe3 = 593.0
 cas21_p_dhe3 = float(r_th_dhe3.costs.cas21) * 0.75
 cas26_p_dhe3 = float(r_th_dhe3.costs.cas26) * 0.15
 # Deduct synchronous-generator GSU (~$15M) and sync/protection gear (~$3M)

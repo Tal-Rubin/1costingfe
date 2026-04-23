@@ -4,11 +4,11 @@ Published fusion power plant designs almost never include a complete cost estima
 
 The result is that comparing the cost of different fusion concepts requires assembling a consistent cost picture from incomplete, inconsistent, and often incomparable data. One design publishes magnet costs in 2014 dollars. Another publishes net electric output and availability but no capital costs. A third asserts an LCOE target with no supporting analysis. To compare them, you need a common framework that fills the gaps systematically: the same cost account structure, the same financial assumptions, the same indirect cost fractions, the same escalation basis.
 
-This dispatch demonstrates the pipeline we have built to do this. We take two very different fusion concepts, an HTS compact tokamak and a planar coil stellarator, extract their published parameters, and run them through the same cost framework. The point is not the LCOE numbers themselves, which carry large uncertainty. The point is what you learn when you apply a consistent methodology across concepts that differ in confinement, geometry, scale, and data availability.
+This dispatch demonstrates how [1costingfe](https://github.com/1cfe/1costingfe) does that. The framework underpins our [first dispatch](https://1cf.energy/blog/fusions-cost-floor) on the industrial floor of fusion electricity cost and our [second dispatch](https://1cf.energy/blog/direct-energy-conversion) on direct energy conversion architectures; here we turn it on published concept designs. We take two very different fusion concepts, an HTS compact tokamak and a planar coil stellarator, extract their published parameters, and run them through the same cost framework. The point is not the LCOE numbers themselves, which carry large uncertainty. The point is what you learn when you apply a consistent methodology across concepts that differ in confinement, geometry, scale, and data availability.
 
-## The pipeline
+## The workflow
 
-The analysis pipeline has three stages. Today these are manual, with tool support; we are building toward a more automated version using SysML v2 system models and code generation, but the results in this post come from the current manual workflow.
+Applying 1costingfe to a published design has three stages. Today this is a manual workflow with tool support; a separate dispatch will describe the automated ingestion and code-generation layer we are building on top of it.
 
 **Stage one: parameter extraction.** A published design paper or report is read and its LCOE-relevant parameters extracted into a structured analysis document. For each parameter, the extraction records the value, the source (with section and table reference), the units, and a confidence tag: known (published and independently verifiable), uncertain (published but with large range or weak basis), or truly unknown (not published; estimated from analogous concepts or first principles). This stage is labour-intensive and concept-specific. It cannot be fully automated because the quality of fusion design publications varies enormously: one paper gives a complete radial build with materials and thicknesses; another gives a major radius and a fusion power and nothing else.
 
@@ -176,7 +176,7 @@ The CATF Investors Working Group (2025) surveyed expert estimates for fusion LCO
 
 The gap between our $642/MWh and the $60-100/MWh NOAK range is almost entirely explained by two factors: the magnet cost and the plant scale. The 2015 paper's $5.15 billion magnet estimate (2014 dollars) reflects REBCO tape prices that have since fallen by roughly 5x. And 261 MWe is small; the FECONS reference plant is 2.4x larger, and LCOE scales sublinearly with size. Araiinejad & Shirvan (2025), using the same design but updated assumptions for REBCO learning and regulatory treatment, arrive at estimates within the CATF range.
 
-This is exactly the kind of insight the pipeline is designed to surface. The model does not hide the gap or explain it away. It shows you the published input, the computed output, and the sensitivity analysis that tells you which inputs would need to change (and by how much) to reach a different answer. The magnet cost and availability dominate; everything else is noise.
+This is exactly the kind of insight 1costingfe is designed to surface. The model does not hide the gap or explain it away. It shows you the published input, the computed output, and the sensitivity analysis that tells you which inputs would need to change (and by how much) to reach a different answer. The magnet cost and availability dominate; everything else is noise.
 
 ## Sensitivity: what moves the needle
 
@@ -217,11 +217,11 @@ Running both concepts through the same framework produces several observations t
 
 **Scale matters.** The tokamak at 261 MWe is small for a power plant. The staffing economy of scale (power-law exponent 0.5) means that a 1 GWe plant with the same technology would have roughly 60% lower LCOE per MWh from O&M alone. The stellarator at 390 MWe benefits less from scaling up because it is already in a more favourable size range.
 
-## What the pipeline does not tell you
+## What the framework does not tell you
 
-The pipeline produces numbers. Numbers invite false precision. Several caveats apply.
+1costingfe produces numbers. Numbers invite false precision. Several caveats apply.
 
-The model uses published parameters at face value. If a design paper's magnet cost estimate is obsolete (and for the tokamak it likely is, given the REBCO price trajectory since 2014), the LCOE will be correspondingly wrong. The pipeline does not improve the source data; it makes the source data's implications explicit.
+The model uses published parameters at face value. If a design paper's magnet cost estimate is obsolete (and for the tokamak it likely is, given the REBCO price trajectory since 2014), the LCOE will be correspondingly wrong. The framework does not improve the source data; it makes the source data's implications explicit.
 
 Framework defaults for accounts where concept-specific data is unavailable are calibrated to the ARIES program and NETL fossil energy baselines. They are reasonable for conventional D-T plants at GWe scale. For a 261 MWe compact tokamak or a first-of-a-kind planar coil stellarator, the defaults may be too high or too low. The model flags every default-sourced parameter so the user can see exactly where the analysis is relying on analogues rather than concept-specific data.
 
@@ -240,6 +240,8 @@ For the planar coil stellarator, the answer is: the cost lives in the coil syste
 These are different kinds of engineering challenges, requiring different kinds of evidence to resolve. A comparative framework makes that visible.
 
 The [1costingfe](https://github.com/1cfe/1costingfe) framework and its [companion paper](https://github.com/1cfe/1costingfe/blob/master/tex/paper.tex) document the methodology, cost account structure, and physics models. All numbers in this post can be reproduced from the code snippets shown above.
+
+Writing these scripts by hand works for two concepts. It does not scale to the 36 concepts in our spanning set. The follow-up dispatch describes the automated ingestion and code-generation pipeline we are building on top of 1costingfe so that a new fusion concept enters as a published paper and exits as a fully attributed LCOE estimate with sensitivity analysis.
 
 ## References
 

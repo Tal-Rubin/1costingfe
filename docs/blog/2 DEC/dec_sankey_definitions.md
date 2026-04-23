@@ -6,7 +6,7 @@ All energy values in MW. All cases are 1 GWe net output, baseline conditions
 (85% availability, 7% WACC, 30-year life, 6-year construction).
 
 Power balance from `1costingfe` model (mirror concept, f_rad_fus=0.87 for p-B11,
-f_rad_fus=0.35 for D-He3).
+f_rad_fus=0.25 for D-He3).
 
 "Heating System." (with period) is a SankeyMatic trick to create a separate node
 from the left-side "Heating System". After export, edit the SVG to reroute the
@@ -56,33 +56,33 @@ Gross Electric [40] Heating System.
 
 Placement: end of "Pulsed Inductive DEC"
 
-p_fus=1612, p_ash=1537, p_neutron=75, p_rad=564 (35%), transport=1013,
-DEC gets 95% of transport=962, thermal gets brem+neutrons+5% transport
+p_fus=1533, p_ash=1462, p_neutron=71, p_rad=383 (25%), transport=1119,
+DEC gets 95% of transport=1063, thermal gets brem+neutrons+5% transport
 
 ```
 // D-He3 pulsed inductive DEC at 85%, f_dec=0.95
-// 35% of fusion power radiated as bremsstrahlung
+// 25% of fusion power radiated as bremsstrahlung (consensus clean-plasma value)
 // 95% of charged transport to DEC, 5% + brem + neutrons to thermal
 
-Fusion Reactions [1537] Charged Particles
-Fusion Reactions [75] Neutrons
+Fusion Reactions [1462] Charged Particles
+Fusion Reactions [71] Neutrons
 Heating System [40] Charged Particles
 
-// Transport = 1537 + 40 - 564 = 1013
-// 95% to DEC = 962, 5% to walls = 51
-Charged Particles [564] Bremsstrahlung → Thermal (sCO2)
-Charged Particles [962] Pulsed Inductive DEC
-Charged Particles [51] Thermal (sCO2)
-Neutrons [82] Thermal (sCO2)
+// Transport = 1462 + 40 - 383 = 1119
+// 95% to DEC = 1063, 5% to walls = 56
+Charged Particles [383] Bremsstrahlung → Thermal (sCO2)
+Charged Particles [1063] Pulsed Inductive DEC
+Charged Particles [56] Thermal (sCO2)
+Neutrons [78] Thermal (sCO2)
 
-Pulsed Inductive DEC [818] Gross Electric
-Pulsed Inductive DEC [144] Waste Heat
+Pulsed Inductive DEC [904] Gross Electric
+Pulsed Inductive DEC [159] Waste Heat
 
-Bremsstrahlung → Thermal (sCO2) [265] Gross Electric
-Bremsstrahlung → Thermal (sCO2) [299] Waste Heat
+Bremsstrahlung → Thermal (sCO2) [180] Gross Electric
+Bremsstrahlung → Thermal (sCO2) [203] Waste Heat
 
 Thermal (sCO2) [63] Gross Electric
-Thermal (sCO2) [70] Waste Heat
+Thermal (sCO2) [71] Waste Heat
 
 Gross Electric [1000] Net Electric
 Gross Electric [106] BOP
