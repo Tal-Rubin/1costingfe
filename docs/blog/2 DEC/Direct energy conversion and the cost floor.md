@@ -29,7 +29,7 @@ Photons aren't a nuclear constraint, but at fusion temperatures they can be debi
 
 ### Venetian Blind
 
-The [venetian blind](https://iopscience.iop.org/article/10.1088/0029-5515/13/1/005) is the most mature DEC concept (TRL 4-5). It consists of angled metal ribbon grids at successively higher retarding potentials that sort ions by energy and collect them on high-potential electrodes. It mounts on linear magnetic confinement devices such as magnetic mirrors, as an add-on to the expander tank, collecting the particle stream leaving along field lines. It has no moving parts, and was [demonstrated at 48% efficiency](https://www.osti.gov/biblio/7341986) on real mirror plasma at LLNL's TMX (1982), with a [theoretical maximum of 70%](https://iopscience.iop.org/article/10.1088/0029-5515/13/1/005). The 70% cap is set by grid geometry and the ion energy spread, not by the wall-material Carnot limit. [Realta Fusion](https://www.realtafusion.com/) is the sole active developer, with a [patented](https://patents.google.com/patent/US12166398B2) axisymmetric variant.
+The [venetian blind](https://iopscience.iop.org/article/10.1088/0029-5515/13/1/005) is the most mature DEC concept (TRL 4-5). It consists of angled metal ribbon grids at successively higher retarding potentials that sort ions by energy and collect them on high-potential electrodes. It mounts on linear magnetic confinement devices such as magnetic mirrors, as an add-on to the expander tank, collecting the particle stream leaving along field lines. It has no moving parts, and was [demonstrated at 48% efficiency](https://doi.org/10.13182/FST83-A20820) on real end-loss plasma at LLNL's TMX (Barr & Moir, 1983), with a [theoretical maximum of 70%](https://iopscience.iop.org/article/10.1088/0029-5515/13/1/005). The 70% cap is set by grid geometry and the ion energy spread, not by the wall-material Carnot limit. [Realta Fusion](https://www.realtafusion.com/) is the sole active developer, with a [patented](https://patents.google.com/patent/US12166398B2) axisymmetric variant.
 
 ### Pulsed Inductive
 
@@ -51,23 +51,27 @@ One caveat up front: the thermal capture hardware in the baseline (turbine islan
 
 We carry the p-B11 mirror baseline forward from the [prior dispatch](https://1cf.energy/fusions-cost-floor-what-if-the-core-were-free/) and add a venetian blind as an overlay. The thermal cycle is kept because 87% of p-B11 energy radiates as bremsstrahlung; the DEC captures only the charged-particles leaving the mirror axially.
 
-The venetian blind hardware, consisting of grids, power conditioning, incremental vacuum and tank volume, costs [$79–128M](https://www.osti.gov/biblio/7218298) at 400 MWe DEC electric output, comparable to the turbine island it partially replaces ($168M for sCO2 at 1 GWe).
+Sizing the VB hardware to 400 MWe DEC output (2024 NOAK) lands an all-in figure of roughly $140M, range $105-190M: a 304L stainless tank ($8-12/kg fabricated, 1500-3000 tonnes, ~$20M), HV power conditioning at $100-120/kW (60-70% of a full [MISO 2024 VSC HVDC station](https://cdn.misoenergy.org/20240501%20PSC%20Item%2004%20MISO%20Transmission%20Cost%20Estimation%20Guide%20for%20MTEP24632680.pdf) since the AC interconnect isn't duplicated, ~$45M), cryopumps at fusion procurement scale (~$15M), ITER NBI-style actively cooled thermal panels for the 30-90 MW grid heat load (~$15M), grid and collector hardware (~$15M, Hoffman 1977 geometry x CPI), HV bushings, valves, and controls (~$12M), plus 15% installation. This is comparable to the turbine island it partially replaces ($168M for sCO2 at 1 GWe).
 
 We model the hybrid with DEC handling 90% of the charged particle transport and the rest going through a small thermal cycle:
 
 | Configuration (1 GWe, pB11, free core) | Floor ($/MWh) | Overnight ($/kW) |
 | --- | --- | --- |
-| Thermal only (sCO2 Brayton, 47%) | 18 | 1,234 |
-| VB DEC at 48% + thermal (hybrid) | 18 | 1,233 |
-| VB DEC at 60% + thermal (hybrid) | 18 | 1,226 |
+| Thermal only (sCO2 Brayton, 47%) | 18 | 1,250 |
+| VB DEC at 48% + thermal (hybrid) | 19 | 1,264 |
+| VB DEC at 60% + thermal (hybrid) | 19 | 1,261 |
 
-The venetian blind barely moves the floor. With 87% of fusion energy radiated as bremsstrahlung, the DEC only captures the 13% charged-particle margin. At the demonstrated 48% efficiency, the DEC hardware adds cost without meaningfully improving conversion. Even at 60% (never demonstrated on real plasma), the hybrid floor stays at $18/MWh. Eliminating the turbine entirely and wasting the bremsstrahlung is not viable for p-B11: without a thermal cycle, the plant needs 16 GW of fusion power for 1 GWe net, driving the fully costed LCOE to $60/MWh, far worse than the thermal path ($37/MWh). For D-He3 with its higher charged fraction, the VB DEC 60% floor is $16/MWh, but the He-3 fuel adds $72/MWh on top.
+The venetian blind barely moves the floor. With 87% of fusion energy radiated as bremsstrahlung, the DEC only captures the 13% charged-particle margin. At the demonstrated 48% efficiency, the DEC hardware adds cost without meaningfully improving conversion. Even at 60% (never demonstrated on real plasma), the hybrid floor sits at $19/MWh, $1/MWh above thermal-only and about $11-14/kW worse on overnight. Eliminating the turbine entirely and wasting the bremsstrahlung is not viable for p-B11: without a thermal cycle, the plant needs 16 GW of fusion power for 1 GWe net, driving the fully costed LCOE to $60/MWh, far worse than the thermal path ($37/MWh). For D-He3 with its higher charged fraction, the VB DEC 60% floor is $16/MWh, but the He-3 fuel adds $72/MWh on top.
+
+The numbers above use the mirror baseline heating power of 40 MW, giving Q_eng around 8 and a 13% recirculating fraction. If the heating power is larger, the picture shifts. The heating power leaves the plasma in the charged-particle transport channel, and is mostly captured by the VB. But at a heating wall-plug efficiency of 50% (the model's NBI default) the injection chain draws 2 MW of gross electric per 1 MW delivered to the plasma, while the transport channel returns only 0.58 MW in the VB 60% hybrid. Each MW of heating therefore costs roughly 1.4 MW of gross electric output (2 MW drawn in, 0.58 MW returned), and the fusion core upsizes to cover the shortfall. Holding net output at 1 GWe, LCOE rises by $1/MWh at 150 MW heating, by $3/MWh at 250 MW, and by $5/MWh at 400 MW; beyond 600 MW Q_eng drops below 2 and the recirculating fraction exceeds 50%. Thermal-only stays cheaper than the thermal+VB hybrid by about $0.9/MWh at every heating level: the VB hardware cost scales with DEC throughput alongside the recovery it provides, so the gap stays roughly flat across the sweep.
+
+Flipping the analysis: at fixed VB hardware cost, what efficiency would justify adding the DEC? At the 1 GWe p-B11 baseline the VB only outputs roughly 145 MWe (13% charged fraction of 2 GW fusion, 90% captured, 60% converted), so the build-up scales to about $81M of VB hardware at this plant scale. Holding that fixed, no VB efficiency between 30% and 100% breaks even with thermal-only — the VB hardware exceeds turbine-side savings across the entire physically accessible band, and even at a hypothetical 100% VB efficiency the hybrid is still about $0.3/MWh above thermal-only. Break-even enters the physically accessible window only if the VB capex at this plant scale falls by roughly 3x, to around $30M, at which point a 62% VB suffices. The leverage is narrow: only 12% of fusion power (0.9 x 0.13) flows through the DEC, so each percentage point of VB efficiency moves only 0.12 percentage points of plant-level conversion.
 
 ### Pulsed Inductive (D-He3)
 
 Pulsed inductive DEC using D-He3 plasma is Helion's concept. Helion is one of the best-capitalized American fusion companies (roughly $1.8B raised) and has signed a [commercial PPA with Microsoft](https://www.microsoft.com/en-us/blog/2023/05/10/microsoft-signs-agreement-with-helion-energy-to-purchase-electricity/) targeting 2028. D-He3 radiates only 25% of its energy as bremsstrahlung, leaving most of the fusion power to the charged particles and the inductive coils. Unlike the VB hybrid, no main turbine is retained; the pulsed-power chain handles most of the conversion, with a small thermal bottoming cycle for the bremsstrahlung and neutron fractions.
 
-With no turbine, the BOP becomes a pulsed-power chain: pulse-rated switchgear, capacitor or inductive storage to smooth the duty cycle, DC-DC converters to recharge the compression coils, and a grid-tie inverter at the back. A utility-scale solar inverter ($30-50/kW, [NREL](https://www.nrel.gov/solar/market-research-analysis.html)) is only the last link. Sizing the pulsed chain downstream of the driver to 1 GWe net (NOAK) gives a defensible all-in figure of roughly $593/kW: a dedicated recovery cap bank sized to the fusion power balance (703 MJ at $0.50/J = $351M), DC-DC links at $75/kW of gross output ($78M), the grid inverter at $150/kW net ($150M), and controls at 4% of the driver bank ($14M). The compression bank itself ($351M) is accounted for as part of the driver (core).
+With no turbine, the BOP becomes a pulsed-power chain: pulse-rated switchgear, capacitor or inductive storage to smooth the duty cycle, DC-DC converters to recharge the compression coils, and a grid-tie inverter at the back. A utility-scale solar inverter ($30-50/kWdc, [NREL Table A-3](https://docs.nrel.gov/docs/fy25osti/92536.pdf)) is only the last link. Sizing the pulsed chain downstream of the driver to 1 GWe net (NOAK) gives a defensible all-in figure of roughly $593/kW: a dedicated recovery cap bank sized to the fusion power balance (703 MJ at $0.50/J = $351M), DC-DC links at $75/kW of gross output ($78M), the grid inverter at $150/kW net ($150M), and controls at 4% of the driver bank ($14M). The compression bank itself ($351M) is accounted for as part of the driver (core).
 
 | Configuration (1 GWe, D-He3, free core) | BOP floor ($/MWh) | He-3 fuel ($/MWh) | Total ($/MWh) |
 | --- | --- | --- | --- |
@@ -89,7 +93,7 @@ Here is the comparison at aggressive conditions (2 GWe, 95% availability, 3% WAC
 | Approach (2 GWe, pB11, free core) | Floor ($/MWh) | Overnight ($/kW) | Budget for core |
 | --- | --- | --- | --- |
 | Thermal only (sCO2 Brayton, 47%) | 7.6 | 826 | +$2.4/MWh |
-| VB DEC 60% + thermal (hybrid) | 7.8 | 840 | +$2.2/MWh |
+| VB DEC 60% + thermal (hybrid) | 7.9 | 861 | +$2.1/MWh |
 
 At aggressive conditions, the hybrid DEC and thermal approaches are within $0.2/MWh. The no-turbine configurations are excluded for p-B11 because wasting 87% of fusion energy as bremsstrahlung heat requires an enormous core that more than offsets the turbine savings (see above). The dominant terms remain buildings ($370-490M), the electrical plant ($180M), O&M ($62M/yr), indirect costs, and financing.
 
@@ -105,13 +109,13 @@ In the fully costed D-He3 mirror at 1 GWe baseline conditions:
 
 | Configuration | LCOE ($/MWh) | Core cost | He-3 fuel ($/MWh) |
 | --- | --- | --- | --- |
-| Thermal only (47%) | 119 | $1,279M | 80 |
-| VB DEC 60% (hybrid) | 109 | $1,279M | 72 |
-| Pulsed inductive (85%) | 95 | $1,686M | 55 |
+| Thermal only (47%) | 120 | $1,315M | 80 |
+| VB DEC 60% (hybrid) | 110 | $1,353M | 72 |
+| Pulsed inductive (85%) | 95 | $1,696M | 55 |
 
-For the venetian blind, the core cost is effectively flat: the added DEC hardware (counted as part of the core in standard fusion accounting) offsets the savings from smaller heating and blanket systems. For pulsed inductive, the core jumps $407M because the pulsed-power chain that replaces the turbine (dominated by the recovery cap bank) is substantial. LCOE drops $10/MWh with the venetian blind and $24/MWh with pulsed inductive, but the pulsed savings come entirely from fuel, not hardware: higher efficiency means less fusion power per MWh, which means less He-3 burned. For D-He3, DEC is primarily a fuel-saving technology.
+For the venetian blind, the core cost rises modestly ($38M): the added DEC hardware partially offsets the savings from smaller heating and blanket systems. For pulsed inductive, the core jumps $381M because the pulsed-power chain that replaces the turbine (dominated by the recovery cap bank) is substantial. LCOE drops $10/MWh with the venetian blind and $25/MWh with pulsed inductive, but the pulsed savings come entirely from fuel, not hardware: higher efficiency means less fusion power per MWh, which means less He-3 burned. For D-He3, DEC is primarily a fuel-saving technology.
 
-For p-B11 (negligible fuel cost), the effect is smaller: thermal LCOE is $37/MWh, VB DEC 60% is $37/MWh (core $1,189M vs $1,209M). Because bremsstrahlung dominates, the DEC captures only the 13% charged-particle margin and does not meaningfully reduce the required fusion power.
+For p-B11 (negligible fuel cost), the effect is smaller: thermal LCOE is $37/MWh, VB DEC 60% is $37/MWh (core $1,202M vs $1,235M). Because bremsstrahlung dominates, the DEC captures only the 13% charged-particle margin and does not meaningfully reduce the required fusion power.
 
 The pulsed inductive case already costs more than a turbine on BOP even at 85% efficiency; the LCOE win over thermal comes entirely from halving the fusion power and the He-3 burn. If the efficiency is 70% instead of 85%, the core-size savings shrink and the pulsed power system (capacitor banks, switches; the model assumes $0.50/J stored NOAK, vs [$2-4/J](https://arxiv.org/abs/2602.19389) in the literature) becomes clearly more expensive than the turbine it replaces. Capacitor lifetime is a separate risk: the model assumes 10^8 shot lifetime (NOAK), but current high-energy-density capacitors achieve roughly 10^7 cycles. At a 1 Hz rep rate, 10^7 shots is four months of operation, requiring frequent bank replacements that add both capital cost and downtime.
 
@@ -142,7 +146,7 @@ The pulsed inductive path is different. Capacitor banks and power electronics do
 
 The pulsed floors in this post already assume the 40–100x reduction has happened. If capacitors stay at $5–20/J, those floors rise substantially and the economics favor a turbine. The thermal and venetian blind floors carry no comparable risk.
 
-![](<efficiency-cost chart.svg>)
+![Approximate efficiency and capital cost ranges for thermal and DEC conversion systems. Costs are per kW of output routed through that system; sCO2 Brayton and pulsed inductive are per kW net, venetian blind is per kW of DEC output. Pulsed inductive assumes the $0.50/J NOAK capacitor-bank target; at today's literature cost of $2-4/J the range shifts roughly $1,000/kW higher, off the chart. MHD is dashed because no fusion-relevant cost basis exists yet.](<efficiency-cost chart.svg>)
 
 ## Conclusions
 
@@ -176,11 +180,11 @@ The path to 1-cent fusion energy does not run through direct energy conversion a
 8. Rosa, R.J., *Magnetohydrodynamic Energy Conversion*, Hemisphere Publishing (1987). [Link](https://inis.iaea.org/records/4ss3z-rqd83)
 9. GAO, "Magnetohydrodynamics: A Promising Technology for Efficiently Generating Electricity From Coal," EMD-80-14 (1980). [Link](https://www.gao.gov/products/emd-80-14)
 10. Shea, D.A. & Morgan, D., "The Helium-3 Shortage: Supply, Demand, and Options for Congress," Congressional Research Service, R41419 (2010). [Link](https://www.everycrsreport.com/reports/R41419.html)
-11. Barr, W.L. et al., "Experimental Results from a Beam Direct Converter at 100 kV," *Journal of Fusion Energy* 2, 131-143 (1982). [Link](https://www.osti.gov/biblio/7341986)
+11. Barr, W.L. & Moir, R.W., "Test Results on Plasma Direct Converters," *Fusion Technology* 3(1), 98-111 (1983). [Link](https://doi.org/10.13182/FST83-A20820)
 12. Fabris, G. & Hantman, R.G., "Interaction of fluid dynamics phenomena and generator efficiency in two-phase liquid-metal gas magnetohydrodynamic power generators," *Energy Conversion and Management* 21(1), 49-60 (1981). [Link](https://doi.org/10.1016/0196-8904(81)90006-6)
 13. Pinkhasov, D. et al., "CDIF 32-MWt MHD Program Results," *Proc. 31st Symposium on Engineering Aspects of MHD* (1993). [Link](https://www.osti.gov/biblio/6380343)
 14. Smolentsev, S. et al., "MHD Thermofluid Issues of Liquid-Metal Blankets: Phenomena and Advances," *Energies* 14(20), 6640 (2021). [Link](https://doi.org/10.3390/en14206640)
 15. Binderbauer, M.W. & Tajima, T., US Patent 9,893,226 B2, "Photon-to-electric direct conversion" (2018). [Link](https://patents.google.com/patent/US9893226B2/)
-16. NREL, "U.S. Solar Photovoltaic System and Energy Storage Cost Benchmarks." [Link](https://www.nrel.gov/solar/market-research-analysis.html)
+16. Ramasamy, V. et al., "Documenting 15 Years of Reductions in U.S. Solar Photovoltaic System Costs," NREL/TP-7A40-92536 (2025). [Link](https://docs.nrel.gov/docs/fy25osti/92536.pdf)
 17. Realta Fusion, US Patent 12,166,398 B2, "Axisymmetric ferromagnetic venetian blinds" (2025). [Link](https://patents.google.com/patent/US12166398B2)
 18. 1cFE, "1costingfe: Open-source fusion techno-economic model." [GitHub](https://github.com/1cfe/1costingfe)

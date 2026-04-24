@@ -90,6 +90,112 @@ r_th = m.forward(**BASE_KW, inflation_rate=INFLATION, cost_overrides=FREE_CORE)
 
 
 # ══════════════════════════════════════════════════════════════════════
+# TABLE 1b: VB break-even efficiency at fixed hardware cost (blog addition)
+# For each fixed VB CAS22 cost, find the eta_de where hybrid floor
+# matches the thermal-only floor. f_dec=0.9.
+# ══════════════════════════════════════════════════════════════════════
+print()
+print("=" * 75)
+print("TABLE 1b: VB break-even eta at fixed hardware cost — 1 GWe pB11 free core")
+print("=" * 75)
+
+r_th_ref = m.forward(
+    **BASE_KW, inflation_rate=INFLATION, cost_overrides={"CAS22": 0.0, "CAS27": 0.0}
+)
+lcoe_th = float(r_th_ref.costs.lcoe)
+print(f"  Thermal-only reference: LCOE=${lcoe_th:.2f}/MWh")
+print()
+print(f"  {'Fixed VB cost':>14} {'Break-even eta':>16} {'Note':<30}")
+print("-" * 64)
+
+
+def find_breakeven_eta(fixed_cas22):
+    prev_eta, prev_lcoe = None, None
+    for eta_pct in range(30, 101):
+        eta = eta_pct / 100.0
+        r = m.forward(
+            **BASE_KW,
+            inflation_rate=INFLATION,
+            f_dec=0.9,
+            eta_de=eta,
+            cost_overrides={"CAS22": float(fixed_cas22), "CAS27": 0.0},
+        )
+        lcoe = float(r.costs.lcoe)
+        if prev_eta is not None and (prev_lcoe - lcoe_th) * (lcoe - lcoe_th) <= 0:
+            frac = (prev_lcoe - lcoe_th) / (prev_lcoe - lcoe)
+            return prev_eta + frac * (eta - prev_eta)
+        prev_eta, prev_lcoe = eta, lcoe
+    return None
+
+
+for c in [20.0, 30.0, 45.0, 58.0, 80.0, 100.0]:
+    eta_be = find_breakeven_eta(c)
+    if eta_be is None:
+        note = "no crossover in 30-100% range"
+        cell = "  —  "
+    elif eta_be > 0.70:
+        note = "above 70% theoretical ceiling"
+        cell = f"{eta_be * 100:.0f}%"
+    else:
+        note = "inside 48-70% physical window"
+        cell = f"{eta_be * 100:.0f}%"
+    print(f"  {'$' + f'{c:.0f}M':>14} {cell:>16} {note:<30}")
+
+
+# ══════════════════════════════════════════════════════════════════════
+# TABLE 1c: Heating-power sensitivity (blog addition)
+# Sweep p_input and compare thermal-only vs VB 60% hybrid.
+# VB hybrid preserves the model-scaled VB hardware cost (CAS22 = C220109);
+# thermal-only has CAS22 = 0. This matches the apples-to-apples accounting
+# used in Table 1 above.
+# ══════════════════════════════════════════════════════════════════════
+print()
+print("=" * 75)
+print("TABLE 1c: Heating-power sensitivity — 1 GWe pB11 free core")
+print("=" * 75)
+print(
+    f"  {'p_in':>5} {'p_fus':>7} {'Q_eng':>6}"
+    f"  {'th LCOE':>8} {'vb LCOE':>8} {'vb CAS22':>9} {'th-vb':>7}"
+)
+print("-" * 68)
+for p_in in [5, 40, 80, 150, 250, 400, 600]:
+    # Thermal-only: no DEC hardware
+    r_th_sweep = m.forward(
+        **BASE_KW,
+        inflation_rate=INFLATION,
+        p_input=float(p_in),
+        cost_overrides={"CAS22": 0.0, "CAS27": 0.0},
+    )
+    # VB hybrid: first pass to read the model-scaled VB hardware cost,
+    # second pass to free the core but preserve it.
+    r_full_sweep = m.forward(
+        **BASE_KW,
+        inflation_rate=INFLATION,
+        f_dec=0.9,
+        eta_de=0.60,
+        p_input=float(p_in),
+    )
+    vb_cas22 = float(r_full_sweep.cas22_detail.get("C220109", 0.0))
+    r_vb_sweep = m.forward(
+        **BASE_KW,
+        inflation_rate=INFLATION,
+        f_dec=0.9,
+        eta_de=0.60,
+        p_input=float(p_in),
+        cost_overrides={"CAS22": vb_cas22, "CAS27": 0.0},
+    )
+    delta = float(r_th_sweep.costs.lcoe) - float(r_vb_sweep.costs.lcoe)
+    print(
+        f"  {p_in:>5} {float(r_th_sweep.power_table.p_fus):>7.0f}"
+        f" {float(r_th_sweep.power_table.q_eng):>6.2f}"
+        f"  {float(r_th_sweep.costs.lcoe):>8.2f}"
+        f" {float(r_vb_sweep.costs.lcoe):>8.2f}"
+        f" {vb_cas22:>9.1f}"
+        f" {delta:>+7.2f}"
+    )
+
+
+# ══════════════════════════════════════════════════════════════════════
 # TABLE 3: All approaches at aggressive conditions (blog table 3)
 # ══════════════════════════════════════════════════════════════════════
 print()

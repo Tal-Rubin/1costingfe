@@ -1408,6 +1408,79 @@ present-value sum of discrete replacements over the plant lifetime,
 discounted at the project interest rate.
 
 %% ------------------------------------------------------------
+\subsection{CAS22.01.09: Direct Energy Converter (electrostatic)}
+\label{sec:cas2209}
+
+CAS22.01.09 covers add-on direct energy converters for linear devices
+(mirrors and steady-state FRCs) where charged-particle exhaust escapes
+along open field lines and can be decelerated to recover kinetic energy
+as electricity.  Inductive DEC (Helion-type pulsed FRC) is captured in
+CAS22.01.07 via $Q_{\text{sci}}$-derived markups on the driver bank
+(\cref{sec:cas2207}); the present subsection covers the electrostatic
+venetian-blind variant for steady-state mirrors.
+
+The cost scales with DEC electric output:
+\begin{equation}
+  C_{220109} = c_{\text{dec}} \times (P_{\text{dee}} / P_{\text{dee,ref}})^{0.7}
+  \quad [\text{M\$}]
+\end{equation}
+where $c_{\text{dec}} = 140$~M\$ is the NOAK all-in 2024 USD reference
+cost at $P_{\text{dee,ref}} = 400$~MWe DEC electric output, and the
+0.7~exponent reflects sub-linear scaling of vacuum/tank infrastructure
+with throughput while grid modules and power conditioning scale roughly
+linearly.
+
+The reference figure is a bottom-up build-up of the DEC-specific
+add-on hardware (excluding shared mirror infrastructure already
+costed under CAS22.01.06 and the expander):
+\begin{itemize}
+  \item Tank and incremental vacuum: \$15--30~M, central \$20~M.
+    Industrial-grade fabricated 304L stainless ($\$8\text{--}12$/kg
+    cleaned and ASME~Section~VIII certified for $10^{-5}$ to
+    $10^{-6}$~Torr service) at 1500--3000 tonnes.  ITER cryostat
+    ($\sim \$35$/kg, nuclear-grade) and LIGO UHV ($10^{-9}$~Torr,
+    overspec) bracket above; bare-plate steel pricing ($\$5\text{--}8$/kg)
+    bounds below.
+  \item HV power conditioning (DC-AC chain): \$35--55~M, central \$45~M.
+    The DEC outputs DC at multi-stage retarding potentials (30--100~kV),
+    which a converter chain returns to grid AC.  MISO's 2024 MTEP24
+    cost guide \citep{miso2024mtep24} reports VSC HVDC valve hall
+    capital at \$167/kW for $\pm 250$~kV / 500~MW and \$178/kW for
+    $\pm 400$~kV / 1.5~GW; the DEC needs the IGBT/DC-conversion
+    portion only (no duplicate AC interconnect), placing it at
+    roughly 60--70\% of full HVDC station cost, $\$100\text{--}120$/kW.
+  \item Cryopumps: \$10--25~M, central \$15~M.
+    $10^6$--$10^7$~L/s pumping speed.  ITER cryopumps procurement
+    \citep{iter_cryopumps} (8 units at $\sim \$6$M each, total
+    $\sim \$50$M for 600,000~L/s via Fusion for Energy contracts) and
+    industrial cryopump pricing (Edwards/Leybold STP-iXR class,
+    $\$200\text{--}500$k per 20,000~L/s) bracket the figure.
+  \item Heat collection panels: \$10--20~M, central \$15~M.
+    Active-cooled tungsten panels for the 30--90~MW heat load
+    deposited on grids and collectors (5--15\% of charged-particle
+    power for geometrically transparent grids).  Scaled from ITER
+    NBI beam-dump procurement \citep{iter_nbi_dump}
+    ($\sim \$5\text{--}10$M per 16~MW beam line).  ITER divertor
+    pricing ($\$60$M/GW${}_\text{th}$) is overspec, since VB grids
+    are not exposed to direct fusion plasma or 14~MeV neutron flux.
+  \item Grid and collector modules: \$10--20~M, central \$15~M.
+    Tungsten ribbon grids, alumina HV insulators, stainless
+    mounting frames.  Geometry-driven; this line uses
+    \citet{hoffman1977} ($\$4$k/m${}^2$ in 1975 USD, $\$23$k/m${}^2$
+    in 2024 USD via CPI) at 300--1000~m${}^2$ collector area.
+    Cross-checked against the TMX-integrated 48\% demonstration
+    \citep{barr_moir1983}.
+  \item Misc (HV bushings, vacuum gate valve, controls, instrumentation):
+    \$10--17~M, central \$12~M.
+\end{itemize}
+
+The hardware subtotal is \$90--167~M, central \$122~M.  Adding 15\%
+installation (NOAK) gives \$105--190~M total, central \$140~M, which
+is the value used for $c_{\text{dec}}$.  Uncertainty: $\pm 35\%$,
+dominated by the HV power conditioning scale-up factor and the
+plant-scale tank fabrication unit cost.
+
+%% ------------------------------------------------------------
 \subsection{CAS22.01.10: Remote Handling \& Maintenance Equipment}
 \label{sec:cas2210}
 

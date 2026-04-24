@@ -259,52 +259,93 @@ hardware beyond what the mirror already requires.
 
 ### DEC-specific add-on (charged to C220109):
 
+Bottom-up rebuild in 2024 USD, NOAK basis. Each line item references
+modern industry benchmarks (HVDC, vacuum-vendor, ITER procurement)
+rather than Hoffman 1975 dollars escalated by CPI.
+
 | Subsystem | Scaling basis | Build-up (2024$, ~400 MWe DEC) |
 |---|---|---|
-| Grid/collector modules | Collector area | \$10-15M |
-| DC-AC power conditioning | DEC electric output | \$35-50M |
-| Heat collection system | Thermal load on grids | \$8-12M |
-| Incremental vacuum (cryo) | DEC volume/gas load | \$10-20M |
-| Incremental tank volume | Expansion ratio | \$15-25M |
-| Neutron trap shielding | DT only | \$0-5M |
-| DEC gate valve | Fixed | \$0.5M |
-| **Total DEC add-on** | | **\$79-128M** |
+| Grid/collector modules | Collector area | \$10-20M |
+| DC-AC power conditioning | DEC electric output | \$35-55M |
+| Heat collection system | Thermal load on grids | \$10-20M |
+| Incremental vacuum (cryo) | DEC volume/gas load | \$10-25M |
+| Incremental tank volume | Steel mass + vacuum cleaning | \$15-30M |
+| Misc (HV bushings, gate valve, controls) | Fixed | \$10-17M |
+| Neutron trap shielding | DT only (zero for DHe3, pB11) | \$0-5M |
+| **Hardware subtotal** | | **\$90-167M** |
+| Installation (NOAK, 15%) | Hardware total | \$14-25M |
+| **Total DEC add-on, NOAK** | | **\$105-190M, central \$140M** |
 
-### Build-up methodology
+### Build-up methodology (2024 USD, NOAK)
 
-**Grid/collector modules (\$10-15M):**
-Hoffman: \$4,000/m^2 (1975\$) = \$23,200/m^2 (2024\$). For a mirror
-with ~300 MW charged particle throughput, expansion ratio ~100,
-mirror exit area ~3 m^2, collector area ~300 m^2. Cost =
-300 x \$23.2k = \$7M. Add 50% for support structure, alignment, and
-electrical connections: \$10M. Three-stage system: x1.5 = \$15M.
+**Grid/collector modules (\$10-20M, central \$15M):**
+Tungsten ribbon grids (1 mm wire, 20 mm spacing per Barr 1983) with
+stainless mounting frames and alumina HV insulators. Geometry-driven
+sizing for a mirror with ~300 MW charged-particle throughput,
+expansion ratio ~100, collector area ~300-1000 m^2 depending on
+single-vs. multi-stage configuration. Wire and insulator unit costs
+have not changed materially since the 1970s; this line still uses
+Hoffman's \$4k/m^2 (1975\$) escalated to \$23k/m^2 (2024\$), with
++50% for support structure and x1.5 for three-stage. Cross-check:
+NSTX-U beam dump scrapers and SLAC/CERN ion-collector hardware
+land in the same range for similar collection area.
 
-**DC-AC power conditioning (\$35-50M):**
-Hoffman: \$46/kWe (1975\$) = \$267/kWe (2024\$). Modern high-power
-inverters (solar/wind industry) have driven costs down. NREL
-utility-scale inverter benchmark (2024): \$30-50/kWe for >100 MW
-systems. Fusion DEC operates at higher voltage (100-250 kV)
-requiring specialized conversion, so use \$80-120/kWe. At 300-500
-MWe DEC output: \$24-60M, central estimate \$40M.
+**DC-AC power conditioning (\$35-55M, central \$45M):**
+The VB outputs DC at multiple stage voltages (typically 30-100 kV);
+conversion to grid AC is functionally an HVDC valve hall + IGBT
+chain + step-up transformer + filters. Reference: MISO 2024 MTEP24
+Transmission Cost Estimation Guide, Table 2.4-2: a +-250 kV / 500 MW
+VSC HVDC bipole valve hall costs \$83.4M (\$167/kW), and a
++-400 kV / 1,500 MW station costs \$266.4M (\$178/kW). A VB DEC
+needs the IGBT/DC-conversion portion only (no duplicate AC
+interconnect), so scale at 60-70% of full HVDC station cost:
+\$100-120/kW. At 400 MWe: \$40-50M, range \$35-55M reflecting
+voltage class and topology uncertainty. NREL 2024 utility-scale
+solar inverter benchmark (\$30-50/kW for low-voltage systems) is
+the floor; HVDC station pricing is the ceiling.
 
-**Heat collection system (\$8-12M):**
-Helium-cooled thermal panels on grid supports. Similar technology
-to divertor cooling but lower heat flux (grids are geometrically
-transparent, so only ~10-20% of particle power deposits as heat).
-Scale from divertor cost (\$60M/GWth) at ~1/6 the thermal load:
-~\$10M.
+**Heat collection system (\$10-20M, central \$15M):**
+Active-cooled tungsten panels for the 30-90 MW thermal load
+deposited on grids and collectors (~5-15% of incident charged-
+particle power; geometrically transparent grids). Reference: ITER
+NBI beam-dump procurement, where each beam line absorbs ~16 MW
+into actively cooled targets at roughly \$5-10M per beam dump.
+Scaling to 30-90 MW at the VB: \$10-25M. ITER-class divertor
+cost (\$60M/GWth) is overspec for VB grids — they don't see a
+14 MeV neutron flux or fusion-plasma direct exposure.
 
-**Incremental vacuum (\$10-20M):**
-Cryo pumping for the larger DEC volume and charge-exchange gas
-load. Hoffman: \$6,300/m^2 (1975\$) = \$36,500/m^2 (2024\$). Modern
-cryopumps are commoditized (Edwards, Leybold). Use \$15,000/m^2
-for industrial cryopanels at fusion scale. At ~1,000 m^2 pump
-area: \$15M.
+**Incremental vacuum / cryopumps (\$10-25M, central \$15M):**
+The expander tank requires 1e6-1e7 L/s of pumping speed to keep
+charge-exchange neutral fraction below a few percent. ITER
+cryopumps: 8 units at ~75,000 L/s each, total ~\$50M (\$6M each).
+For a VB at fusion-scale procurement, 50-100 industrial cryopumps
+(Edwards / Leybold STP-iXR class, \$200-500k each at 20,000 L/s)
+plus LHe/LN2 distribution lands \$10-25M. The fusion-DEC vacuum
+spec (1e-5 to 1e-6 Torr, sufficient to suppress charge exchange)
+is industrial-grade, NOT LIGO-class UHV (1e-9 Torr).
 
-**Incremental tank volume (\$15-25M):**
+**Incremental tank volume (\$15-30M, central \$20M):**
 The DEC needs a larger end tank than basic plasma exhaust handling.
-Incremental steel: ~2,000-4,000 tonnes at \$5-8/kg fabricated and
-installed. Cost: \$10-32M, central \$20M.
+Modern fabricated 304L stainless steel for industrial vacuum
+service (NOT nuclear-grade or LIGO UHV): \$8-12/kg fabricated,
+welded, vacuum-cleaned, ASME Section VIII certified. Vendor
+references: Anderson Dahlen (LIGO industrial vacuum suppliers),
+Kurt J. Lesker custom chamber pricing, Northern Industrial. At
+1500-3000 tonnes (a 5-15 m diameter, 20-40 m long tank with
+10-15 mm wall): \$15-30M. ITER cryostat (\$35/kg, nuclear-grade,
+superconductor-compatible) is overspec for a VB end tank.
+
+**Misc (HV bushings, gate valve, controls) (\$10-17M, central \$12M):**
+- Large vacuum gate valve (1-2 m diameter): \$1-2M
+- HV feedthroughs and bushings (100-250 kV class): \$3-5M
+- Controls, instrumentation, FPGAs, HV protection: \$5-10M
+
+**Installation, indirect, NOAK contingency (15% of hardware):**
+Standard CAS22 installation fraction (`installation_frac = 0.14`).
+NOAK basis: no additional FOAK markup, since DEC components are
+extensions of mature industrial technology (vacuum vessels,
+cryopumps, IGBT power electronics). Hardware subtotal x 1.15
+gives the final NOAK total.
 
 ---
 
@@ -315,7 +356,8 @@ installed. Cost: \$10-32M, central \$20M.
     C220109 = dec_base * (p_dee / P_DEE_REF) ^ 0.7
 
 where:
-- `dec_base` = 100.0 M$ (total DEC add-on cost at reference output)
+- `dec_base` = 140.0 M$ (NOAK total DEC add-on cost at reference output;
+  central value of the \$105-190M build-up range above)
 - `P_DEE_REF` = 400 MWe (reference DEC electric output)
 - `p_dee` = DEC electric output in MW (from physics layer:
   `f_dec * eta_de * p_transport`)
@@ -536,3 +578,13 @@ make-or-break R&D question for that concept.
 - Woodruff, S., "A Costing Framework for Fusion Power Plants,"
   arXiv:2601.21724, January 2026.
 - NREL, "Utility-Scale Solar Photovoltaics — 2024 Cost Benchmark."
+- MISO, "Transmission Cost Estimation Guide for MTEP24," May 1, 2024
+  (final published). Table 2.4-2: VSC HVDC valve hall \$83.4M at
+  +-250 kV / 500 MW and \$266.4M at +-400 kV / 1,500 MW.
+  [Link](https://cdn.misoenergy.org/20240501%20PSC%20Item%2004%20MISO%20Transmission%20Cost%20Estimation%20Guide%20for%20MTEP24632680.pdf)
+- ITER International Organization, "Cryopumps procurement," public
+  contract awards via Fusion for Energy. [Link](https://fusionforenergy.europa.eu/)
+- ITER International Organization, "Neutral beam injector beam dumps
+  and residual ion dumps," procurement records (TECHNALIA-AVS for
+  MITICA ERID; ALSYOM-SEIV beam source).
+  [Link](https://fusionforenergy.europa.eu/news/iter-neutral-beam-drift-ducts-contract)

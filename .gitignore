@@ -17,4 +17,4 @@ build/
 *.out
 *.synctex.gz
 *.toc
-tex/*.pdf
+*.pdf

@@ -39,7 +39,7 @@ target_factory_base: 244.0   # M$ at 1 GWe ref (IFE/MIF target factory capital)
 
 # C220109: DEC add-on for linear devices (M$ at 400 MWe DEC electric output)
 # Source: docs/account_justification/CAS220109_direct_energy_converter.md
-dec_base: 100.0              # Total DEC add-on cost at P_DEE_REF
+dec_base: 140.0              # Total DEC add-on cost at P_DEE_REF
 dec_grid_cost: 12.0          # Replaceable grid/collector modules at P_DEE_REF
 
 # DEC grid lifetime (FPY) — HIGH UNCERTAINTY, no reactor-scale data.
