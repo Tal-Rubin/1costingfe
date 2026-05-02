@@ -347,6 +347,9 @@ def cas80_fuel(
     noak,
     dd_f_T=DD_F_T_DEFAULT,
     dd_f_He3=DD_F_HE3_DEFAULT,
+    dhe3_dd_frac=0.131,
+    dhe3_f_T=0.5,
+    dhe3_f_He3=0.1,
     burn_fraction=None,
     fuel_recovery=None,
 ):
@@ -371,8 +374,25 @@ def cas80_fuel(
         d_per_event = 2 + 0.5 * dd_f_T + 0.5 * dd_f_He3
         cost_per_rxn = d_per_event * M_DEUTERIUM_KG * cc.u_deuterium
     elif fuel == Fuel.DHE3:
-        cost_per_rxn = M_DEUTERIUM_KG * cc.u_deuterium + M_HE3_KG * cc.u_he3
-        q_eff = Q_DHE3
+        # Per fusion event in a D-He-3 plasma:
+        #   (1 - dhe3_dd_frac) are D-He-3 events:  1 D + 1 He-3 -> Q_DHE3
+        #   dhe3_dd_frac are D-D events:           2 D, 50/50 D(d,p)T and D(d,n)He-3
+        #     T burnup (dhe3_f_T) consumes another D in D-T -> Q_DT
+        #     He-3 burnup (dhe3_f_He3) consumes another D in D-He-3 -> Q_DHE3
+        #     and saves an external He-3 atom.
+        f_dhe3 = 1.0 - dhe3_dd_frac
+        q_dd_avg = 0.5 * Q_DD_PT + 0.5 * Q_DD_NHE3
+        q_eff = f_dhe3 * Q_DHE3 + dhe3_dd_frac * (
+            q_dd_avg + 0.5 * dhe3_f_T * Q_DT + 0.5 * dhe3_f_He3 * Q_DHE3
+        )
+        d_per_event = (
+            f_dhe3 + 2.0 * dhe3_dd_frac + dhe3_dd_frac * 0.5 * (dhe3_f_T + dhe3_f_He3)
+        )
+        he3_per_event = f_dhe3 - dhe3_dd_frac * 0.5 * dhe3_f_He3
+        cost_per_rxn = (
+            d_per_event * M_DEUTERIUM_KG * cc.u_deuterium
+            + he3_per_event * M_HE3_KG * cc.u_he3
+        )
     elif fuel == Fuel.PB11:
         b11_price = cc.u_b11_noak if noak else cc.u_b11
         cost_per_rxn = M_PROTON_KG * cc.u_protium + M_B11_KG * b11_price

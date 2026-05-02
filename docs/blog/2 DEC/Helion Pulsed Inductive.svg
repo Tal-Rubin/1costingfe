@@ -1,0 +1,91 @@
+<svg height="340" width="1000" xmlns="http://www.w3.org/2000/svg">
+<title>Your Diagram Title</title>
+<!-- Generated with SankeyMATIC: 5/2/2026, 2:33:52 PM -->
+<g transform="translate(134.51665,18)">
+<g id="sankey_flows">
+<path id="flow0" d="M12 28.42693v126.9406L210.37084 155.15675v-126.9406z" fill="#d45" stroke-width="0.5" stroke="#d45" opacity="0.45"><title>Fusion Reactions → Charged Particles: 1,655</title></path>
+<path id="flow4" d="M222.37084 79.9128C321.55626 79.9128 321.55626 70.92662 420.74167 70.92662" fill="none" stroke-width="103.39331" stroke="#2a7fff" opacity="0.45"><title>Charged Particles → Pulsed Inductive DEC: 1,348</title></path>
+<path id="flow6" d="M432.74167 19.22996v87.89965L631.11251 106.15686v-87.89965z" fill="#6a3" stroke-width="0.5" stroke="#6a3" opacity="0.45"><title>Pulsed Inductive DEC → Gross Electric: 1,146</title></path>
+<path id="flow11" d="M643.11251 56.60784C742.29793 56.60784 742.29793 51.37067 841.48335 51.37067" fill="none" stroke-width="76.70127" stroke="#0a0" opacity="0.45"><title>Gross Electric → Net Electric: 1,000</title></path>
+<path id="flow3" d="M222.37084 142.19423C321.55626 142.19423 321.55626 165.45805 420.74167 165.45805" fill="none" stroke-width="21.16955" stroke="#2a7fff" opacity="0.45"><title>Charged Particles → Bremsstrahlung: 276</title></path>
+<path id="flow8" d="M432.74167 154.87327v21.16955L631.11251 175.07007v-21.16955z" fill="#c33" stroke-width="0.5" stroke="#c33" opacity="0.45"><title>Bremsstrahlung → Waste Heat: 276</title></path>
+<path id="flow7" d="M432.74167 114.87645C531.92709 114.87645 531.92709 146.15369 631.11251 146.15369" fill="none" stroke-width="15.49366" stroke="#c33" opacity="0.45"><title>Pulsed Inductive DEC → Waste Heat: 202</title></path>
+<path id="flow12" d="M643.11251 99.02365C742.29793 99.02365 742.29793 126.03647 841.48335 126.03647" fill="none" stroke-width="8.13033" stroke="#bcbd22" opacity="0.45"><title>Gross Electric → BOP: 106</title></path>
+<path id="flow5" d="M222.37084 155.5019C321.55626 155.5019 321.55626 211.01572 420.74167 211.01572" fill="none" stroke-width="5.44579" stroke="#2a7fff" opacity="0.45"><title>Charged Particles → Wall Losses: 71</title></path>
+<path id="flow9" d="M432.74167 211.01572C531.92709 211.01572 531.92709 177.79297 631.11251 177.79297" fill="none" stroke-width="5.44579" stroke="#c33" opacity="0.45"><title>Wall Losses → Waste Heat: 71</title></path>
+<path id="flow2" d="M12 192.1429C111.18542 192.1429 111.18542 156.69077 210.37084 156.69077" fill="none" stroke-width="3.06805" stroke="#c80" opacity="0.45"><title>Heating System → Charged Particles: 40</title></path>
+<path id="flow13" d="M643.11251 104.62284C770 104.62284 770 305 643.11251 305 L 12 305 C -100 305 -100 192.1429 12 192.1429" fill="none" stroke-width="3.06805" stroke="#c80" opacity="0.45"><title>Gross Electric → Heating System: 40</title></path>
+<path id="flow1" d="M12 156.8632C216.37084 156.8632 216.37084 247.48429 420.74167 247.48429" fill="none" stroke-width="2.99135" stroke="#d45" opacity="0.45"><title>Fusion Reactions → Neutrons: 39</title></path>
+<path id="flow10" d="M432.74167 247.48429C531.92709 247.48429 531.92709 182.01154 631.11251 182.01154" fill="none" stroke-width="2.99135" stroke="#c33" opacity="0.45"><title>Neutrons → Waste Heat: 39</title></path>
+</g>
+<g id="sankey_nodes">
+<g class="node" style="touch-action: none;">
+<rect id="r0" class="for_r0" x="0" y="28.42693" height="129.93195" width="12" fill="#d45" fill-opacity="1"><title>Fusion Reactions:
+1,694</title></rect>
+</g>
+<g class="node" style="touch-action: none;">
+<rect id="r1" class="for_r1" x="210.37084" y="28.21615" height="130.00865" width="12" fill="#2a7fff" fill-opacity="1"><title>Charged Particles:
+1,695</title></rect>
+</g>
+<g class="node" style="touch-action: none;">
+<rect id="r2" class="for_r2" x="420.74167" y="245.98861" height="2.99135" width="12" fill="#a5a" fill-opacity="1"><title>Neutrons:
+39</title></rect>
+</g>
+<g class="node" style="touch-action: none;">
+<rect id="r3" class="for_r3" x="0" y="190.60888" height="3.06805" width="12" fill="#c80" fill-opacity="1"><title>Heating System:
+40</title></rect>
+</g>
+<g class="node" style="touch-action: none;">
+<rect id="r4" class="for_r4" x="420.74167" y="154.87327" height="21.16955" width="12" fill="#e8a030" fill-opacity="1"><title>Bremsstrahlung:
+276</title></rect>
+</g>
+<g class="node" style="touch-action: none;">
+<rect id="r5" class="for_r5" x="420.74167" y="19.22996" height="103.39331" width="12" fill="#07a" fill-opacity="1"><title>Pulsed Inductive DEC:
+1,348</title></rect>
+</g>
+<g class="node" style="touch-action: none;">
+<rect id="r6" class="for_r6" x="420.74167" y="208.29282" height="5.44579" width="12" fill="#888" fill-opacity="1"><title>Wall Losses:
+71</title></rect>
+</g>
+<g class="node" style="touch-action: none;">
+<rect id="r7" class="for_r7" x="631.11251" y="18.25721" height="87.89965" width="12" fill="#6a3" fill-opacity="1"><title>Gross Electric:
+1,146</title></rect>
+</g>
+<g class="node" style="touch-action: none;">
+<rect id="r8" class="for_r8" x="631.11251" y="138.40686" height="45.10035" width="12" fill="#c33" fill-opacity="1"><title>Waste Heat:
+588</title></rect>
+</g>
+<g class="node" style="touch-action: none;">
+<rect id="r9" class="for_r9" x="841.48335" y="13.02004" height="76.70127" width="12" fill="#0a0" fill-opacity="1"><title>Net Electric:
+1,000</title></rect>
+</g>
+<g class="node" style="touch-action: none;">
+<rect id="r10" class="for_r10" x="841.48335" y="121.97131" height="8.13033" width="12" fill="#bcbd22" fill-opacity="1"><title>BOP:
+106</title></rect>
+</g>
+</g>
+<g id="sankey_labels" font-family="sans-serif" font-size="16px" fill="#000000">
+<rect id="label0_bg" class="for_r0" x="-122.51667" y="71.6729" width="120.65" height="42.52" rx="4" fill="#fff" fill-opacity="0.75" stroke="none" stroke-width="0" stroke-opacity="0"></rect>
+<text id="label0" class="for_r0" text-anchor="end" x="-6.53333" y="93.3929" font-weight="400" font-size="14.4px" dy="-4.12">Fusion Reactions<tspan x="-6.53333" dy="19.32" font-weight="400" font-size="17.6px">1,694</tspan></text>
+<rect id="label1_bg" class="for_r1" x="84.65416" y="71.50047" width="123.85" height="42.52" rx="4" fill="#fff" fill-opacity="0.75" stroke="none" stroke-width="0" stroke-opacity="0"></rect>
+<text id="label1" class="for_r1" text-anchor="end" x="203.8375" y="93.22047" font-weight="400" font-size="14.4px" dy="-4.12">Charged Particles<tspan x="203.8375" dy="19.32" font-weight="400" font-size="17.6px">1,695</tspan></text>
+<rect id="label2_bg" class="for_r2" x="351.075" y="225.76428" width="67.80001" height="42.52" rx="4" fill="#fff" fill-opacity="0.75" stroke="none" stroke-width="0" stroke-opacity="0"></rect>
+<text id="label2" class="for_r2" text-anchor="end" x="414.20834" y="247.48429" font-weight="400" font-size="14.4px" dy="-4.12">Neutrons<tspan x="414.20834" dy="19.32" font-weight="400" font-size="17.6px">39</tspan></text>
+<rect id="label3_bg" class="for_r3" x="-112.88333" y="170.42289" width="111.01667" height="42.52001" rx="4" fill="#fff" fill-opacity="0.75" stroke="none" stroke-width="0" stroke-opacity="0"></rect>
+<text id="label3" class="for_r3" text-anchor="end" x="-6.53333" y="192.1429" font-weight="400" font-size="14.4px" dy="-4.12">Heating System<tspan x="-6.53333" dy="19.32" font-weight="400" font-size="17.6px">40</tspan></text>
+<rect id="label4_bg" class="for_r4" x="308.64168" y="143.73805" width="110.23333" height="42.52001" rx="4" fill="#fff" fill-opacity="0.75" stroke="none" stroke-width="0" stroke-opacity="0"></rect>
+<text id="label4" class="for_r4" text-anchor="end" x="414.20834" y="165.45805" font-weight="400" font-size="14.4px" dy="-4.12">Bremsstrahlung<tspan x="414.20834" dy="19.32" font-weight="400" font-size="17.6px">276</tspan></text>
+<rect id="label5_bg" class="for_r5" x="269.42501" y="49.20662" width="149.45" height="42.52" rx="4" fill="#fff" fill-opacity="0.75" stroke="none" stroke-width="0" stroke-opacity="0"></rect>
+<text id="label5" class="for_r5" text-anchor="end" x="414.20834" y="70.92662" font-weight="400" font-size="14.4px" dy="-4.12">Pulsed Inductive DEC<tspan x="414.20834" dy="19.32" font-weight="400" font-size="17.6px">1,348</tspan></text>
+<rect id="label6_bg" class="for_r6" x="332.42501" y="189.29571" width="86.45" height="42.52001" rx="4" fill="#fff" fill-opacity="0.75" stroke="none" stroke-width="0" stroke-opacity="0"></rect>
+<text id="label6" class="for_r6" text-anchor="end" x="414.20834" y="211.01572" font-weight="400" font-size="14.4px" dy="-4.12">Wall Losses<tspan x="414.20834" dy="19.32" font-weight="400" font-size="17.6px">71</tspan></text>
+<rect id="label7_bg" class="for_r7" x="530.27913" y="40.48704" width="98.96669" height="42.52" rx="4" fill="#fff" fill-opacity="0.75" stroke="none" stroke-width="0" stroke-opacity="0"></rect>
+<text id="label7" class="for_r7" text-anchor="end" x="624.57918" y="62.20704" font-weight="400" font-size="14.4px" dy="-4.12">Gross Electric<tspan x="624.57918" dy="19.32" font-weight="400" font-size="17.6px">1,146</tspan></text>
+<rect id="label8_bg" class="for_r8" x="545.19582" y="139.23704" width="84.05001" height="42.52001" rx="4" fill="#fff" fill-opacity="0.75" stroke="none" stroke-width="0" stroke-opacity="0"></rect>
+<text id="label8" class="for_r8" text-anchor="end" x="624.57918" y="160.95704" font-weight="400" font-size="14.4px" dy="-4.12">Waste Heat<tspan x="624.57918" dy="19.32" font-weight="400" font-size="17.6px">588</tspan></text>
+<rect id="label9_bg" class="for_r9" x="756.64998" y="29.65067" width="82.96669" height="42.52" rx="4" fill="#fff" fill-opacity="0.75" stroke="none" stroke-width="0" stroke-opacity="0"></rect>
+<text id="label9" class="for_r9" text-anchor="end" x="834.95002" y="51.37067" font-weight="400" font-size="14.4px" dy="-4.12">Net Electric<tspan x="834.95002" dy="19.32" font-weight="400" font-size="17.6px">1,000</tspan></text>
+<rect id="label10_bg" class="for_r10" x="799.88332" y="104.31647" width="39.73336" height="42.52" rx="4" fill="#fff" fill-opacity="0.75" stroke="none" stroke-width="0" stroke-opacity="0"></rect>
+<text id="label10" class="for_r10" text-anchor="end" x="834.95002" y="126.03647" font-weight="400" font-size="14.4px" dy="-4.12">BOP<tspan x="834.95002" dy="19.32" font-weight="400" font-size="17.6px">106</tspan></text>
+</g>
+</g></svg>

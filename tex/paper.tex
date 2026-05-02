@@ -564,11 +564,16 @@ neutron energy fraction $\bar{E}_n / \bar{E}_{\text{total}}$ increases from
 
 \subsubsection{\texorpdfstring{Deuterium-helium 3 (D-${}^3$He)}{Deuterium-helium 3 (D-3He)}}
 The primary D-${}^3$He reaction produces only charged particles
-($Q = 18.3$~MeV). However, at the temperatures required
-for D-${}^3$He fusion, a fraction $f_{\text{DD}}$ of the deuterium
-undergoes D-D side reactions, producing tritium that can in turn
-undergo secondary D-T fusion and introduce 14.1~MeV neutrons into
-an otherwise neutron-free system.
+($Q = 18.3$~MeV). At the temperatures required for D-${}^3$He fusion
+($T_i = 60$--$100$~keV), a fraction $f_{\text{DD}}$ of fusion events
+are D-D side reactions. The D-D events produce tritium (via
+D(d,p)T) that re-burns in D-T fusion at burn fraction
+$f_T^*$, introducing 14.1~MeV neutrons into an
+otherwise neutron-free system. They also produce ${}^3$He
+(via D(d,n)${}^3$He) that re-burns in D-${}^3$He fusion at burn
+fraction $f_{{}^3\text{He}}^*$, releasing additional
+charged-particle energy and reducing the external ${}^3$He demand
+of the plant.
 
 The effective total energy and neutron energy per D-${}^3$He event are:
 
@@ -583,22 +588,53 @@ The effective total energy and neutron energy per D-${}^3$He event are:
 \bar{E}_n = f_{\text{DD}} \, \bar{E}_{n,\text{DD}}
 \end{equation}
 
-\noindent where $\bar{E}_{\text{total,DD}}$ and
-$\bar{E}_{n,\text{DD}}$ follow the same structure as
-\cref{eq:dd-etotal,eq:dd-eneutron} but with only the tritium
-secondary burn: the ${}^3$He product from D-D branch~2 is already the
-majority species and need not be tracked, so $f_{{}^3\text{He}} = 0$
-and only the D-T secondary (parameterized by $f_T$) contributes
-neutrons. Note that this $f_T$ is a separate parameter from the
-D-D fuel cycle's $f_T$: the tritium burn fraction in a D-${}^3$He
-plasma may differ due to higher operating temperatures.
-This makes the secondary D-T burn of the tritium from D-D
-branch~1 the sole source of neutrons in a D-${}^3$He plasma.
-At the default D-D fraction $f_{\text{DD}} = 0.07$ and tritium burn
-fraction $f_T = 0.97$, the effective neutron energy fraction
-$\bar{E}_n / \bar{E}_{\text{total}}$ is approximately 3\%, small but
+\noindent where $\bar{E}_{\text{total,DD}}$ follows the structure
+of \cref{eq:dd-etotal} including both secondary burns:
+\begin{equation*}
+\bar{E}_{\text{total,DD}} = \tfrac{1}{2}(Q_1 + Q_2)
+  + \tfrac{1}{2} f_T^* \, Q_{\text{DT}}
+  + \tfrac{1}{2} f_{{}^3\text{He}}^*
+    \, Q_{\text{D}{}^3\text{He}}
+\end{equation*}
+and $\bar{E}_{n,\text{DD}}$ follows \cref{eq:dd-eneutron}: only the
+D-T secondary burn contributes neutrons, since the secondary
+D-${}^3$He reaction is aneutronic. The burn-fraction parameters
+$f_T^*$ and $f_{{}^3\text{He}}^*$
+are kept separate from the D-D fuel cycle's burn fractions and are
+concept-specific. The single-pass burn fraction in a thermal plasma
+is set by $f_X = n_D \langle\sigma v\rangle_X \tau_p / (1 + n_D
+\langle\sigma v\rangle_X \tau_p)$ where $\tau_p$ is the species
+particle confinement time; for a steady-state mirror at $T_i = 70$~keV
+with $n_D = 3.3 \times 10^{19}$~m${}^{-3}$ and $\tau_p \sim 30$~s,
+$f_T^* \sim 0.5$ and $f_{{}^3\text{He}}^* \sim 0.1$, with the latter
+smaller because $\langle\sigma v\rangle_{\text{D}{}^3\text{He}}$ is
+~13$\times$ smaller than $\langle\sigma v\rangle_{\text{DT}}$ at this
+temperature (see
+\texttt{examples/dhe3\_burn\_fractions.py}). Pulsed-FRC architectures
+with active inter-shot ${}^3$He recovery (Helion-style) reach the
+asymptotic limit set by the recovery efficiency: at 99\% recovery
+per cycle, $f_{{}^3\text{He}}^* \approx 0.99$. Tritium in such a
+plant is exhausted (or held until decay) to keep the design
+neutron-averse, so $f_T^* \approx 0$. Default values are therefore
+concept-specific: steady-state mirror uses $f_T^* = 0.5$,
+$f_{{}^3\text{He}}^* = 0.1$; pulsed FRC uses $f_T^* = 0$,
+$f_{{}^3\text{He}}^* = 0.99$.
+Per primary D-${}^3$He event, the deuteron
+consumption is $1 + f_{\text{DD}} (1 + \tfrac{1}{2} f_T^*
++ \tfrac{1}{2} f_{{}^3\text{He}}^*)$ and the
+external ${}^3$He consumption is $(1 - f_{\text{DD}})
+- \tfrac{1}{2} f_{\text{DD}} f_{{}^3\text{He}}^*$,
+the latter accounting for D-D-bred ${}^3$He that re-burns in place
+of an external atom.
+At the default $f_{\text{DD}} = 0.131$ (corresponding to a
+50/50 D/${}^3$He mix at $T_i = 70$~keV with Bosch-Hale cross sections,
+the textbook reference of Wesson and Santarius/Kulcinski), the
+effective neutron energy fraction
+$\bar{E}_n / \bar{E}_{\text{total}}$ is approximately 6\%, small but
 nonzero, and consequential for shielding, activation, and tritium
-breeding requirements.
+breeding requirements. See \texttt{examples/dhe3\_mix\_optimization.py}
+for the self-consistent calculation that links $f_{\text{DD}}$ to the
+plasma D/${}^3$He density ratio and operating temperature.
 
 \subsubsection{\texorpdfstring{Proton-boron 11 (p-${}^{11}$B)}{Proton-boron 11 (p-11B)}}
 The primary p-${}^{11}$B reaction produces three alpha particles
@@ -1424,7 +1460,7 @@ The cost scales with DEC electric output:
   C_{220109} = c_{\text{dec}} \times (P_{\text{dee}} / P_{\text{dee,ref}})^{0.7}
   \quad [\text{M\$}]
 \end{equation}
-where $c_{\text{dec}} = 140$~M\$ is the NOAK all-in 2024 USD reference
+where $c_{\text{dec}} = 125$~M\$ is the NOAK all-in 2024 USD reference
 cost at $P_{\text{dee,ref}} = 400$~MWe DEC electric output, and the
 0.7~exponent reflects sub-linear scaling of vacuum/tank infrastructure
 with throughput while grid modules and power conditioning scale roughly
@@ -1434,13 +1470,19 @@ The reference figure is a bottom-up build-up of the DEC-specific
 add-on hardware (excluding shared mirror infrastructure already
 costed under CAS22.01.06 and the expander):
 \begin{itemize}
-  \item Tank and incremental vacuum: \$15--30~M, central \$20~M.
-    Industrial-grade fabricated 304L stainless ($\$8\text{--}12$/kg
-    cleaned and ASME~Section~VIII certified for $10^{-5}$ to
-    $10^{-6}$~Torr service) at 1500--3000 tonnes.  ITER cryostat
-    ($\sim \$35$/kg, nuclear-grade) and LIGO UHV ($10^{-9}$~Torr,
-    overspec) bracket above; bare-plate steel pricing ($\$5\text{--}8$/kg)
-    bounds below.
+  \item Tank: \$3--15~M, central \$7~M.
+    Industrial-grade fabricated 304L stainless ($\$10\text{--}15$/kg
+    cleaned and ASME~Section~VIII Div~1 certified for $10^{-5}$ to
+    $10^{-6}$~Torr service).  Sizing for atmospheric collapse load
+    on a 10--15~m diameter, 20--40~m long shell with ring stiffeners
+    every 1--2~m gives 300--500 tonnes (low end) to 600--800 tonnes
+    (conservative). Same dimensional class as commercial refinery
+    hydrocracker reactors \citep{exxonmobil_rotterdam_hydrocracker}
+    (4--5~m $\times$ 25--30~m, 1000--1500 tonnes, ASME~VIII Div~2
+    at 200~bar internal) which run \$26--30~M; the VB tank holds
+    only vacuum (1~atm external collapse load), so it sits well
+    below that price.  ITER cryostat ($\sim\$30\text{--}40$/kg,
+    nuclear-grade, double-walled) is overspec on certification.
   \item HV power conditioning (DC-AC chain): \$35--55~M, central \$45~M.
     The DEC outputs DC at multi-stage retarding potentials (30--100~kV),
     which a converter chain returns to grid AC.  MISO's 2024 MTEP24
@@ -1451,18 +1493,22 @@ costed under CAS22.01.06 and the expander):
     roughly 60--70\% of full HVDC station cost, $\$100\text{--}120$/kW.
   \item Cryopumps: \$10--25~M, central \$15~M.
     $10^6$--$10^7$~L/s pumping speed.  ITER cryopumps procurement
-    \citep{iter_cryopumps} (8 units at $\sim \$6$M each, total
-    $\sim \$50$M for 600,000~L/s via Fusion for Energy contracts) and
-    industrial cryopump pricing (Edwards/Leybold STP-iXR class,
+    \citep{iter_cryopumps} (8 torus and cryostat cryopumps, EUR 21~M
+    F4E investment, manufactured by Research Instruments / Alsymex)
+    and industrial cryopump pricing (Edwards/Leybold STP-iXR class,
     $\$200\text{--}500$k per 20,000~L/s) bracket the figure.
   \item Heat collection panels: \$10--20~M, central \$15~M.
-    Active-cooled tungsten panels for the 30--90~MW heat load
-    deposited on grids and collectors (5--15\% of charged-particle
-    power for geometrically transparent grids).  Scaled from ITER
-    NBI beam-dump procurement \citep{iter_nbi_dump}
-    ($\sim \$5\text{--}10$M per 16~MW beam line).  ITER divertor
-    pricing ($\$60$M/GW${}_\text{th}$) is overspec, since VB grids
-    are not exposed to direct fusion plasma or 14~MeV neutron flux.
+    Hypervapotron-cooled tungsten panels for the 30--90~MW heat
+    load deposited on grids and collectors (5--15\% of charged-particle
+    power for geometrically transparent grids).  Design analog: the
+    ITER NBI residual ion dump and calorimeter \citep{hemsworth2017},
+    which handle 5--13~MW/m${}^2$ heat flux on hypervapotron-cooled
+    Cu-CrZr / W elements at the 16~MW beam-line scale.  Public
+    procurement values for the ITER beam-dump components are not
+    disclosed; the dollar figure here is an order-of-magnitude
+    estimate scaled by area and heat flux.  ITER divertor pricing
+    ($\$60$M/GW${}_\text{th}$) is overspec, since VB grids are not
+    exposed to direct fusion plasma or 14~MeV neutron flux.
   \item Grid and collector modules: \$10--20~M, central \$15~M.
     Tungsten ribbon grids, alumina HV insulators, stainless
     mounting frames.  Geometry-driven; this line uses
@@ -1474,8 +1520,8 @@ costed under CAS22.01.06 and the expander):
     \$10--17~M, central \$12~M.
 \end{itemize}
 
-The hardware subtotal is \$90--167~M, central \$122~M.  Adding 15\%
-installation (NOAK) gives \$105--190~M total, central \$140~M, which
+The hardware subtotal is \$78--152~M, central \$109~M.  Adding 15\%
+installation (NOAK) gives \$90--175~M total, central \$125~M, which
 is the value used for $c_{\text{dec}}$.  Uncertainty: $\pm 35\%$,
 dominated by the HV power conditioning scale-up factor and the
 plant-scale tank fabrication unit cost.

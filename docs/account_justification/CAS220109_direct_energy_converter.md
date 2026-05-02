@@ -269,12 +269,12 @@ rather than Hoffman 1975 dollars escalated by CPI.
 | DC-AC power conditioning | DEC electric output | \$35-55M |
 | Heat collection system | Thermal load on grids | \$10-20M |
 | Incremental vacuum (cryo) | DEC volume/gas load | \$10-25M |
-| Incremental tank volume | Steel mass + vacuum cleaning | \$15-30M |
+| Incremental tank volume | Steel mass + vacuum cleaning | \$3-15M |
 | Misc (HV bushings, gate valve, controls) | Fixed | \$10-17M |
 | Neutron trap shielding | DT only (zero for DHe3, pB11) | \$0-5M |
-| **Hardware subtotal** | | **\$90-167M** |
-| Installation (NOAK, 15%) | Hardware total | \$14-25M |
-| **Total DEC add-on, NOAK** | | **\$105-190M, central \$140M** |
+| **Hardware subtotal** | | **\$78-152M** |
+| Installation (NOAK, 15%) | Hardware total | \$12-23M |
+| **Total DEC add-on, NOAK** | | **\$90-175M, central \$125M** |
 
 ### Build-up methodology (2024 USD, NOAK)
 
@@ -324,16 +324,24 @@ plus LHe/LN2 distribution lands \$10-25M. The fusion-DEC vacuum
 spec (1e-5 to 1e-6 Torr, sufficient to suppress charge exchange)
 is industrial-grade, NOT LIGO-class UHV (1e-9 Torr).
 
-**Incremental tank volume (\$15-30M, central \$20M):**
+**Incremental tank volume (\$3-15M, central \$7M):**
 The DEC needs a larger end tank than basic plasma exhaust handling.
 Modern fabricated 304L stainless steel for industrial vacuum
-service (NOT nuclear-grade or LIGO UHV): \$8-12/kg fabricated,
-welded, vacuum-cleaned, ASME Section VIII certified. Vendor
-references: Anderson Dahlen (LIGO industrial vacuum suppliers),
-Kurt J. Lesker custom chamber pricing, Northern Industrial. At
-1500-3000 tonnes (a 5-15 m diameter, 20-40 m long tank with
-10-15 mm wall): \$15-30M. ITER cryostat (\$35/kg, nuclear-grade,
-superconductor-compatible) is overspec for a VB end tank.
+service (NOT nuclear-grade or LIGO UHV): \$10-15/kg fabricated
+for low-volume, vacuum-cleaned, ASME Section VIII Div 1 custom
+chambers (Anderson Dahlen, Kurt J. Lesker, Northern Industrial).
+Sizing for atmospheric collapse load on a 10-15 m diameter,
+20-40 m long shell with ring stiffeners every 1-2 m: 10-15 mm
+wall plus stiffeners, dished ends, nozzles, internal supports
+gives 300-500 tonnes (low end) to 600-800 tonnes (conservative).
+At \$10-15/kg: \$3-15M, central \$7M. Cross-checks: refinery
+hydrocracker reactors (4-5 m x 25-30 m, 1000-1500 tonnes,
+ASME Section VIII Div 2 at 200 bar internal) run \$26-30M but
+overspec on pressure regime; ITER cryostat (\$30-40/kg,
+nuclear-grade, double-walled) is overspec on certification.
+The earlier figure of 1500-3000 tonnes was inconsistent with
+the cited 10-15 mm wall (a 15 m x 40 m shell at 15 mm is only
+~270 tonnes); replaced with the build-up above.
 
 **Misc (HV bushings, gate valve, controls) (\$10-17M, central \$12M):**
 - Large vacuum gate valve (1-2 m diameter): \$1-2M
@@ -356,8 +364,8 @@ gives the final NOAK total.
     C220109 = dec_base * (p_dee / P_DEE_REF) ^ 0.7
 
 where:
-- `dec_base` = 140.0 M$ (NOAK total DEC add-on cost at reference output;
-  central value of the \$105-190M build-up range above)
+- `dec_base` = 125.0 M$ (NOAK total DEC add-on cost at reference output;
+  central value of the \$90-175M build-up range above)
 - `P_DEE_REF` = 400 MWe (reference DEC electric output)
 - `p_dee` = DEC electric output in MW (from physics layer:
   `f_dec * eta_de * p_transport`)

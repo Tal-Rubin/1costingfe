@@ -28,9 +28,8 @@ m_dhe3 = CostModel(
 def free_core_with_dec(model, f_dec, eta_de, **kw):
     """Run free-core analysis but keep C220109 (DEC hardware) cost."""
     kw.setdefault("inflation_rate", INFLATION)
-    if f_dec > 0:
-        kw["f_dec"] = f_dec
-        kw["eta_de"] = eta_de
+    kw["f_dec"] = f_dec
+    kw["eta_de"] = eta_de
 
     # First pass: get DEC hardware cost from full model
     r_full = model.forward(**kw)
@@ -254,7 +253,26 @@ r_dhe3_vb = m_dhe3.forward(**BASE_KW, inflation_rate=INFLATION, f_dec=0.9, eta_d
 # hardware cost (which is the VB formula it applies by default for mirrors)
 # for $593M of pulsed DEC hardware, zero the turbine, and reduce buildings,
 # heat rejection, and electrical plant (no synchronous generator / GSU).
-r_pi_raw = m_dhe3.forward(**BASE_KW, inflation_rate=INFLATION, f_dec=0.95, eta_de=0.85)
+# Helion-likely operating point:
+#   - Magneto-inertial timescale: tritium not confined long enough to burn,
+#     so f_T = 0; tritium is exhausted (or held until decay).
+#   - 99% He-3 recovery between shots; D-T cycle (and its 14 MeV neutron)
+#     deliberately not closed, keeping the design neutron-averse.
+#   - D-rich mix (n_D/n_He3 ≈ 3) at T ≈ 100 keV minimizes bremsstrahlung;
+#     f_DD = 0.314, f_brem = 0.163 from Bosch-Hale + relativistic brem
+#     (examples/dhe3_mix_optimization.py).
+#   - eta_th = 0: no thermal bottoming cycle. Helion has no turbine; wall
+#     heat from bremsstrahlung and DEC waste is dumped to cooling.
+PI_BURN = dict(
+    dhe3_f_T=0.0,
+    dhe3_f_He3=0.99,
+    dhe3_dd_frac=0.314,
+    f_rad_fus=0.163,  # bypass cc.f_rad_fus_dhe3 (which doesn't propagate)
+    eta_th=0.0,
+)
+r_pi_raw = m_dhe3.forward(
+    **BASE_KW, inflation_rate=INFLATION, f_dec=0.95, eta_de=0.85, **PI_BURN
+)
 vb_dec_cost = float(r_pi_raw.cas22_detail.get("C220109", 0.0))
 pi_cas22 = float(r_pi_raw.costs.cas22) - vb_dec_cost + 593.0
 r_dhe3_pi = m_dhe3.forward(
@@ -262,6 +280,7 @@ r_dhe3_pi = m_dhe3.forward(
     inflation_rate=INFLATION,
     f_dec=0.95,
     eta_de=0.85,
+    **PI_BURN,
     cost_overrides={
         "CAS22": pi_cas22,
         "CAS23": 0.0,
@@ -384,6 +403,7 @@ r_p_dhe3 = m_dhe3.forward(
     inflation_rate=INFLATION,
     f_dec=0.95,
     eta_de=0.85,
+    **PI_BURN,
     cost_overrides={
         "CAS22": inv_dhe3,
         "CAS27": 0.0,

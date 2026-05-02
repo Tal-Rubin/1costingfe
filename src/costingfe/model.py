@@ -140,6 +140,7 @@ class CostModel:
                 dd_f_He3=params["dd_f_He3"],
                 dhe3_dd_frac=params["dhe3_dd_frac"],
                 dhe3_f_T=params["dhe3_f_T"],
+                dhe3_f_He3=params["dhe3_f_He3"],
                 pb11_f_alpha_n=params["pb11_f_alpha_n"],
                 pb11_f_p_n=params["pb11_f_p_n"],
             )
@@ -195,6 +196,7 @@ class CostModel:
                 dd_f_He3=params["dd_f_He3"],
                 dhe3_dd_frac=params["dhe3_dd_frac"],
                 dhe3_f_T=params["dhe3_f_T"],
+                dhe3_f_He3=params["dhe3_f_He3"],
                 pb11_f_alpha_n=params["pb11_f_alpha_n"],
                 pb11_f_p_n=params["pb11_f_p_n"],
             )
@@ -281,6 +283,7 @@ class CostModel:
             dd_f_He3=params["dd_f_He3"],
             dhe3_dd_frac=params["dhe3_dd_frac"],
             dhe3_f_T=params["dhe3_f_T"],
+            dhe3_f_He3=params["dhe3_f_He3"],
             pb11_f_alpha_n=params["pb11_f_alpha_n"],
             pb11_f_p_n=params["pb11_f_p_n"],
         )
@@ -732,6 +735,11 @@ class CostModel:
             construction_time_yr,
             self.fuel,
             noak,
+            dd_f_T=params["dd_f_T"],
+            dd_f_He3=params["dd_f_He3"],
+            dhe3_dd_frac=params["dhe3_dd_frac"],
+            dhe3_f_T=params["dhe3_f_T"],
+            dhe3_f_He3=params["dhe3_f_He3"],
             burn_fraction=params.get("burn_fraction"),
             fuel_recovery=params.get("fuel_recovery"),
         )
@@ -866,6 +874,7 @@ class CostModel:
             "dd_f_He3",
             "dhe3_dd_frac",
             "dhe3_f_T",
+            "dhe3_f_He3",
             "pb11_f_alpha_n",
             "pb11_f_p_n",
         ]

@@ -1,0 +1,120 @@
+<svg viewBox="0 0 800 540" width="600" height="405" xmlns="http://www.w3.org/2000/svg" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif">
+  <defs>
+    <style>
+      .title { font-size: 20px; font-weight: 600; fill: #1a1a1a; }
+      .subtitle { font-size: 13px; fill: #555; }
+      .axis-label { font-size: 12px; fill: #555; }
+      .axis-title { font-size: 13px; fill: #333; font-weight: 500; }
+      .bar-label { font-size: 13px; fill: #333; font-weight: 500; }
+      .bar-sublabel { font-size: 11px; fill: #666; }
+      .segment-label { font-size: 12px; fill: #ffffff; font-weight: 600; }
+      .outside-label { font-size: 11px; fill: #333; }
+      .legend-text { font-size: 13px; fill: #333; }
+      .grid-line { stroke: #d0d0d0; stroke-width: 1; }
+      .axis-line { stroke: #888; stroke-width: 1; }
+      .leader { stroke: #888; stroke-width: 1; }
+      @media (prefers-color-scheme: dark) {
+        .title { fill: #f0f0f0; }
+        .subtitle { fill: #b0b0b0; }
+        .axis-label { fill: #b0b0b0; }
+        .axis-title { fill: #d0d0d0; }
+        .bar-label { fill: #e0e0e0; }
+        .bar-sublabel { fill: #999; }
+        .outside-label { fill: #d0d0d0; }
+        .legend-text { fill: #e0e0e0; }
+        .grid-line { stroke: #555; }
+        .axis-line { stroke: #888; }
+        .leader { stroke: #888; }
+      }
+    </style>
+  </defs>
+
+  <!-- Title -->
+  <text x="400" y="32" text-anchor="middle" class="title">Energy Channel Distribution by Fuel</text>
+  <text x="400" y="52" text-anchor="middle" class="subtitle">Fractional split of fusion energy by output channel</text>
+
+  <!-- Plot area: x=120 to x=720 (width 600), y=70 to y=470 (height 400 = 100%) -->
+  <!-- 1% = 4px -->
+
+  <!-- Gridlines at 0, 20, 40, 60, 80, 100% -->
+  <line x1="120" y1="70"  x2="720" y2="70"  class="grid-line" />
+  <line x1="120" y1="150" x2="720" y2="150" class="grid-line" />
+  <line x1="120" y1="230" x2="720" y2="230" class="grid-line" />
+  <line x1="120" y1="310" x2="720" y2="310" class="grid-line" />
+  <line x1="120" y1="390" x2="720" y2="390" class="grid-line" />
+  <line x1="120" y1="470" x2="720" y2="470" class="axis-line" />
+
+  <!-- Y-axis labels -->
+  <text x="112" y="75"  text-anchor="end" class="axis-label">100%</text>
+  <text x="112" y="155" text-anchor="end" class="axis-label">80%</text>
+  <text x="112" y="235" text-anchor="end" class="axis-label">60%</text>
+  <text x="112" y="315" text-anchor="end" class="axis-label">40%</text>
+  <text x="112" y="395" text-anchor="end" class="axis-label">20%</text>
+  <text x="112" y="475" text-anchor="end" class="axis-label">0%</text>
+
+  <!-- Y-axis title -->
+  <text x="48" y="270" text-anchor="middle" class="axis-title" transform="rotate(-90, 48, 270)">Fraction of fusion energy</text>
+
+  <!-- ============================================================ -->
+  <!-- Stacking order from bottom to top: Extractable, Brem, Neutrons -->
+  <!-- 5 bars at centers x = 180, 300, 420, 540, 660; width = 70     -->
+  <!-- ============================================================ -->
+
+  <!-- Bar 1: D-T (20% E, 0% B, 80% N) -->
+  <rect x="145" y="390" width="70" height="80"  fill="#059669" />
+  <rect x="145" y="70"  width="70" height="320" fill="#dc2626" />
+  <text x="180" y="434" text-anchor="middle" class="segment-label">20%</text>
+  <text x="180" y="234" text-anchor="middle" class="segment-label">80%</text>
+  <text x="180" y="490" text-anchor="middle" class="bar-label">D-T</text>
+
+  <!-- Bar 2: D-³He 50/50 (70% E, 24% B, 6% N)  — model default at T=70 keV -->
+  <rect x="265" y="190" width="70" height="280" fill="#059669" />
+  <rect x="265" y="94"  width="70" height="96"  fill="#d97706" />
+  <rect x="265" y="70"  width="70" height="24"  fill="#dc2626" />
+  <text x="300" y="334" text-anchor="middle" class="segment-label">70%</text>
+  <text x="300" y="146" text-anchor="middle" class="segment-label">24%</text>
+  <text x="300" y="86"  text-anchor="middle" class="segment-label">6%</text>
+  <text x="300" y="490" text-anchor="middle" class="bar-label">D-³He</text>
+  <text x="300" y="506" text-anchor="middle" class="bar-sublabel">(50/50)</text>
+
+  <!-- Bar 3: D-³He Helion-likely (81% E, 16% B, 3% N)  — MIF, r=0.31, T=100 keV -->
+  <rect x="385" y="146" width="70" height="324" fill="#059669" />
+  <rect x="385" y="82"  width="70" height="64"  fill="#d97706" />
+  <rect x="385" y="70"  width="70" height="12"  fill="#dc2626" />
+  <text x="420" y="312" text-anchor="middle" class="segment-label">81%</text>
+  <text x="420" y="118" text-anchor="middle" class="segment-label">16%</text>
+  <line x1="455" y1="76" x2="470" y2="76" class="leader" />
+  <text x="473" y="79" class="outside-label">3%</text>
+  <text x="420" y="490" text-anchor="middle" class="bar-label">D-³He</text>
+  <text x="420" y="506" text-anchor="middle" class="bar-sublabel">(Helion-likely)</text>
+
+  <!-- Bar 4: p-¹¹B (thermal)  (3% E, 97% B, 0.2% N) -->
+  <rect x="505" y="458" width="70" height="12"  fill="#059669" />
+  <rect x="505" y="70"  width="70" height="388" fill="#d97706" />
+  <text x="540" y="268" text-anchor="middle" class="segment-label">97%</text>
+  <line x1="575" y1="464" x2="590" y2="464" class="leader" />
+  <text x="593" y="467" class="outside-label">3%</text>
+  <text x="540" y="490" text-anchor="middle" class="bar-label">p-¹¹B</text>
+  <text x="540" y="506" text-anchor="middle" class="bar-sublabel">(thermal)</text>
+
+  <!-- Bar 5: p-¹¹B (non-thermal)  (17% E, 83% B, 0.2% N) -->
+  <rect x="625" y="402" width="70" height="68"  fill="#059669" />
+  <rect x="625" y="70"  width="70" height="332" fill="#d97706" />
+  <text x="660" y="440" text-anchor="middle" class="segment-label">17%</text>
+  <text x="660" y="240" text-anchor="middle" class="segment-label">83%</text>
+  <text x="660" y="490" text-anchor="middle" class="bar-label">p-¹¹B</text>
+  <text x="660" y="506" text-anchor="middle" class="bar-sublabel">(non-thermal)</text>
+
+  <!-- Legend -->
+  <g transform="translate(160, 522)">
+    <rect x="0"   y="0" width="14" height="14" fill="#059669" />
+    <text x="22"  y="11" class="legend-text">Extractable charged</text>
+
+    <rect x="160" y="0" width="14" height="14" fill="#d97706" />
+    <text x="182" y="11" class="legend-text">Bremsstrahlung / X-ray</text>
+
+    <rect x="380" y="0" width="14" height="14" fill="#dc2626" />
+    <text x="402" y="11" class="legend-text">Neutrons</text>
+  </g>
+
+</svg>

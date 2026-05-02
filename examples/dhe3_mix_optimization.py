@@ -1,22 +1,25 @@
-"""D-He3 fuel mix optimization for direct energy conversion.
+"""D-He3 fuel mix optimization for a Helion-like (magneto-inertial) plasma.
 
-Sweeps the D/He3 density ratio r = n_He3/n_D to find the mix that
-minimizes the unrecoverable energy fraction (neutrons + bremsstrahlung)
-in a thermal D-He3 plasma. Used by the "Direct Energy Conversion and
-the Cost Floor" post to compute the DEC-optimal fuel mix and to set
-self-consistent 1costingfe defaults.
+In a magneto-inertial plasmoid the plasma is held too briefly for D-D-bred
+tritium to fuse, so the secondary D-T channel is closed. This script computes
+the per-shot energy split between extractable charged power, bremsstrahlung,
+and neutrons as a function of the D/He-3 density ratio and temperature, and
+finds the operating point that minimizes bremsstrahlung losses.
 
-Physics:
-- Cross-sections from Bosch-Hale (Nucl. Fusion 32, 611, 1992)
-- Bremsstrahlung from NRL Plasma Formulary, with relativistic + e-e
-  corrections after Rider (1995)
-- Energy bookkeeping: D-He3 primary (18.35 MeV, all charged) +
-  D-D side reactions (with tritium burnup chain)
-
-Caveats:
-- Assumes thermal equilibrium (T_e = T_i)
+Assumptions:
+- f_T = 0: bred tritium exhausted before D-T fusion completes (MIF timescale)
+- f_He3 = 0: single-pass plasma physics; inter-shot He-3 recovery is a
+  system-level effect handled separately in the cost model, not credited here
+- Bosch-Hale cross sections (Nucl. Fusion 32, 611, 1992)
+- Bremsstrahlung from NRL Plasma Formulary with relativistic + e-e corrections
+  (Rider 1995)
+- Thermal equilibrium (T_e = T_i)
 - No alpha-ash buildup in Z_eff
-- Synchrotron / impurity-line radiation not included
+- Synchrotron and impurity-line radiation not included
+
+Used by the "Direct Energy Conversion and the Cost Floor" post to set the
+Helion-likely operating point and to derive the corresponding 1costingfe
+inputs (dhe3_dd_frac and f_rad_fus_dhe3).
 """
 
 import numpy as np
@@ -24,10 +27,9 @@ from scipy.optimize import minimize_scalar
 
 
 # ============================================================
-# Bosch-Hale (1992) thermal reactivities
+# Bosch-Hale (1992) thermal reactivities. T in keV, <sigma v> in m^3/s.
 # ============================================================
 def _bh(T, BG, mrc2, C1, C2, C3, C4, C5, C6, C7):
-    """Bosch-Hale parametrization. T in keV, returns <sigma*v> in m^3/s."""
     num = T * (C2 + T * (C4 + T * C6))
     den = 1 + T * (C3 + T * (C5 + T * C7))
     theta = T / (1 - num / den)
@@ -70,20 +72,20 @@ def sigv_dd_total(T):
 
 
 # ============================================================
-# Per-event energies (MeV)
+# Per-event energies (MeV). Helion-like: T is exhausted before it fuses,
+# so neither D-T nor secondary D-He3 burnup contributes at the per-shot level.
+# Each D-D event contributes only its primary kinetic energy:
+#   D(d,p)T:    p (3.02 MeV) + T (1.01 MeV) = 4.03 MeV charged
+#   D(d,n)3He:  n (2.45 MeV) + 3He (0.82 MeV) = 3.27 MeV total, 2.45 MeV neutron
 # ============================================================
 E_DHE3 = 18.35  # all charged (4He + p)
-
-# D-D events (mean over the two equally probable branches), with
-# tritium-burnup contribution from T+D -> 4He + n
-F_T_BURNUP = 0.97
-E_N_DD = 0.5 * 2.45 + 0.5 * F_T_BURNUP * 14.06
-E_C_DD = 0.5 * 0.82 + 0.5 * 4.03 + 0.5 * F_T_BURNUP * 3.52
+E_N_DD = 0.5 * 2.45  # neutron from primary D(d,n)3He branch only
+E_C_DD = 0.5 * 0.82 + 0.5 * 4.03  # primary charged (3He + p + T)
 E_DD_TOT = E_N_DD + E_C_DD
 
 
 # ============================================================
-# Bremsstrahlung — non-relativistic plus relativistic + e-e corrections
+# Bremsstrahlung — non-relativistic NRL plus relativistic + e-e corrections
 # ============================================================
 def brem_factor_rel(T_keV, Zeff):
     """Relativistic e-i + e-e correction to non-relativistic NRL brem.
@@ -96,18 +98,20 @@ def brem_factor_rel(T_keV, Zeff):
     return rel_ei + ee_correction
 
 
-def fractions(r, T_keV, n_e=1e20, relativistic=True):
+# ============================================================
+# Energy split at given mix r = n_3He / n_D and temperature
+# ============================================================
+def fractions(r, T_keV, n_e=1e20):
     """Compute neutron / bremsstrahlung / extractable fractions of fusion power.
 
     Inputs:
-        r = n_He3 / n_D
+        r = n_3He / n_D (so D-rich means r < 1)
         T_keV = ion/electron temperature (assumed equal)
         n_e = electron density (m^-3); cancels out for fractions
-        relativistic = include relativistic + e-e brem corrections
 
     Returns dict with f_n, f_brem, f_ext, f_DD (reaction fraction), Zeff.
     """
-    Zeff = (1 + 4 * r) / (1 + 2 * r)
+    Zeff = (1 + 4 * r) / (1 + 2 * r)  # quasineutrality, He-3 is +2
     n_D = n_e / (1 + 2 * r)
     n_He3 = r * n_e / (1 + 2 * r)
 
@@ -115,12 +119,13 @@ def fractions(r, T_keV, n_e=1e20, relativistic=True):
     R_DD = 0.5 * n_D**2 * sigv_dd_total(T_keV)
 
     MeV_to_J = 1.602e-13
-    P_fus = (R_DHe3 * E_DHE3 + R_DD * E_DD_TOT) * MeV_to_J
+    P_fus = (R_DHe3 * E_DHE3 + R_DD * E_DD_TOT) * MeV_to_J  # W/m^3
     P_n = R_DD * E_N_DD * MeV_to_J
     P_c = (R_DHe3 * E_DHE3 + R_DD * E_C_DD) * MeV_to_J
 
+    # NRL bremsstrahlung volume emission coefficient (W/m^3, T in eV)
     P_brem_NR = 1.69e-38 * Zeff * n_e**2 * np.sqrt(T_keV * 1000)
-    P_brem = P_brem_NR * (brem_factor_rel(T_keV, Zeff) if relativistic else 1.0)
+    P_brem = P_brem_NR * brem_factor_rel(T_keV, Zeff)
 
     f_n = P_n / P_fus
     f_brem = P_brem / P_fus
@@ -130,57 +135,26 @@ def fractions(r, T_keV, n_e=1e20, relativistic=True):
     return dict(f_n=f_n, f_brem=f_brem, f_ext=f_ext, f_DD=f_DD, Zeff=Zeff)
 
 
-def find_optimum(T_keV, r_bounds=(0.05, 20.0), relativistic=True):
-    """Return (r_opt, fractions_dict) minimizing f_n + f_brem at fixed T."""
+def find_minimum_brem(T_keV, r_bounds=(0.05, 5.0)):
+    """Find the mix r = n_3He/n_D that minimizes bremsstrahlung at fixed T."""
     res = minimize_scalar(
-        lambda r: fractions(r, T_keV, relativistic=relativistic)["f_n"]
-        + fractions(r, T_keV, relativistic=relativistic)["f_brem"],
+        lambda r: fractions(r, T_keV)["f_brem"],
         bounds=r_bounds,
         method="bounded",
     )
     r = float(res.x)
-    return r, fractions(r, T_keV, relativistic=relativistic)
+    return r, fractions(r, T_keV)
 
 
-# ============================================================
-# Total fusion power at fixed plasma pressure
-# ============================================================
-# Constraint: 2 n_D + 3 n_He3 = const (proportional to plasma pressure
-# at T_e = T_i, charge-balanced D-He3 plasma).
-# Total fusion power (D-He3 + D-D side) per unit volume:
-#   P_fus(r) ∝ [r * sigv_DHe3 * E_DHe3 + 0.5 * sigv_DD * E_DD] / (2+3r)^2
-# Maximize w.r.t. r.
-
-
-def total_fusion_power_density(r, T_keV, N=1.0):
-    """Total P_fus per unit volume at fixed pressure parameter N = 2 n_D + 3 n_He3.
-
-    Returns P_fus in arbitrary units (proportional to N^2 * T-dependent terms).
-    Use the relative magnitude to compare different mixes at the same pressure.
-    """
-    A = sigv_dhe3(T_keV) * E_DHE3  # MeV * m^3/s
-    B = sigv_dd_total(T_keV) * E_DD_TOT
-    return (r * A + 0.5 * B) / (2 + 3 * r) ** 2 * N**2
-
-
-def find_max_fusion_power(T_keV, r_bounds=(0.05, 20.0)):
-    """Find r maximizing total fusion power at fixed plasma pressure.
-
-    Analytical optimum: r = 2/3 - B/A  where A = sigv_DHe3 * E_DHe3,
-    B = sigv_DD * E_DD_total. Returns (r_opt, fractions_dict, relative_power).
-    """
-    A = sigv_dhe3(T_keV) * E_DHE3
-    B = sigv_dd_total(T_keV) * E_DD_TOT
-    r_opt = max(2.0 / 3 - B / A, r_bounds[0])
-    return r_opt, fractions(r_opt, T_keV)
-
-
-def relative_reactivity(r, T_keV):
-    """Total fusion power at mix r, normalized to peak at fixed pressure (=1.0)."""
-    r_peak, _ = find_max_fusion_power(T_keV)
-    return total_fusion_power_density(r, T_keV) / total_fusion_power_density(
-        r_peak, T_keV
+def find_minimum_loss(T_keV, r_bounds=(0.05, 5.0)):
+    """Find the mix that minimizes (neutrons + bremsstrahlung) at fixed T."""
+    res = minimize_scalar(
+        lambda r: fractions(r, T_keV)["f_n"] + fractions(r, T_keV)["f_brem"],
+        bounds=r_bounds,
+        method="bounded",
     )
+    r = float(res.x)
+    return r, fractions(r, T_keV)
 
 
 # ============================================================
@@ -188,113 +162,70 @@ def relative_reactivity(r, T_keV):
 # ============================================================
 if __name__ == "__main__":
     print("=" * 75)
-    print("D-He3 mix optimization (Bosch-Hale + relativistic brem)")
+    print("Helion-like D-He3 plasma: per-shot energy split")
+    print("(magneto-inertial timescale: T exhausted, no secondary burnup)")
     print("=" * 75)
 
-    T = 70
-    print(f"\nSweep at T = {T} keV (n_e = 1e20 m^-3):")
+    print("\nMix sweep at T = 100 keV (n_e = 1e20 m^-3):")
     print(
-        f"  <sv>_DHe3 = {sigv_dhe3(T):.3e}  <sv>_DD = {sigv_dd_total(T):.3e}  "
-        f"ratio = {sigv_dd_total(T) / sigv_dhe3(T):.3f}"
-    )
-    print()
-    print(f"  {'r':>5} {'f_DD':>7} {'f_n':>7} {'f_brem':>9} {'f_ext':>9} {'sum_NB':>9}")
-    print("  " + "-" * 55)
-    for r in [0.2, 0.3, 0.5, 0.7, 0.85, 1.0, 1.2, 1.5, 2.0, 3.0, 5.0]:
-        f = fractions(r, T)
-        print(
-            f"  {r:>5.2f} {f['f_DD'] * 100:>6.1f}% {f['f_n'] * 100:>6.1f}% "
-            f"{f['f_brem'] * 100:>8.1f}% {f['f_ext'] * 100:>8.1f}% "
-            f"{(f['f_n'] + f['f_brem']) * 100:>8.1f}%"
-        )
-
-    print("\nLoss-minimizing mix (minimum N + B) vs operating temperature:")
-    print(
-        f"  {'T_keV':>6} {'r_opt':>7} {'f_n%':>7} {'f_brem%':>9} "
-        f"{'f_ext%':>8} {'sum%':>7}"
-    )
-    print("  " + "-" * 50)
-    for T in [50, 70, 100, 150, 200, 300]:
-        r, f = find_optimum(T)
-        print(
-            f"  {T:>6} {r:>7.2f} {f['f_n'] * 100:>7.1f} {f['f_brem'] * 100:>9.1f} "
-            f"{f['f_ext'] * 100:>8.1f} {(f['f_n'] + f['f_brem']) * 100:>7.1f}"
-        )
-
-    print("\nReactivity-optimal mix (max total fusion power at fixed plasma pressure):")
-    print(
-        f"  {'T_keV':>6} {'r_opt':>7} {'n_D/n_He3':>10} {'f_n%':>7} "
-        f"{'f_brem%':>9} {'f_ext%':>8}"
+        f"  {'r':>5} {'n_D/n_3He':>10} {'f_DD':>7}"
+        f" {'f_n':>6} {'f_brem':>8} {'f_ext':>8}"
     )
     print("  " + "-" * 55)
-    for T in [50, 70, 100, 150, 200, 300]:
-        r, f = find_max_fusion_power(T)
+    for r in [0.2, 0.3, 0.5, 0.7, 1.0, 1.5, 2.0, 3.0]:
+        f = fractions(r, 100)
         print(
-            f"  {T:>6} {r:>7.2f} {1 / r:>10.2f} {f['f_n'] * 100:>7.1f} "
-            f"{f['f_brem'] * 100:>9.1f} {f['f_ext'] * 100:>8.1f}"
+            f"  {r:>5.2f} {1 / r:>10.2f}"
+            f" {f['f_DD'] * 100:>6.1f}%"
+            f" {f['f_n'] * 100:>5.1f}%"
+            f" {f['f_brem'] * 100:>7.1f}%"
+            f" {f['f_ext'] * 100:>7.1f}%"
         )
 
-    print(
-        "\nRelative total fusion power vs reactivity-optimal mix (at fixed pressure):"
-    )
-    print(f"  {'r':>5} {'label':<22} {'P_fus/P_peak':>14}")
+    print("\nTemperature sweep at r = 0.31 (D-rich, brem-minimum at 100 keV):")
+    print(f"  {'T (keV)':>8} {'f_DD':>7} {'f_n':>6} {'f_brem':>8} {'f_ext':>8}")
     print("  " + "-" * 50)
-    T = 70
-    for r, label in [
-        (find_max_fusion_power(T)[0], "reactivity-peak"),
-        (find_optimum(T)[0], "DEC-optimal"),
-        (1.0, "50/50 (textbook)"),
-        (0.5, "D-rich (1:2 He3:D)"),
-        (2.0, "3He-rich (2:1 He3:D)"),
-    ]:
-        rel = relative_reactivity(r, T)
-        print(f"  {r:>5.2f} {label:<22} {rel * 100:>12.1f}%")
+    for T in [50, 70, 100, 150, 200]:
+        f = fractions(0.31, T)
+        print(
+            f"  {T:>8} {f['f_DD'] * 100:>6.1f}%"
+            f" {f['f_n'] * 100:>5.1f}%"
+            f" {f['f_brem'] * 100:>7.1f}%"
+            f" {f['f_ext'] * 100:>7.1f}%"
+        )
 
-    print("\n" + "=" * 75)
-    print("Comparison to literature consensus")
-    print("=" * 75)
     print()
+    print("=" * 75)
+    print("Brem-minimum mix at fixed temperature")
+    print("=" * 75)
     print(
-        f"{'Operating point':<28} {'T':>5} {'r':>5} {'f_DD':>7} "
-        f"{'f_n':>7} {'f_brem':>9} {'f_ext':>8}"
+        f"  {'T (keV)':>8} {'r_opt':>7} {'n_D/n_3He':>10}"
+        f" {'f_n':>6} {'f_brem':>8} {'f_ext':>8}"
     )
-    print("-" * 75)
-    cases = [
-        ("Wesson 50/50 @ 70 keV", 70, 1.0),
-        ("Wesson 50/50 @ 100 keV", 100, 1.0),
-        ("DEC-optimal @ 70 keV", 70, 0.71),
-        ("DEC-optimal @ 100 keV", 100, 0.80),
-        ("D-rich (1:2 He3:D)", 70, 0.5),
-        ("3He-rich (2:1 He3:D)", 70, 2.0),
-    ]
-    for label, T, r in cases:
-        f = fractions(r, T)
+    print("  " + "-" * 60)
+    for T in [50, 70, 100, 150, 200]:
+        r, f = find_minimum_brem(T)
         print(
-            f"{label:<28} {T:>5} {r:>5.2f} {f['f_DD'] * 100:>6.1f}% "
-            f"{f['f_n'] * 100:>6.1f}% {f['f_brem'] * 100:>8.1f}% "
-            f"{f['f_ext'] * 100:>7.1f}%"
+            f"  {T:>8} {r:>7.2f} {1 / r:>10.2f}"
+            f" {f['f_n'] * 100:>5.1f}%"
+            f" {f['f_brem'] * 100:>7.1f}%"
+            f" {f['f_ext'] * 100:>7.1f}%"
         )
 
     print()
-    print("Literature reference values for D-He3:")
-    print("  Wesson 'Tokamaks' (Fig 1.5.x):    P_brem/P_fus ~ 20% at 50/50, T~100 keV")
-    print("  Santarius & Kulcinski:            P_brem/P_fus ~ 25% (used in 1costingfe)")
-    print("  Rider 1995 (with extra losses):   P_brem/P_fus ~ 30%")
-
-    print("\n" + "=" * 75)
-    print("Self-consistent 1costingfe defaults (compute both params at chosen point)")
     print("=" * 75)
-    for label, T, r in [
-        ("Wesson 50/50 @ 70 keV", 70, 1.0),
-        ("Wesson 50/50 @ 100 keV", 100, 1.0),
-        ("DEC-optimal @ 100 keV", 100, 0.80),
-    ]:
-        f = fractions(r, T)
-        print(f"\n{label}  (r={r}, T={T} keV):")
-        print(f"  dhe3_dd_frac     = {f['f_DD']:.3f}   (current default 0.070)")
-        print(f"  f_rad_fus_dhe3   = {f['f_brem']:.3f}   (current default 0.250)")
-        print(
-            f"  -> {f['f_n'] * 100:.1f}% N, "
-            f"{f['f_brem'] * 100:.1f}% B, "
-            f"{f['f_ext'] * 100:.1f}% E"
-        )
+    print("Helion-likely operating point: brem-minimum at T = 100 keV")
+    print("=" * 75)
+    r_opt, f = find_minimum_brem(100)
+    print(f"  r = n_3He / n_D     = {r_opt:.3f}")
+    print(f"  n_D / n_3He         = {1 / r_opt:.2f}")
+    print("  Energy split:")
+    print(f"    Extractable       = {f['f_ext'] * 100:.1f}%")
+    print(f"    Bremsstrahlung    = {f['f_brem'] * 100:.1f}%")
+    print(f"    Neutrons          = {f['f_n'] * 100:.1f}%")
+    print(f"  D-D reaction frac   = {f['f_DD'] * 100:.1f}%")
+    print(f"  Zeff                = {f['Zeff']:.2f}")
+    print()
+    print("  1costingfe inputs:")
+    print(f"    dhe3_dd_frac      = {f['f_DD']:.3f}")
+    print(f"    f_rad_fus_dhe3    = {f['f_brem']:.3f}")

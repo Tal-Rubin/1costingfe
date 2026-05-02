@@ -68,6 +68,7 @@ def ash_neutron_split(
     dd_f_He3: float,
     dhe3_dd_frac: float,
     dhe3_f_T: float,
+    dhe3_f_He3: float,
     pb11_f_alpha_n: float,
     pb11_f_p_n: float,
 ) -> tuple[float, float]:
@@ -88,12 +89,17 @@ def ash_neutron_split(
     elif fuel == Fuel.DHE3:
         # Energy-weighted ash fraction: total charged energy / total fusion energy.
         # D-He3 events release Q_DHE3 = 18.35 MeV (all charged); D-D events release
-        # E_n_dd + E_c_dd = ~12.18 MeV with the tritium-burnup chain. The previous
-        # reaction-fraction-weighted formula treated all events as equal-energy and
-        # underestimated D-He3's contribution (overcounting f_n by ~40% at typical
-        # mixes). See examples/dhe3_mix_optimization.py for a Bosch-Hale verification.
-        E_n_dd = _E_NEUTRON_PRIMARY_DD + 0.5 * dhe3_f_T * E_N_DT
-        E_c_dd = _E_CHARGED_PRIMARY_DD + 0.5 * dhe3_f_T * E_ALPHA_DT
+        # primary energy plus T-burnup (in D-T) and He-3-burnup (in D-He-3) chains.
+        # See examples/dhe3_mix_optimization.py for a Bosch-Hale verification.
+        E_n_dd = (
+            _E_NEUTRON_PRIMARY_DD
+            + 0.5 * dhe3_f_T * E_N_DT  # T burns in D-T -> 14.1 MeV neutron
+        )
+        E_c_dd = (
+            _E_CHARGED_PRIMARY_DD
+            + 0.5 * dhe3_f_T * E_ALPHA_DT  # T burns in D-T -> 3.5 MeV alpha
+            + 0.5 * dhe3_f_He3 * Q_DHE3  # He-3 burns in D-He-3 -> 18.35 MeV charged
+        )
         E_DD_event = E_n_dd + E_c_dd
         E_charged = (1 - dhe3_dd_frac) * Q_DHE3 + dhe3_dd_frac * E_c_dd
         E_total = (1 - dhe3_dd_frac) * Q_DHE3 + dhe3_dd_frac * E_DD_event
@@ -157,6 +163,7 @@ def mfe_forward_power_balance(
     dd_f_He3: float,
     dhe3_dd_frac: float,
     dhe3_f_T: float,
+    dhe3_f_He3: float,
     pb11_f_alpha_n: float,
     pb11_f_p_n: float,
     wall_material: WallMaterial | None,
@@ -189,6 +196,7 @@ def mfe_forward_power_balance(
         dd_f_He3,
         dhe3_dd_frac,
         dhe3_f_T,
+        dhe3_f_He3,
         pb11_f_alpha_n,
         pb11_f_p_n,
     )
@@ -327,6 +335,7 @@ def mfe_inverse_power_balance(
     dd_f_He3: float,
     dhe3_dd_frac: float,
     dhe3_f_T: float,
+    dhe3_f_He3: float,
     pb11_f_alpha_n: float,
     pb11_f_p_n: float,
     wall_material: WallMaterial | None,
@@ -401,7 +410,15 @@ def mfe_inverse_power_balance(
 
     # Step 3: Ash fraction from fuel type (use p_fus=1.0 to get the fraction)
     p_ash_unit, _ = ash_neutron_split(
-        1.0, fuel, dd_f_T, dd_f_He3, dhe3_dd_frac, dhe3_f_T, pb11_f_alpha_n, pb11_f_p_n
+        1.0,
+        fuel,
+        dd_f_T,
+        dd_f_He3,
+        dhe3_dd_frac,
+        dhe3_f_T,
+        dhe3_f_He3,
+        pb11_f_alpha_n,
+        pb11_f_p_n,
     )
     ash_frac = p_ash_unit
     neutron_frac = 1.0 - ash_frac
@@ -488,7 +505,8 @@ def _charged_particle_fraction(
     dd_f_T: float = DD_F_T_DEFAULT,
     dd_f_He3: float = DD_F_HE3_DEFAULT,
     dhe3_dd_frac: float = 0.131,
-    dhe3_f_T: float = 0.97,
+    dhe3_f_T: float = 0.5,
+    dhe3_f_He3: float = 0.1,
     pb11_f_alpha_n: float = 0.0,
     pb11_f_p_n: float = 0.0,
 ) -> float:
@@ -500,6 +518,7 @@ def _charged_particle_fraction(
         dd_f_He3,
         dhe3_dd_frac,
         dhe3_f_T,
+        dhe3_f_He3,
         pb11_f_alpha_n,
         pb11_f_p_n,
     )
@@ -530,7 +549,8 @@ def pulsed_thermal_forward(
     dd_f_T: float = DD_F_T_DEFAULT,
     dd_f_He3: float = DD_F_HE3_DEFAULT,
     dhe3_dd_frac: float = 0.131,
-    dhe3_f_T: float = 0.97,
+    dhe3_f_T: float = 0.5,
+    dhe3_f_He3: float = 0.1,
     pb11_f_alpha_n: float = 0.0,
     pb11_f_p_n: float = 0.0,
 ) -> PowerTable:
@@ -554,6 +574,7 @@ def pulsed_thermal_forward(
         dd_f_He3,
         dhe3_dd_frac,
         dhe3_f_T,
+        dhe3_f_He3,
         pb11_f_alpha_n,
         pb11_f_p_n,
     )
@@ -612,6 +633,7 @@ def pulsed_thermal_forward(
         dd_f_He3,
         dhe3_dd_frac,
         dhe3_f_T,
+        dhe3_f_He3,
         pb11_f_alpha_n,
         pb11_f_p_n,
     )
@@ -666,7 +688,8 @@ def pulsed_thermal_inverse(
     dd_f_T: float = DD_F_T_DEFAULT,
     dd_f_He3: float = DD_F_HE3_DEFAULT,
     dhe3_dd_frac: float = 0.131,
-    dhe3_f_T: float = 0.97,
+    dhe3_f_T: float = 0.5,
+    dhe3_f_He3: float = 0.1,
     pb11_f_alpha_n: float = 0.0,
     pb11_f_p_n: float = 0.0,
 ) -> tuple[float, float]:
@@ -696,6 +719,7 @@ def pulsed_thermal_inverse(
         dd_f_He3,
         dhe3_dd_frac,
         dhe3_f_T,
+        dhe3_f_He3,
         pb11_f_alpha_n,
         pb11_f_p_n,
     )
@@ -735,7 +759,8 @@ def pulsed_dec_forward(
     dd_f_T: float = DD_F_T_DEFAULT,
     dd_f_He3: float = DD_F_HE3_DEFAULT,
     dhe3_dd_frac: float = 0.131,
-    dhe3_f_T: float = 0.97,
+    dhe3_f_T: float = 0.5,
+    dhe3_f_He3: float = 0.1,
     pb11_f_alpha_n: float = 0.0,
     pb11_f_p_n: float = 0.0,
 ) -> PowerTable:
@@ -762,6 +787,7 @@ def pulsed_dec_forward(
         dd_f_He3,
         dhe3_dd_frac,
         dhe3_f_T,
+        dhe3_f_He3,
         pb11_f_alpha_n,
         pb11_f_p_n,
     )
@@ -827,6 +853,7 @@ def pulsed_dec_forward(
         dd_f_He3,
         dhe3_dd_frac,
         dhe3_f_T,
+        dhe3_f_He3,
         pb11_f_alpha_n,
         pb11_f_p_n,
     )
@@ -883,7 +910,8 @@ def pulsed_dec_inverse(
     dd_f_T: float = DD_F_T_DEFAULT,
     dd_f_He3: float = DD_F_HE3_DEFAULT,
     dhe3_dd_frac: float = 0.131,
-    dhe3_f_T: float = 0.97,
+    dhe3_f_T: float = 0.5,
+    dhe3_f_He3: float = 0.1,
     pb11_f_alpha_n: float = 0.0,
     pb11_f_p_n: float = 0.0,
 ) -> tuple[float, float]:
@@ -922,6 +950,7 @@ def pulsed_dec_inverse(
         dd_f_He3=dd_f_He3,
         dhe3_dd_frac=dhe3_dd_frac,
         dhe3_f_T=dhe3_f_T,
+        dhe3_f_He3=dhe3_f_He3,
         pb11_f_alpha_n=pb11_f_alpha_n,
         pb11_f_p_n=pb11_f_p_n,
     )

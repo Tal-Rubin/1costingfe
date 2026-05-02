@@ -72,7 +72,7 @@ class CostingConstants:
     # C220109: DEC add-on for linear devices
     # Source: docs/account_justification/CAS220109_direct_energy_converter.md
     # Subsystem build-up: grids + power conditioning + incremental vacuum/tank
-    dec_base: float = 140.0  # M$ at 400 MWe DEC electric output (P_DEE_REF)
+    dec_base: float = 125.0  # M$ at 400 MWe DEC electric output (P_DEE_REF)
     dec_grid_cost: float = 12.0  # M$ replaceable grid/collector modules at P_DEE_REF
 
     # DEC grid lifetime (FPY) — HIGH UNCERTAINTY, no reactor-scale data.

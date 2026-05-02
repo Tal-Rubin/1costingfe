@@ -39,7 +39,7 @@ def test_dec_constants_exist():
     from costingfe.defaults import load_costing_constants
 
     cc = load_costing_constants()
-    assert cc.dec_base == 100.0
+    assert cc.dec_base == 125.0
     assert cc.dec_grid_cost == 12.0
     assert cc.dec_grid_lifetime_dt == 2.0
     assert cc.dec_grid_lifetime_dd == 3.0

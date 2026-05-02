@@ -14,8 +14,9 @@ from costingfe.types import Fuel, ImpurityMix, WallMaterial
 _FUEL_FRACS = dict(
     dd_f_T=0.969,
     dd_f_He3=0.689,
-    dhe3_dd_frac=0.07,
-    dhe3_f_T=0.97,
+    dhe3_dd_frac=0.131,
+    dhe3_f_T=0.5,
+    dhe3_f_He3=0.1,
     pb11_f_alpha_n=0.0,
     pb11_f_p_n=0.0,
 )

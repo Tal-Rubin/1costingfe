@@ -208,6 +208,7 @@ def tokamak_0d_forward(
     dd_f_He3: float,
     dhe3_dd_frac: float,
     dhe3_f_T: float,
+    dhe3_f_He3: float,
     pb11_f_alpha_n: float,
     pb11_f_p_n: float,
 ):
@@ -243,6 +244,7 @@ def tokamak_0d_forward(
         dd_f_He3=dd_f_He3,
         dhe3_dd_frac=dhe3_dd_frac,
         dhe3_f_T=dhe3_f_T,
+        dhe3_f_He3=dhe3_f_He3,
         pb11_f_alpha_n=pb11_f_alpha_n,
         pb11_f_p_n=pb11_f_p_n,
     )
@@ -368,6 +370,7 @@ def tokamak_0d_inverse(
     dd_f_He3: float,
     dhe3_dd_frac: float,
     dhe3_f_T: float,
+    dhe3_f_He3: float,
     pb11_f_alpha_n: float,
     pb11_f_p_n: float,
     # Impurity / synchrotron params for power balance
@@ -427,6 +430,7 @@ def tokamak_0d_inverse(
         dd_f_He3=dd_f_He3,
         dhe3_dd_frac=dhe3_dd_frac,
         dhe3_f_T=dhe3_f_T,
+        dhe3_f_He3=dhe3_f_He3,
         pb11_f_alpha_n=pb11_f_alpha_n,
         pb11_f_p_n=pb11_f_p_n,
     )
@@ -453,6 +457,7 @@ def tokamak_0d_inverse(
         dd_f_He3=dd_f_He3,
         dhe3_dd_frac=dhe3_dd_frac,
         dhe3_f_T=dhe3_f_T,
+        dhe3_f_He3=dhe3_f_He3,
         pb11_f_alpha_n=pb11_f_alpha_n,
         pb11_f_p_n=pb11_f_p_n,
     )
@@ -492,6 +497,7 @@ def tokamak_0d_inverse(
         dd_f_He3=dd_f_He3,
         dhe3_dd_frac=dhe3_dd_frac,
         dhe3_f_T=dhe3_f_T,
+        dhe3_f_He3=dhe3_f_He3,
         pb11_f_alpha_n=pb11_f_alpha_n,
         pb11_f_p_n=pb11_f_p_n,
     )

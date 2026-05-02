@@ -97,16 +97,16 @@ Different fuel choices result in different floors.
 | Fuel | Buildings (1 GWe) | BOP floor (excl. fuel) | Staffing |
 | --- | --- | --- | --- |
 | D-T | $570M | $29/MWh | 78 FTE |
-| D-He3 | $392M | $19/MWh | 39 FTE |
+| D-He3 | $388M | $19/MWh | 39 FTE |
 | p-B11 | $354M | $18/MWh | 36 FTE |
 
-Deuterium-helium-3 (D-He3) produces about 5% of its energy as neutrons from D-D side reactions, far less than D-T, but not zero. The buildings require some radiation shielding and modest tritium monitoring, bringing them to $392M. The BOP floor drops to $19/MWh. However, D-He3 carries a separate problem: helium-3 fuel at an optimistic $2M/kg (used in this analysis) contributes $81/MWh to the levelized electricity cost. The [DOE-allocated price](https://www.everycrsreport.com/reports/R41419.html) is roughly $4.5M/kg (Congressional Research Service, 2010), which would more than double this. The BOP is competitive but the cost of fuel  is challenging. Unlike tritium, which can be bred in a lithium blanket surrounding the same reactor that consumes it, helium-3 breeding would likely require a separate D-D fusion source: a working fusion reactor to fuel the primary fusion reactor.
+Deuterium-helium-3 (D-He3) produces about 6% of its energy as neutrons from D-D side reactions, far less than D-T, but not zero. The buildings require some radiation shielding and modest tritium monitoring, bringing them to $388M. The BOP floor drops to $19/MWh. However, D-He3 carries a separate problem: helium-3 fuel at an optimistic $2M/kg (used in this analysis) contributes $74/MWh to the levelized electricity cost. The [DOE-allocated price](https://www.everycrsreport.com/reports/R41419.html) is roughly $4.5M/kg (Congressional Research Service, 2010), which would more than double this. The BOP is competitive but the cost of fuel  is challenging. Unlike tritium, which can be bred in a lithium blanket surrounding the same reactor that consumes it, helium-3 breeding would likely require a separate D-D fusion source: a working fusion reactor to fuel the primary fusion reactor.
 
 Proton-boron (p-B11) fuel is aneutronic: 99.8% of its fusion energy comes out as charged alpha particles, not neutrons. It uses no tritium and does not activate structural components. The buildings can be built to conventional industrial standards: no shielding, no hot cells, no tritium containment infrastructure. The result is a BOP floor of **$18/MWh**, roughly half the D-T floor. Staffing requirements are similarly favorable: a p-B11 plant needs roughly the same staff as a conventional thermal plant plus fusion-specific roles (magnet technicians, vacuum systems, plasma control), but none of the radiation-specific roles that dominate D-T. No health physics, no tritium processing, no radwaste, and no hot cell operators.
 
 The $220M building cost gap between D-T and p-B11 is larger than most fusion core cost-reduction scenarios in the literature. This gap is not a reflection of the plasma physics difficulty. It is the implication of what handling neutrons and tritium does to the cost of the building you put the plant in. The fuel choice establishes the floor before the fusion core enters the picture.
 
-With zero He-3 fuel cost (self-bred), a D-He3 plant without a core is slightly more expensive than p-B11 ($19/MWh vs $18/MWh) due to the modest shielding required for D-D side reaction neutrons.
+With zero He-3 fuel cost (self-bred), a D-He3 plant without a core is slightly more expensive than p-B11 ($18.5/MWh vs $17.8/MWh) due to the modest shielding required for D-D side reaction neutrons.
 
 ## Lowering the p-B11 Floor
 
