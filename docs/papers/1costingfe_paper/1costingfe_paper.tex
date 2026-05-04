@@ -20,20 +20,32 @@
 \usepackage{xcolor}
 
 %% ============================================================
-%% Dark mode
+%% Dark mode (off by default; toggle the conditional to enable)
 %% ============================================================
+\newif\ifdarkmode
+\darkmodefalse
 \definecolor{darkbg}{HTML}{1E1E1E}
-\definecolor{lightfg}{HTML}{D4D4D4}
 \definecolor{darklink}{HTML}{6CB4EE}
 \definecolor{darkcite}{HTML}{8FBC8F}
-\pagecolor{darkbg}
-\color{lightfg}
-\hypersetup{
-  colorlinks=true,
-  linkcolor=darklink,
-  citecolor=darkcite,
-  urlcolor=darklink,
-}
+\ifdarkmode
+  \definecolor{lightfg}{HTML}{D4D4D4}
+  \pagecolor{darkbg}
+  \color{lightfg}
+  \hypersetup{
+    colorlinks=true,
+    linkcolor=darklink,
+    citecolor=darkcite,
+    urlcolor=darklink,
+  }
+\else
+  \definecolor{lightfg}{HTML}{000000}
+  \hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    citecolor=blue,
+    urlcolor=blue,
+  }
+\fi
 
 %% ============================================================
 %% Reference parameters (derived values are computed by pgfmath)
@@ -63,23 +75,15 @@
 \uniqueAffiliationtrue
 
 \ifuniqueAffiliation
-%\author{
-%	Tal Rubin \\
-%	Astera Institute \\
-%	\texttt{tal.rubin@astera.org} \\
-%	\And
-%	Mallory Snowden \\
-%	Astera Institute \\
-%	\texttt{mallory.snowden@astera.org} \\
-%	\And
-%	Reid Westwood \\
-%	Astera Institute \\
-%	\texttt{westwood.reid@gmail.com} \\
-%	\And
-%	Damien Scott \\
-%	Astera Institute \\
-%	\texttt{damien.scott@astera.org} \\
-%}
+\author{
+	Tal Rubin \\
+	Astera Institute \\
+	\texttt{tal.rubin@astera.org} \\
+	\And
+	Damien Scott \\
+	Astera Institute \\
+	\texttt{damien.scott@astera.org} \\
+}
 \fi
 
 \renewcommand{\shorttitle}{Differentiable Fusion Costing}
@@ -95,17 +99,24 @@ pdfkeywords={fusion energy, LCOE, cost estimation, automatic differentiation, JA
 
 \begin{abstract}
 We present \textsc{1costingfe}, a JAX-based costing framework for fusion power plants
-that computes the levelized cost of electricity (LCOE) from customer-level requirements
-across all major confinement families and fuel cycles.
-The framework implements the Code of Accounts Structure (CAS)
-established by the Generation~IV Economic Modeling Working Group and adapted for fusion
-by Schulte et~al.\ and the ARIES program, and adopted by the ARPA-E-funded pyfecons framework
-of Woodruff Scientific.
-The purpose of \textsc{1costingfe}, beyond enabling extraction of exact gradients and built-in uncertainty analysis via JAX,
-is to assist the identification of technological corridors into truly competitive fusion power in the 1cent/kWh range.
-We describe the economics module, the physics module, and the cost
-account methodology, noting where our treatment diverges from prior
-work.
+that computes the levelized cost of electricity (LCOE) from customer-level requirements.
+Cost accounts follow the Code of Accounts Structure (CAS), originated by Schulte et~al.\
+at PNL in 1978, adapted for fusion by the ARIES program, and later formalized by the
+Generation~IV Economic Modeling Working Group.
+The framework spans the four candidate fuel cycles (D-T, D-D, D-${}^3$He, p-${}^{11}$B)
+and the principal confinement families (tokamak, stellarator, mirror, field-reversed
+configuration, laser and Z-pinch inertial systems, and magneto-inertial concepts),
+with each cost account justified independently from procurement and benchmark data
+rather than from heritage scaling factors alone.
+The use of JAX as the computational backend exposes exact gradients of LCOE with
+respect to every input parameter through reverse-mode automatic differentiation,
+and supports vectorized sensitivity sweeps and Monte Carlo uncertainty propagation
+via \texttt{vmap}, transforming what are traditionally bottleneck operations into
+routine ones.
+The purpose of \textsc{1costingfe} is to enable identification of technological
+corridors compatible with a 1~cent/kWh LCOE target.
+We describe the economics module, the physics module, and the cost account
+methodology, noting where the treatment diverges from prior work.
 \end{abstract}
 
 \keywords{fusion energy \and LCOE \and cost estimation \and automatic differentiation \and JAX}
@@ -127,7 +138,7 @@ Code of Accounts Structure (CAS) developed by Schulte et~al.\
 the ARIES program \citep{miller1998} and the Generation~IV Economic Modeling
 Working Group \citep{emwg2007}. This framework decomposes plant costs into
 hierarchical accounts covering pre-construction, direct capital, indirect
-services, financial charges, and annual operating costs. The PyFECONS
+services, financial charges, and annual operating costs. The pyFECONS
 code \citep{woodruff2026, woodruff2026b} provides a Python implementation of this
 methodology.
 
@@ -147,7 +158,7 @@ framework to fusion introduces two further challenges:
   uncertain.
 \end{enumerate}
 
-To pursue this search systematically, we are developing \textsc{1costingfe}, a
+To pursue this search systematically, \textsc{1costingfe} is under active development as a
 costing framework built on JAX that computes LCOE from customer-level
 requirements across all major confinement families and fuel cycles. The
 choice of JAX as the computational backend provides automatic
@@ -158,7 +169,7 @@ sensitivity analysis from a computational bottleneck into a routine
 operation, enabling rapid identification of the design levers with the
 greatest leverage on cost.
 
-We are entering a phase of fusion development where fusion power plants are being designed,
+The field is entering a phase in which fusion power plants are being designed,
 not only experiments meant to determine the plasma physics and demonstrate scientific breakeven.
 A commercially viable fusion power plant must be designed with its economics in mind, which introduces
 additional parameters and constraints that must be added to the optimization loop.
@@ -223,8 +234,8 @@ The remainder of this paper is organized as follows.
 \Cref{sec:lcoe} presents the economics module,
 \Cref{sec:physics-module} the physics module, and
 \Cref{sec:cas} the cost account structure, with detailed treatment of
-the accounts for which we have completed independent justification
-studies. \Cref{sec:tokamak-model} presents the 0D tokamak model.
+the accounts for which independent justification studies have been completed.
+\Cref{sec:tokamak-model} presents the 0D tokamak model.
 
 
 %% ============================================================
@@ -248,10 +259,11 @@ production is:
 
 \begin{equation}
 \label{eq:e-annual}
-E_{\text{annual}} = 8760[\text{h}/\text{yr}] \times P_{\text{net}} [\text{MW}/\text{module}] \times N_{\text{mod}} \times A
+E_{\text{annual}} = 8760 \times P_{\text{net}} \times N_{\text{mod}} \times A
+\quad [\text{MWh/yr}]
 \end{equation}
 
-\noindent where $P_{\text{net}}$ is the net electric power per module (MW),
+\noindent where $P_{\text{net}}$ is the net electric power per module in MW,
 $N_{\text{mod}}$ is the number of reactor modules, $A$ is the plant
 availability (capacity factor), and 8760 is the number of hours per year.
 The computation of $P_{\text{net}}$ from fusion power and
@@ -367,7 +379,7 @@ $T_c = \pgfmathprintnumber[precision=0]{\refTc}$~yr), the IDC adds
 \subsection{Levelized Annual Operating Cost}
 \label{sec:lac}
 
-Annual operating costs (maintenance, fuel, and manpower) are stated in constant
+Annual operating costs are stated in constant
 base-year dollars but escalate at the inflation rate $g$ in nominal
 terms over the plant lifetime. The levelized annual cost accounts for
 this growth using a three-step procedure.
@@ -427,11 +439,6 @@ device and plasma parameters, given a confinement concept and fuel cycle.
 A computation of the plant availability would also fit in this, or an Engineering module,
 but requires a dedicated model incorporating the specifics of a design (e.g. maintainability, accessibility, component failure modes).
 
-Currently, the physics module is under development, and has some sections
-already implemented. The power balance section is complete and concept-agnostic,
-while the plasma performance section is being developed in parallel with the
-first confinement-specific layer: a zero-dimensional tokamak equilibrium model.
-
 The power balance section of the physics module computes $P_{\text{net}}$
 from the fusion power $P_{\text{fus}}$ for the four fusion fuels by tracking
 every energy channel from the plasma to the grid: energy split between fusion ash and neutrons,
@@ -446,7 +453,7 @@ parameters amenable to sensitivity analysis via automatic differentiation.
 
 Lumped efficiency parameters are used for characterizing the power flow and thermal cycle.
 A more involved power plant thermodynamics model could be implemented in the future,
-which would allow the selection of a thermal cycle (Bryton vs. Rankine, etc.) and working
+which would allow the selection of a thermal cycle (Brayton vs. Rankine, etc.) and working
 fluid.
 
 The power balance above is concept-agnostic: given $P_{\text{fus}}$
@@ -605,13 +612,13 @@ concept-specific. The single-pass burn fraction in a thermal plasma
 is set by $f_X = n_D \langle\sigma v\rangle_X \tau_p / (1 + n_D
 \langle\sigma v\rangle_X \tau_p)$ where $\tau_p$ is the species
 particle confinement time; for a steady-state mirror at $T_i = 70$~keV
-with $n_D = 3.3 \times 10^{19}$~m${}^{-3}$ and $\tau_p \sim 30$~s,
-$f_T^* \sim 0.5$ and $f_{{}^3\text{He}}^* \sim 0.1$, with the latter
+with $n_D = 3.3 \times 10^{19}$~m${}^{-3}$ and $\tau_p \approx 30$~s,
+$f_T^* \approx 0.5$ and $f_{{}^3\text{He}}^* \approx 0.1$, with the latter
 smaller because $\langle\sigma v\rangle_{\text{D}{}^3\text{He}}$ is
-~13$\times$ smaller than $\langle\sigma v\rangle_{\text{DT}}$ at this
+approximately 13$\times$ smaller than $\langle\sigma v\rangle_{\text{DT}}$ at this
 temperature (see
 \texttt{examples/dhe3\_burn\_fractions.py}). Pulsed-FRC architectures
-with active inter-shot ${}^3$He recovery (Helion-style) reach the
+with active inter-shot ${}^3$He recovery reach the
 asymptotic limit set by the recovery efficiency: at 99\% recovery
 per cycle, $f_{{}^3\text{He}}^* \approx 0.99$. Tritium in such a
 plant is exhausted (or held until decay) to keep the design
@@ -626,10 +633,11 @@ external ${}^3$He consumption is $(1 - f_{\text{DD}})
 - \tfrac{1}{2} f_{\text{DD}} f_{{}^3\text{He}}^*$,
 the latter accounting for D-D-bred ${}^3$He that re-burns in place
 of an external atom.
-At the default $f_{\text{DD}} = 0.131$ (corresponding to a
-50/50 D/${}^3$He mix at $T_i = 70$~keV with Bosch-Hale cross sections,
-the textbook reference of Wesson and Santarius/Kulcinski), the
-effective neutron energy fraction
+For the steady-state mirror concept evaluated at the default
+$f_{\text{DD}} = 0.131$ (corresponding to a 50/50 D/${}^3$He mix at
+$T_i = 70$~keV with Bosch-Hale cross sections \citep{boschhale1992}),
+together with the steady-state default $f_T^* = 0.5$ and
+$f_{{}^3\text{He}}^* = 0.1$, the effective neutron energy fraction
 $\bar{E}_n / \bar{E}_{\text{total}}$ is approximately 6\%, small but
 nonzero, and consequential for shielding, activation, and tritium
 breeding requirements. See \texttt{examples/dhe3\_mix\_optimization.py}
@@ -638,7 +646,7 @@ plasma D/${}^3$He density ratio and operating temperature.
 
 \subsubsection{\texorpdfstring{Proton-boron 11 (p-${}^{11}$B)}{Proton-boron 11 (p-11B)}}
 The primary p-${}^{11}$B reaction produces three alpha particles
-($Q = 8.68$~MeV) with a broad energy spectrum. \citet{dmitriev2009} reports
+($Q = 8.7$~MeV) with a broad energy spectrum. \citet{dmitriev2009} reports
 a primary alpha peaking near 4.5~MeV and two secondary alphas from the
 decay of an excited ${}^8$Be intermediate at approximately 2.4~MeV each. These alphas
 are not inert ash but can undergo further reactions with the boron fuel.
@@ -830,8 +838,8 @@ therefore $P_{\text{transport}} = P_{\text{cp}} + P_{\text{in}} - P_{\text{rad}}
 
 If $P_{\text{rad}}$ exceeds $P_{\text{cp}} + P_{\text{in}}$ at the
 specified $T_e$, the user-supplied heating power is insufficient to
-sustain the plasma against radiation losses. Rather than silently
-capping $P_{\text{rad}}$ (which would mask an unphysical operating
+sustain the plasma against radiation losses. Rather than capping
+$P_{\text{rad}}$ implicitly (which would mask an unphysical operating
 point), the framework increases the effective heating power to the
 minimum needed to close the energy balance:
 
@@ -859,44 +867,44 @@ heat-transfer system is:
 
 \begin{equation}
 \label{eq:p-thermal}
-P_{\text{th}} = M_n \, P_n + P_{\text{rad}} + P_{\text{wall}}
+P_{\text{th}} = M_n \, P_n + P_{\text{rad}} + P_{\text{transport}}
               + \eta_p \, P_{\text{pump}}
 \end{equation}
 
 \noindent where $P_n$ is the neutron power, $P_{\text{rad}}$ is the
-radiated power reabsorbed by the first wall, $P_{\text{wall}}$ is the
-charged-particle transport power deposited on plasma-facing components,
-and $\eta_p P_{\text{pump}}$ is the fraction of pumping power deposited
-as heat. The heating power $P_{\text{in}}$ does not appear
+radiated power reabsorbed by the first wall, $P_{\text{transport}}$ is the
+charged-particle transport power deposited on plasma-facing components
+(\cref{eq:plasma-balance}), and $\eta_p P_{\text{pump}}$ is the fraction
+of pumping power deposited as heat. The heating power $P_{\text{in}}$ does not appear
 separately; it enters the plasma and exits via the radiation and
 transport channels already included in $P_{\text{th}}$.
 A conventional Rankine cycle with thermal efficiency $\eta_{\text{th}}$
-converts thermal power to gross electric power:
+converts thermal power to gross electric power $P_{\text{et}}$:
 
 \begin{equation}
 \label{eq:p-gross}
-P_{\text{gross}} = \eta_{\text{th}} \, P_{\text{th}}
+P_{\text{et}} = \eta_{\text{th}} \, P_{\text{th}}
 \end{equation}
 
 \noindent For systems with direct energy conversion (DEC), a fraction
 $f_{\text{dec}}$ of the transport power bypasses the
-thermal cycle and is converted at efficiency $\eta_{\text{de}}$, and
+thermal cycle and is converted at efficiency $\eta_{\text{dec}}$, and
 the gross electric power becomes
-$P_{\text{gross}} = \eta_{\text{th}} P_{\text{th}} +
- f_{\text{dec}} \, \eta_{\text{de}} \, P_{\text{transport}}$.
+$P_{\text{et}} = \eta_{\text{th}} P_{\text{th}} +
+ f_{\text{dec}} \, \eta_{\text{dec}} \, P_{\text{transport}}$.
 DEC is disabled by default ($f_{\text{dec}} = 0$) pending further
 technology maturation.
 
 \subsection{Recirculating Power and Net Electric Output}
 
-A fraction of the gross electric power is recirculated to sustain
-the plant:
+A fraction of the gross electric power $P_{\text{et}}$ is recirculated
+to sustain the plant:
 
 \begin{equation}
 \label{eq:p-recirc}
 P_{\text{recirc}} = \frac{P_{\text{in,eff}}}{\eta_{\text{aux}}}
   + P_{\text{coils}} + P_{\text{pump}} + P_{\text{cryo}}
-  + P_{\text{cool}} + f_{\text{sub}} \, P_{\text{gross}}
+  + P_{\text{cool}} + f_{\text{sub}} \, P_{\text{et}}
   + P_{\text{other}}
 \end{equation}
 
@@ -904,16 +912,16 @@ P_{\text{recirc}} = \frac{P_{\text{in,eff}}}{\eta_{\text{aux}}}
 power for the heating system (using the effective heating power from
 \cref{eq:p-input-eff}), $P_{\text{coils}}$ powers the magnets,
 $P_{\text{cryo}}$ and $P_{\text{cool}}$ serve the cryogenic and cooling
-systems, $f_{\text{sub}} P_{\text{gross}}$ covers balance-of-plant
+systems, $f_{\text{sub}} P_{\text{et}}$ covers balance-of-plant
 subsystems (typically 3\%), and $P_{\text{other}}$ includes tritium
 processing and housekeeping loads. The net electric power is:
 
 \begin{equation}
 \label{eq:p-net}
-P_{\text{net}} = P_{\text{gross}} - P_{\text{recirc}}
+P_{\text{net}} = P_{\text{et}} - P_{\text{recirc}}
 \end{equation}
 
-\noindent The engineering gain $Q_{\text{eng}} = P_{\text{gross}} /
+\noindent The engineering gain $Q_{\text{eng}} = P_{\text{et}} /
 P_{\text{recirc}}$ must exceed unity for the plant to produce net
 electricity. The recirculating fraction
 $1/Q_{\text{eng}}$ is a key figure of merit: lower recirculating
@@ -942,13 +950,16 @@ power $P_{\text{fus}}$.  The scientific gain
 $Q_{\text{sci}} = P_{\text{fus}} / P_{\text{drv}}$ falls out as a
 derived quantity.  The driver wall-plug efficiency $\eta_{\text{pin}}$
 relates stored energy to delivered energy:
-$E_{\text{stored}} = E_{\text{drv}} / \eta_{\text{pin}}$.
-The charged-particle fraction $f_{\text{ch}}$ is derived from the fuel
+$E_{\text{stored}} = E_{\text{drv}} / \eta_{\text{pin}}$. Note that
+$\eta_{\text{pin}}$ characterises pulsed-driver hardware (laser, ion
+beam, capacitor bank) and is distinct from the steady-state auxiliary
+heating efficiency $\eta_{\text{aux}}$ used in \cref{eq:p-recirc}.
+The charged-particle fraction $f_{\text{cp}}$ is derived from the fuel
 type and determines the ash--neutron split, while
 $f_{\text{rad}}$ is the fraction of ash power radiated during the burn.
 
 $Q_{\text{eng}}$ is preferred over $Q_{\text{sci}}$ as the primary input
-because it directly determines economic viability ($Q_{\text{eng}} < 1$
+because it directly determines economic viability ($Q_{\text{eng}} \le 1$
 means no net power; $Q_{\text{eng}} \approx 2$ means 50\% recirculation),
 and it works uniformly across thermal and DEC conversion pathways without
 requiring concept-dependent parameterization.
@@ -958,15 +969,17 @@ For laser IFE and Z-pinch concepts the driver energy thermalises into
 the blanket alongside neutron and radiation power.  The thermal pool
 is:
 \begin{equation}
-P_{\text{th}} = M_n P_n + P_{\text{ash}} + P_{\text{drv}} + P_{\text{pump}}
+P_{\text{th}} = M_n P_n + P_{\text{cp}} + P_{\text{drv}} + \eta_p \, P_{\text{pump}}
 \end{equation}
-where $M_n$ is the neutron energy multiplier.  All electrical output
+where $M_n$ is the neutron energy multiplier and $\eta_p$ is the
+pump-power thermalisation fraction (matching the steady-state
+convention of \cref{eq:p-thermal}).  All electrical output
 comes from the thermal cycle at efficiency $\eta_{\text{th}}$, and
 the full driver draw $P_{\text{drv}}/\eta_{\text{pin}}$ enters the
 recirculating load.
 
 \subsubsection{Pulsed inductive DEC conversion.}
-For inductive recovery concepts (e.g.\ Helion-style FRCs), the driver
+For inductive recovery concepts (e.g.\ pulsed FRCs with capacitor-bank-driven compression), the driver
 energy circulates in an electromagnetic loop: capacitor bank $\to$
 compression coils $\to$ plasma $\to$ coils $\to$ capacitor bank.
 Charged-particle energy does PdV work on the expanding plasmoid,
@@ -982,7 +995,7 @@ P_{\text{recovered}} &= \eta_{\text{dec}} \bigl(P_{\text{drv}}
   + f_{\text{pdv}} \, P_{\text{ch,net}}\bigr), \\
 P_{\text{dee}} &= P_{\text{recovered}} - P_{\text{drv}},
 \end{align}
-where $P_{\text{ch,net}} = (1 - f_{\text{rad}})\,P_{\text{ash}}$
+where $P_{\text{ch,net}} = (1 - f_{\text{rad}})\,P_{\text{cp}}$
 and $\eta_{\text{dec}}$ is the round-trip efficiency of the
 inductive recovery circuit.
 
@@ -997,7 +1010,7 @@ a thermal blanket.  When $\eta_{\text{th}} > 0$ a conventional thermal
 cycle runs in parallel with the DEC, and the total gross electric is
 $P_{\text{et}} = P_{\text{dee}} + P_{\text{the}}$.  When
 $\eta_{\text{th}} = 0$ the concept is purely inductive and all
-thermal loads (pumps, BOP) are zeroed automatically.
+thermal loads (pumps, balance of plant (BOP)) are zeroed automatically.
 
 For inductive DEC, the capacitor bank is costed on a \$/J stored-energy
 basis (Account~22.01.07, \cref{sec:cas2207}): $C_{220107} = c_{\text{cap}}
@@ -1009,7 +1022,7 @@ For the DEC inverse, the model takes the scientific gain $Q_{\text{sci}}$
 as input and derives the required stored energy per pulse:
 \begin{equation}
 E_{\text{stored}} = \frac{P_{\text{net}}}{f_{\text{rep}} \bigl(
-  \eta_{\text{eff}}\,(1 + Q_{\text{sci}}\,f_{\text{ch}}) - 1 \bigr)
+  \eta_{\text{eff}}\,(1 + Q_{\text{sci}}\,f_{\text{cp}}) - 1 \bigr)
   \,\eta_{\text{pin}}}
 \end{equation}
 where $\eta_{\text{eff}}$ combines the DEC and thermal conversion
@@ -1161,12 +1174,12 @@ detailed parametric modeling.
 \subsubsection{Land and land rights (C11).}
 Modern compact fusion plant designs require 20--200 acres, far less
 than the legacy 1{,}000-acre assumption in earlier ARIES studies.
-The CFS ARC project \citep{cfs_arc} plans 100 acres for 400~MWe,
+A representative compact pilot-plant filing \citep{cfs_arc} plans 100 acres for 400~MWe,
 yielding a land intensity of \refLandIntensity~acres/MWe. At US
 industrial-zoned land costs of approximately
 \$\pgfmathprintnumber[1000 sep={{\,}}, precision=0]{\refLandCost}/acre
-(consistent with USDA 2025 farmland averages scaled for
-industrial zoning), land cost for a 1~GWe plant is approximately
+(consistent with USDA farmland averages scaled for
+industrial zoning\footnote{USDA NASS, \emph{Land Values 2024 Summary}, August 2024.}), land cost for a 1~GWe plant is approximately
 \$\pgfmathprintnumber[precision=1]{\refLandTotal}M, negligible in the context of multi-billion-dollar capital
 investments.
 
@@ -1212,10 +1225,13 @@ materials), not Part~50 (reactor license), which means no Seismic
 Category~I requirements, no NQA-1 program for most buildings, and
 no fission-style containment structure.
 
-\begin{center}
+\begin{table}[htbp]
+\caption{CAS21 buildings cost by fuel cycle (1~GWe reference).}
+\label{tab:cas21-fuel}
+\centering
 \begin{tabular}{lrrl}
 \toprule
-Fuel & \$/kW & M\$ at 1\,GWe & Construction grade \\
+Fuel & \$/kW & M\$ at 1~GWe & Construction grade \\
 \midrule
 D-T    & 502 & 577 & Enhanced industrial (tritium confinement, hot cell, rad-HVAC) \\
 D-D    & 446 & 513 & Enhanced industrial (reduced tritium/activation scope) \\
@@ -1223,7 +1239,7 @@ D-${}^3$He & 339 & 390 & Light enhanced industrial \\
 p-${}^{11}$B & 308 & 354 & Industrial (no hot cell, no tritium, standard HVAC) \\
 \bottomrule
 \end{tabular}
-\end{center}
+\end{table}
 
 \subsubsection{Fuel-dependent scoping.}
 Each building is costed for what it physically is.  Key
@@ -1235,7 +1251,7 @@ differentiators by fuel:
   NQA-1 overhead similar); D-${}^3$He \$23M (shielded inspection room
   only); p-${}^{11}$B \textbf{\$0} (does not exist; nothing
   activates).  The hot cell is physically integrated within the
-  reactor building (UKAEA STEP/PROCESS model), not a separate
+  reactor building, following UK pilot-plant cost models, not a separate
   structure.
 
 \item \textbf{Reactor building:} D-T \$138M (biological shielding
@@ -1263,23 +1279,30 @@ and security are approximately fixed; BOP electrical buildings scale
 with gross electric $P_{\text{et}}$.
 
 \subsubsection{Comparison with benchmarks.}
-\begin{center}
+\Cref{tab:cas21-benchmarks} situates the fuel-dependent CAS21 figures
+of \cref{tab:cas21-fuel} against non-fusion plant types.
+
+\begin{table}[htbp]
+\caption{CAS21 buildings \$/kW benchmark comparison.}
+\label{tab:cas21-benchmarks}
+\centering
 \begin{tabular}{lrl}
 \toprule
 Plant type & Buildings \$/kW & Grade \\
 \midrule
-Gas CCGT & 150--250 & Industrial \\
+Gas combined-cycle (CCGT) & 150--250 & Industrial \\
 Coal (NETL B12A) & 175--300 & Heavy industrial \\
-Fusion pB11 (this model) & 308 & Industrial (1.5$\times$ CCGT) \\
-Fusion D-T (this model) & 502 & Enhanced industrial (2.5$\times$ CCGT) \\
 Fission nuclear (Part~50) & 800--1{,}300 & Nuclear-grade \\
 \bottomrule
 \end{tabular}
-\end{center}
+\end{table}
 
-Source: from-scratch derivation using industrial construction
-benchmarks (Cushman~\&~Wakefield 2025, NETL 2019, NREL ATB 2024,
-Breakthrough Institute 2022).  Supersedes ARIES/pyFECONS values.
+The fusion p-${}^{11}$B figure of 308~\$/kW sits at roughly
+1.5$\times$ CCGT, and the D-T figure of 502~\$/kW at roughly
+2.5$\times$ CCGT.
+The values are derived from-scratch using industrial construction
+benchmarks \citep{cushman_wakefield_2025, netl2022, nrel_atb2024,
+breakthrough2022}, superseding ARIES/pyFECONS values.
 
 
 %% ------------------------------------------------------------
@@ -1291,8 +1314,8 @@ solenoid (CS), poloidal field (PF) coils, structural casing,
 insulation, quench protection, cryostat interfaces, and testing.
 
 \subsubsection{Conductor scaling law.}
-Total conductor quantity is estimated from the magnetic energy stored
-in the coil system:
+Total conductor quantity in kA-m is estimated from the field, coil
+radius, and a geometry-dependent path-length factor:
 \begin{equation}
 \label{eq:cas2203}
 C_{220103} = \frac{G \cdot B_{\max} \cdot R_{\text{coil}}^2}
@@ -1307,25 +1330,28 @@ $c_{\text{kAm}}$ is the conductor cost per kA-metre, and
 $M_{\text{concept}}$ is a manufacturing markup capturing winding,
 insulation, quench protection, structural casing, cryostat, and testing.
 
-\begin{center}
+\begin{table}[htbp]
+\caption{CAS22.01.03 manufacturing markups and path factors by confinement concept.}
+\label{tab:cas2203-markup}
+\centering
 \begin{tabular}{lrrrl}
 \toprule
-Concept & Markup & Path factor & Example (12\,T, 1.85\,m) & Rationale \\
+Concept & Markup & Path factor & Example (12~T, 1.85~m) & Rationale \\
 \midrule
 Tokamak     &  8$\times$ & 1.0 & \$516M & TF+CS+PF complexity \\
 Stellarator & 12$\times$ & 2.0 & \$1{,}546M & Non-planar 3D coils \\
 Mirror      &  2.5$\times$ & 1.0 & \$26M & Simple solenoids \\
-Pulsed FRC  &  1.5$\times$ & 1.0 & --- & Theta-pinch formation coils \\
-Theta pinch &  1.5$\times$ & 1.0 & --- & Compression coils \\
-MagLIF      &  2.0$\times$ & 1.0 & --- & Axial field solenoid \\
-Mag.\ target &  1.5$\times$ & 1.0 & --- & Guide-field solenoid \\
-Plasma jet  &  1.5$\times$ & 1.0 & --- & Guide-field solenoid \\
-Orbitron    &  1.5$\times$ & 1.0 & --- & Electrostatic confinement \\
-Polywell    &  2.0$\times$ & 1.0 & --- & Polyhedral magrid \\
-IFE/Z-pinch & \multicolumn{3}{l}{\$0 (no confinement magnets)} & --- \\
+Pulsed FRC  &  1.5$\times$ & 1.0 & n/a & Theta-pinch formation coils \\
+Theta pinch &  1.5$\times$ & 1.0 & n/a & Compression coils \\
+MagLIF      &  2.0$\times$ & 1.0 & n/a & Axial field solenoid \\
+Mag.\ target &  1.5$\times$ & 1.0 & n/a & Guide-field solenoid \\
+Plasma jet  &  1.5$\times$ & 1.0 & n/a & Guide-field solenoid \\
+Orbitron    &  1.5$\times$ & 1.0 & n/a & Electrostatic confinement \\
+Polywell    &  2.0$\times$ & 1.0 & n/a & Polyhedral magrid \\
+IFE/Z-pinch & \multicolumn{3}{l}{\$0 (no confinement magnets)} & n/a \\
 \bottomrule
 \end{tabular}
-\end{center}
+\end{table}
 
 \subsubsection{Conductor cost assumptions.}
 The default conductor is REBCO high-temperature superconductor at
@@ -1366,7 +1392,7 @@ $c_{\text{ECRH}} = 5.00$, $c_{\text{LHCD}} = 4.00$ (all M\$/MW,
 adjusted from FOAK to NOAK.
 
 \subsubsection{Pulsed concepts.}
-For pulsed concepts, the account covers the primary driver capital ---
+For pulsed concepts, the account covers the primary driver capital, namely
 the hardware that compresses or ignites the target.  This is the pulsed
 analog of the magnet system (CAS22.01.03): the mechanism that provides
 confinement.  Cost scales linearly with average driver power
@@ -1375,7 +1401,10 @@ $P_{\text{drv}} = E_{\text{drv}} \, f_{\text{rep}}$:
 C_{220104} = c_{\text{drv}} \times P_{\text{drv}} \quad [\text{M\$}]
 \end{equation}
 
-\begin{center}
+\begin{table}[htbp]
+\caption{CAS22.01.04 driver \$/MW coefficients by pulsed concept.}
+\label{tab:cas2204-driver}
+\centering
 \begin{tabular}{lrl}
 \toprule
 Concept & \$/MW & Hardware \\
@@ -1390,7 +1419,7 @@ Z-pinch, DPF, Staged Z-pinch & 0 & Driver is electrical (CAS22.01.07) \\
 Pulsed FRC, Theta pinch       & 0 & Driver is coils (CAS22.01.03) \\
 \bottomrule
 \end{tabular}
-\end{center}
+\end{table}
 
 Concepts whose driver is purely electrical (pulsed power / capacitor
 bank) have their driver capital captured entirely in CAS22.01.07 on a
@@ -1415,8 +1444,8 @@ electric output:
 The \$80M reference at 1~GWe originates from the ARIES-CS design study
 (\$70.6M in 2004\$ for a 1.3~GWe stellarator, approximately \$78/kW in
 2024\$).  Cross-checks against GW-scale HVDC converter stations
-(\$100--250/kW installed, Siemens, ABB) and utility-scale solar inverters
-(\$30--50/kW, NREL 2024) bracket the figure: fusion magnet supplies
+(\$100--250/kW installed)\footnote{HVDC converter station vendor literature, Siemens Energy and Hitachi ABB Power Grids, 2022--2024.} and utility-scale solar inverters
+(\$30--50/kW \citep{nrel_atb2024}) bracket the figure: fusion magnet supplies
 operate at lower voltage and higher current than HVDC, which is the
 cheaper regime for power electronics.  No direct vendor quote exists at
 fusion-relevant parameters (1--10~kV, 10--100~kA, 100+~MW).
@@ -1450,7 +1479,7 @@ discounted at the project interest rate.
 CAS22.01.09 covers add-on direct energy converters for linear devices
 (mirrors and steady-state FRCs) where charged-particle exhaust escapes
 along open field lines and can be decelerated to recover kinetic energy
-as electricity.  Inductive DEC (Helion-type pulsed FRC) is captured in
+as electricity.  Inductive DEC for pulsed-FRC architectures is captured in
 CAS22.01.07 via $Q_{\text{sci}}$-derived markups on the driver bank
 (\cref{sec:cas2207}); the present subsection covers the electrostatic
 venetian-blind variant for steady-state mirrors.
@@ -1481,7 +1510,7 @@ costed under CAS22.01.06 and the expander):
     (4--5~m $\times$ 25--30~m, 1000--1500 tonnes, ASME~VIII Div~2
     at 200~bar internal) which run \$26--30~M; the VB tank holds
     only vacuum (1~atm external collapse load), so it sits well
-    below that price.  ITER cryostat ($\sim\$30\text{--}40$/kg,
+    below that price.  ITER cryostat (in the range \$30--40/kg,
     nuclear-grade, double-walled) is overspec on certification.
   \item HV power conditioning (DC-AC chain): \$35--55~M, central \$45~M.
     The DEC outputs DC at multi-stage retarding potentials (30--100~kV),
@@ -1495,8 +1524,8 @@ costed under CAS22.01.06 and the expander):
     $10^6$--$10^7$~L/s pumping speed.  ITER cryopumps procurement
     \citep{iter_cryopumps} (8 torus and cryostat cryopumps, EUR 21~M
     F4E investment, manufactured by Research Instruments / Alsymex)
-    and industrial cryopump pricing (Edwards/Leybold STP-iXR class,
-    $\$200\text{--}500$k per 20,000~L/s) bracket the figure.
+    and industrial cryopump pricing\footnote{Edwards/Leybold STP-iXR class turbomolecular and cryogenic pump product datasheets, list pricing 2023.}
+    (\$200--500k per 20{,}000~L/s) bracket the figure.
   \item Heat collection panels: \$10--20~M, central \$15~M.
     Hypervapotron-cooled tungsten panels for the 30--90~MW heat
     load deposited on grids and collectors (5--15\% of charged-particle
@@ -1595,7 +1624,7 @@ twice. The correct model is one or the other:
   feedstock prices.
 \end{itemize}
 
-We choose market purchase because on-site separation is not justified
+Market purchase is adopted because on-site separation is not justified
 at fusion-scale consumption rates. A 1~GWe D-T plant consumes
 73--194~kg/yr of deuterium against a global enriched supply exceeding
 80{,}000~kg/yr from heavy-water plants. Tritium is bred on-site in the
@@ -1691,10 +1720,11 @@ The combined cycle efficiency of $\eta_{\text{th}} = 0.53$ is derived from
 NGCC performance ($>$60\%, \citealt{netl2022}), adjusted downward for fusion
 heat source temperatures (600$^\circ$C vs.\ 1500$^\circ$C gas
 turbine inlet).  The CAS23 coefficient is 19\% above Rankine due to dual
-turbomachinery sets (topping plus bottoming) and HRSG.
+turbomachinery sets (topping plus bottoming) and a heat recovery steam generator (HRSG).
 
-Cross-checks against the NREL ATB 2024 nuclear cost breakdown (3.9\% of
-total capital for energy conversion, 6.3\% for electrical equipment) confirm
+Cross-checks against the NREL ATB 2024 nuclear cost breakdown
+\citep{nrel_atb2024} (3.9\% of total capital for energy conversion,
+6.3\% for electrical equipment) confirm
 that the adopted Rankine values are conservative, appropriate for NOAK fusion plants
 using conventional, non-nuclear-grade BOP equipment.
 
@@ -1735,7 +1765,7 @@ blanket fill, no neutron multiplier, conventional coolants.
 CAS28 covers a plant-wide digital twin for operator training, predictive
 maintenance, and operational optimization.  A fixed cost of \$5M is adopted,
 independent of plant size, fuel type, or number of modules.  The estimate
-is sourced from NtTau Digital LTD (in-house assessment for the pyFECONs
+is sourced from NtTau Digital LTD (in-house assessment for the pyFECONS
 framework \citep{woodruff2026}), consistent with industrial digital twin
 deployments for large thermal plants (\$2--10M).
 
@@ -1782,7 +1812,7 @@ Three methodologies exist in the fusion costing literature:
   reduction from eliminating nuclear-grade construction requirements
   where the physics permits.
 
-\item \textbf{PyFECONS bottom-up:} A power-scaling formula
+\item \textbf{pyFECONS bottom-up:} A power-scaling formula
   calibrated from a staffing model for a 150~MWe reference plant
   \citep{woodruff2026}. This yields 5.8\% of TDC at 1~GWe, reflecting
   the labor component; non-labor indirect costs (equipment rental,
@@ -1799,7 +1829,7 @@ achieve indirect costs of 12--20\% of TDC, while troubled FOAK
 projects (US Vogtle~3\&4) exceed 35\%.
 
 \subsubsection{Adopted model.}
-We adopt a simpler aggregate model:
+A simpler aggregate model is adopted:
 
 \begin{equation}
 \label{eq:cas30}
@@ -1818,7 +1848,7 @@ The default of 20\% is chosen as:
 \item Below Schulte's 35\% (1978 fission baseline, too high for NOAK fusion),
 \item Below Miller's LSA=2 value of 23.2\% (ARIES tradition, likely
   somewhat high for NOAK),
-\item Above PyFECONS's 5.8\% (labor-only staffing model),
+\item Above pyFECONS's 5.8\% (labor-only staffing model),
 \item Consistent with efficient NOAK nuclear construction internationally
   (15--20\% of TDC).
 \end{itemize}
@@ -1854,7 +1884,7 @@ estimates CAS40 sub-accounts as:
 \item C42: \$40k relocation cost for 50\% of staff.
 \item C43: Benefits at 57--59\% of salary during the training period.
 \end{itemize}
-Applying this methodology to our fuel-specific staffing estimates
+Applying this methodology to the fuel-specific staffing estimates
 yields total pre-operational costs that scale as roughly 3.2$\times$
 annual labor-plus-benefits.
 
@@ -1881,27 +1911,23 @@ Fuel & Staff & Base (M\$) & Key drivers \\
 D-T          & 117 & 39 & Tritium systems training, HP dept, radwaste, remote handling \\
 D-D          &  94 & 31 & Reduced neutron/tritium scope \\
 D-${}^3$He   &  69 & 23 & Light HP program, minor tritium \\
-p-${}^{11}$B &  59 & 20 & Near-industrial, RSO only \\
+p-${}^{11}$B &  59 & 20 & Near-industrial, radiation safety officer (RSO) only \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \subsubsection{Power-law scaling.}
-Staffing does not scale linearly with plant capacity. The INL SFR
-data \citep{prosser2024} shows 236~staff at 165~MWe rising to
-1{,}040~staff at 3{,}108~MWe, a power-law exponent of
-$\alpha \approx 0.5$, reflecting the large fixed component in
-administration, technical, and offsite divisions. This same exponent
-applies to CAS70 (annual O\&M), since both accounts are driven by
-total staff count.
+The exponent of 0.5 is derived from S-PRISM/INL staffing data in
+\cref{sec:cas70}. Both accounts are driven by total staff count and
+share the same exponent.
 
 \subsubsection{Comparison with prior methods.}
-PyFECONS uses the same LSA factor (\texttt{fac\_91}) for both CAS32
+pyFECONS uses the same LSA factor (\texttt{fac\_91}) for both CAS32
 (construction supervision) and CAS40 (owner's costs), fundamentally
 different scopes. This artifact of the old ARIES Account~91 mapping
 produces CAS40 $\approx$ 11--15\% of TDC, implicitly assuming
-fission-level staffing (500 per GWe). Our staffing-based
-approach yields 1--2\% of TDC for fusion, correctly reflecting the
+fission-level staffing (500 per GWe). The staffing-based
+approach adopted here yields 1--2\% of TDC for fusion, correctly reflecting the
 4--8$\times$ reduction in headcount under Part~30 regulation.
 
 
@@ -1911,7 +1937,7 @@ approach yields 1--2\% of TDC for fusion, correctly reflecting the
 
 CAS50 covers capitalized items beyond direct construction, indirect
 services, and owner's costs that must be incurred before commercial
-operation. We decompose CAS50 into six sub-accounts, three of which
+operation. CAS50 is decomposed into six sub-accounts, three of which
 are fuel-dependent:
 
 \begin{equation}
@@ -1965,7 +1991,7 @@ materials decay to clearance levels within 50--100~years
 \citep{iaea_fusion_decom2020}, and Part~30 decommissioning requirements
 are far lighter.
 
-We estimate total decommissioning cost by starting from the fission
+Total decommissioning cost is estimated by starting from the fission
 reference and removing inapplicable cost drivers (spent fuel
 \$300/kWe, actinide waste \$200/kWe, Part~50 overhead
 \$100/kWe, armed security \$100/kWe), then adding
@@ -1994,14 +2020,10 @@ C56 decom.\ provision (M\$) & 127 & 93 & 65 & 53 \\
 \end{table}
 
 \subsubsection{Comparison with prior methods.}
-The previous implementation used flat placeholder values
-(\$1M shipping, \$0.5M insurance, \$5M decommissioning) with no
-source documentation, producing CAS50 $\approx$ \$18M, roughly
-20$\times$ too low. The Woodruff MIF example reports CAS50 at 10\% of
-total capital \citep{woodruff2026}; our D-T estimate of 8\% is
-consistent with this, while our p-${}^{11}$B estimate of 5\%
-correctly reflects reduced spare parts, negligible fuel cost, and
-lighter decommissioning obligations.
+The D-T CAS50 estimate of 8\% of total capital is consistent with the
+Woodruff MIF example at 10\% \citep{woodruff2026}; the p-${}^{11}$B
+estimate of 5\% reflects reduced spare parts, negligible fuel cost,
+and lighter decommissioning.
 
 
 %% ------------------------------------------------------------
@@ -2012,18 +2034,9 @@ Interest during construction (IDC) represents the cost of financing
 the plant during the construction period, as introduced in
 \cref{sec:capex-annual}.
 
-\subsubsection{Derivation.}
-Assuming the total overnight cost $C$ is spent uniformly over $T_c$ years
-with end-of-year disbursements at annual interest rate $i$, the future
-value at commercial operation date is:
-
-\begin{equation}
-\text{FV} = \frac{C}{T_c} \sum_{k=0}^{T_c-1} (1+i)^k
-           = \frac{C}{T_c} \cdot \frac{(1+i)^{T_c} - 1}{i}
-\end{equation}
-
-\noindent The IDC is the excess above the overnight cost:
-
+\subsubsection{Formula.}
+The uniform-spending IDC formula is derived in \cref{sec:capex-annual}
+(\cref{eq:idc-lcoe}); CAS60 reuses it directly:
 \begin{equation}
 \label{eq:idc}
 \text{IDC} = C \left[ \frac{(1+i)^{T_c} - 1}{i\,T_c} - 1 \right]
@@ -2053,7 +2066,7 @@ exist:
   \end{equation}
 \end{itemize}
 
-\noindent We adopt Option~A because it makes IDC visible as a separate
+\noindent Option~A is adopted because it makes IDC visible as a separate
 line item, uses the more realistic uniform-spending assumption (versus
 lump-sum in Option~B), and is consistent with EMWG/ARIES cost reporting
 conventions \citep{emwg2007}.
@@ -2096,9 +2109,13 @@ planning zones, and nuclear QA programs that drive fission plant
 staffing. However, fuels with higher neutron production require
 radiation protection programs, radwaste management, and
 radiation-controlled maintenance, costs that scale roughly with
-neutron flux. The resulting fuel-dependent coefficients are:
+neutron flux. The resulting fuel-dependent coefficients are listed
+in \cref{tab:cas71-staffing}.
 
-\begin{center}
+\begin{table}[htbp]
+\caption{CAS71 staffing-based O\&M coefficients by fuel cycle (1~GWe reference, 2023~USD).}
+\label{tab:cas71-staffing}
+\centering
 \begin{tabular}{lrrrl}
 \toprule
 Fuel & Staff & O\&M (M\$/yr) & O\&M (k\$/MW/yr) & Key drivers \\
@@ -2109,7 +2126,7 @@ D-${}^3$He &  69 & 26.0 & 26 & 5\% neutron fraction, minimal tritium \\
 p-${}^{11}$B &  59 & 23.6 & 24 & Aneutronic, no tritium, RSO only \\
 \bottomrule
 \end{tabular}
-\end{center}
+\end{table}
 
 \noindent All values are at a 1~GWe reference in 2023~USD. For
 comparison, S-PRISM fission O\&M is \$50k/MW/yr and modern gas CCGT
@@ -2133,15 +2150,9 @@ offsite divisions. The same exponent is used for CAS40
 (\cref{sec:cas40}), which shares the same staffing basis.
 
 \subsubsection{Levelization.}
-Both sub-accounts are levelized using the growing-annuity procedure
-described in \cref{sec:lac}, which accounts for nominal cost escalation
-over the full plant lifetime. A simpler approach that inflates costs
-to first-year-of-operation dollars but neglects the continued
-escalation over the remaining operating life would underestimate
-levelized O\&M and fuel costs by approximately
-\pgfmathprintnumber[precision=0]{\refUnderestimate}\% at reference
-conditions ($g = \refG$,
-$n = \pgfmathprintnumber[precision=0]{\refN}$~yr).
+Both sub-accounts are levelized using the procedure of \cref{sec:lac};
+neglecting the growing annuity would underestimate by the percentage
+given there.
 
 
 %% ------------------------------------------------------------
@@ -2154,12 +2165,12 @@ energy per reaction, and the unit cost of fuel isotopes:
 
 \begin{equation}
 \label{eq:cas80-base}
-A_{\text{fuel}} = N_{\text{mod}} \cdot P_{\text{fus}} \cdot
+A_{\text{fuel}} = N_{\text{mod}} \cdot P_{\text{fus}}\,[\text{W}] \cdot
   \frac{8760 \times 3600 \cdot f_{\text{avail}} \cdot c_{\text{rxn}}}
        {Q_{\text{eff}} \cdot e_{\text{MeV}}}
 \end{equation}
 
-\noindent where $c_{\text{rxn}}$ is the cost per fusion reaction
+\noindent where $P_{\text{fus}}$ is in watts, $c_{\text{rxn}}$ is the cost per fusion reaction
 (summing the unit costs of the consumed isotopes weighted by their
 per-reaction masses), $Q_{\text{eff}}$ is the effective energy per
 reaction in MeV (fuel-dependent; see \cref{tab:fusion-reactions}), and
@@ -2231,6 +2242,40 @@ modeled. The framework thus equates CAS90 with CAS93 (cost of money).
 
 
 %% ============================================================
+\section{Conclusion}
+\label{sec:conclusion}
+
+A parsimonious differentiable framework for estimating the levelized
+cost of electricity from fusion power plants has been described.
+The framework spans the four candidate fuel cycles and the principal
+confinement families through a common power-balance and cost-account
+backbone, with each account justified independently from procurement
+and benchmark data rather than from heritage scaling factors alone.
+The use of JAX as the computational backend exposes exact gradients
+and supports vectorised sensitivity sweeps, making LCOE-driven design
+exploration tractable.
+
+Several limitations remain. Only a single confinement-specific physics
+layer (the 0D tokamak model of \cref{sec:tokamak-model}) is implemented;
+analogous models for stellarators, mirrors, FRCs, and inertial systems
+are planned but not yet exercised in this paper. Cross-validation of
+LCOE outputs against ARIES and pyFECONS reference cases is in progress.
+Gradient-enabled use cases (sensitivity tornados, target-driven inverse
+design, autodiff-versus-finite-difference comparisons) are supported by
+the framework but are not demonstrated in the present text.
+
+\section{Code Availability}
+\label{sec:code-availability}
+
+The \textsc{1costingfe} source code, example scripts, and per-account
+documentation are released at
+\url{https://github.com/1cfe/1costingfe}. The framework targets
+Python~3.11 or later and depends on JAX. Reproduction of the figures
+and account-level cost tables in this paper requires only the
+example scripts shipped in the \texttt{examples/} directory.
+
+
+%% ============================================================
 
 \appendix
 
@@ -2239,7 +2284,7 @@ modeled. The framework thus equates CAS90 with CAS93 (cost of money).
 
 The power balance of the physics module accepts fusion power
 $P_{\text{fus}}$ as an input. To derive $P_{\text{fus}}$ from machine
-geometry and plasma parameters for a tokamak, we implement a
+geometry and plasma parameters for a tokamak, the framework implements a
 zero-dimensional (0D) equilibrium model that chains standard scaling
 laws. The model is fully JAX-differentiable, enabling gradient-based
 sensitivity analysis of LCOE with respect to machine-level design
@@ -2301,7 +2346,7 @@ P_{\text{fus}} = \tfrac{1}{4}\,n_e^2\,
   \quad [\text{W}]
 \end{equation}
 
-\noindent where $E_{\text{fus}} = 17.58$~MeV per D-T reaction.
+\noindent where $E_{\text{fus}} = 17.6$~MeV per D-T reaction.
 This $P_{\text{fus}}$ feeds directly into the fuel-cycle-dependent
 power split (\cref{tab:fusion-reactions}) and the power balance
 of \cref{eq:p-thermal}--\cref{eq:p-net}.
