@@ -97,38 +97,38 @@ Different fuel choices result in different floors.
 | Fuel | Buildings (1 GWe) | BOP floor (excl. fuel) | Staffing |
 | --- | --- | --- | --- |
 | D-T | $570M | $29/MWh | 78 FTE |
-| D-He3 | $388M | $19/MWh | 39 FTE |
-| p-B11 | $354M | $18/MWh | 36 FTE |
+| D-He3 | $388M | $18/MWh | 39 FTE |
+| p-B11 | $354M | $17/MWh | 36 FTE |
 
-Deuterium-helium-3 (D-He3) produces about 6% of its energy as neutrons from D-D side reactions, far less than D-T, but not zero. The buildings require some radiation shielding and modest tritium monitoring, bringing them to $388M. The BOP floor drops to $19/MWh. However, D-He3 carries a separate problem: helium-3 fuel at an optimistic $2M/kg (used in this analysis) contributes $74/MWh to the levelized electricity cost. The [DOE-allocated price](https://www.everycrsreport.com/reports/R41419.html) is roughly $4.5M/kg (Congressional Research Service, 2010), which would more than double this. The BOP is competitive but the cost of fuel  is challenging. Unlike tritium, which can be bred in a lithium blanket surrounding the same reactor that consumes it, helium-3 breeding would likely require a separate D-D fusion source: a working fusion reactor to fuel the primary fusion reactor.
+Deuterium-helium-3 (D-He3) produces about 6% of its energy as neutrons from D-D side reactions, far less than D-T, but not zero. The buildings require some radiation shielding and modest tritium monitoring, bringing them to $388M. The BOP floor drops to $18/MWh. However, D-He3 carries a separate problem: helium-3 fuel at an optimistic $2M/kg (used in this analysis) contributes $74/MWh to the levelized electricity cost. The [DOE-allocated price](https://www.everycrsreport.com/reports/R41419.html) is roughly $4.5M/kg (Congressional Research Service, 2010), which would more than double this. The BOP is competitive but the cost of fuel  is challenging. Unlike tritium, which can be bred in a lithium blanket surrounding the same reactor that consumes it, helium-3 breeding would likely require a separate D-D fusion source: a working fusion reactor to fuel the primary fusion reactor.
 
-Proton-boron (p-B11) fuel is aneutronic: 99.8% of its fusion energy comes out as charged alpha particles, not neutrons. It uses no tritium and does not activate structural components. The buildings can be built to conventional industrial standards: no shielding, no hot cells, no tritium containment infrastructure. The result is a BOP floor of **$18/MWh**, roughly half the D-T floor. Staffing requirements are similarly favorable: a p-B11 plant needs roughly the same staff as a conventional thermal plant plus fusion-specific roles (magnet technicians, vacuum systems, plasma control), but none of the radiation-specific roles that dominate D-T. No health physics, no tritium processing, no radwaste, and no hot cell operators.
+Proton-boron (p-B11) fuel is aneutronic: 99.8% of its fusion energy comes out as charged alpha particles, not neutrons. It uses no tritium and does not activate structural components. The buildings can be built to conventional industrial standards: no shielding, no hot cells, no tritium containment infrastructure. The result is a BOP floor of **$17/MWh**, well below half the D-T floor. Staffing requirements are similarly favorable: a p-B11 plant needs roughly the same staff as a conventional thermal plant plus fusion-specific roles (magnet technicians, vacuum systems, plasma control), but none of the radiation-specific roles that dominate D-T. No health physics, no tritium processing, no radwaste, and no hot cell operators.
 
 The $220M building cost gap between D-T and p-B11 is larger than most fusion core cost-reduction scenarios in the literature. This gap is not a reflection of the plasma physics difficulty. It is the implication of what handling neutrons and tritium does to the cost of the building you put the plant in. The fuel choice establishes the floor before the fusion core enters the picture.
 
-With zero He-3 fuel cost (self-bred), a D-He3 plant without a core is slightly more expensive than p-B11 ($18.5/MWh vs $17.8/MWh) due to the modest shielding required for D-D side reaction neutrons.
+With zero He-3 fuel cost (self-bred), a D-He3 plant without a core is slightly more expensive than p-B11 ($17.7/MWh vs $17.1/MWh) due to the modest shielding required for D-D side reaction neutrons.
 
 ## Lowering the p-B11 Floor
 
-The p-B11 baseline floor is $18/MWh, still 1.8x the target, but closer than D-T. Applying the same parameters:
+The p-B11 baseline floor is $17/MWh, still 1.7x the target, but closer than D-T. Applying the same parameters:
 
 | Scenario (p-B11) | Floor ($/MWh) | Overnight ($/kW) | Budget left for core |
 | --- | --- | --- | --- |
-| Baseline: 1 GWe, 85%, 7% WACC, 30yr, 6yr build | 18 | 1,193 | -$8/MWh |
-| 2 GWe, 85%, 7%, 30yr, 6yr | 15 | 1,033 | -$5/MWh |
-| 2 GWe, 95%, 3%, 50yr, 3yr build | 7.6 | 826 | +$2.4/MWh |
-| 3 GWe, 95%, 3%, 50yr, 3yr | 6.7 | 783 | +$3.3/MWh |
-| 5 GWe, 95%, 2%, 50yr, 3yr | 5.3 | 740 | +$4.7/MWh |
+| Baseline: 1 GWe, 85%, 7% WACC, 30yr, 6yr build | 17 | 1,186 | -$7/MWh |
+| 2 GWe, 85%, 7%, 30yr, 6yr | 14 | 1,026 | -$4/MWh |
+| 2 GWe, 95%, 3%, 50yr, 3yr build | 7.1 | 821 | +$2.9/MWh |
+| 3 GWe, 95%, 3%, 50yr, 3yr | 6.3 | 777 | +$3.7/MWh |
+| 5 GWe, 95%, 2%, 50yr, 3yr | 5.0 | 735 | +$5.0/MWh |
 
-At 2 GWe with 95% availability, 3% WACC, 3-year construction, and 50-year life, the p-B11 floor drops to $8/MWh (below the target), leaving $2.4/MWh for the fusion core. Compare this to D-T at the same conditions: $14/MWh floor at full staffing, or $10/MWh with staffing halved, leaving no budget for the core either way.
+At 2 GWe with 95% availability, 3% WACC, 3-year construction, and 50-year life, the p-B11 floor drops to $7/MWh (below the target), leaving $2.9/MWh for the fusion core. Compare this to D-T at the same conditions: $14/MWh floor at full staffing, or $10/MWh with staffing halved, leaving no budget for the core either way.
 
 Is 3-year construction realistic for the BOP? Modern gas combined-cycle plants of comparable scale are built in 2-3 years. The BOP of a fusion plant is similar in scope and complexity. In the scenario we are solving for, we do not construct the fusion core, only the turbine halls, cooling systems, switchgears, and buildings. A 3% WACC is not realistic for an unsubsidized first-of-a-kind plant; commercial project finance for new energy technologies typically runs 7-10%. But government-backed financing (DOE Loan Programs Office, export credit agencies) routinely achieves 2-4% for qualifying infrastructure. The Vogtle nuclear expansion, for example, received an $8.3B DOE loan guarantee. Reaching 3% WACC assumes the plant is financed as infrastructure.
 
-At the 2 GWe aggressive conditions, the remaining budget for the fusion core is $2.4/MWh, roughly $920/kW of overnight capital for magnets, heating, vacuum vessel, structure, power supplies, and installation. For reference, the entire overnight cost of a natural gas combined-cycle plant is $900-1,200/kW. The fusion core has to fit within that budget while being none of those things (mature, mass-produced, or built at scale) yet.
+At the 2 GWe aggressive conditions, the remaining budget for the fusion core is $2.9/MWh, roughly $1,145/kW of overnight capital for magnets, heating, vacuum vessel, structure, power supplies, and installation. For reference, the entire overnight cost of a natural gas combined-cycle plant is $900-1,200/kW. The fusion core has to fit within that budget while being none of those things (mature, mass-produced, or built at scale) yet.
 
-O&M staffing accounts for $3.7/MWh of the $7.6/MWh p-B11 floor, about half. But unlike D-T, p-B11 is already below the 1-cent target at full staffing. No automation is required to reach $10/MWh. Because p-B11 has no radiation-specific roles, the staffing automation argument is much stronger here, and the gains go directly to widening the core budget. The remaining functions (grid dispatch, routine maintenance, unplanned fault response) are the same as any conventional thermal plant. Highly automated operation could bring staffing from 30 to 15 employees, dropping the floor from $7.6 to $5.8/MWh.
+O&M staffing accounts for $3.2/MWh of the $7.1/MWh p-B11 floor, about half. But unlike D-T, p-B11 is already below the 1-cent target at full staffing. No automation is required to reach $10/MWh. Because p-B11 has no radiation-specific roles, the staffing automation argument is much stronger here, and the gains go directly to widening the core budget. The remaining functions (grid dispatch, routine maintenance, unplanned fault response) are the same as any conventional thermal plant. Highly automated operation could bring staffing from 30 to 15 employees, dropping the floor from $7.1 to $5.5/MWh.
 
-Radical staffing reduction also reduces the building costs. A 15-FTE plant still needs a control room, canteen, locker rooms, parking. A near-zero-FTE plant looks more like a data center: remote monitoring, automated systems, minimal human-occupied space. That could strip $50-100M from the $354M building cost, flowing directly into overnight capital and LCOE. Together, near-zero staffing and the associated building scope reduction would drop the floor from $7.6/MWh to roughly $4.3/MWh, leaving $5.7/MWh of budget for the fusion core. At the limit, automation does not just reduce O&M; it removes building scope.
+Radical staffing reduction also reduces the building costs. A 15-FTE plant still needs a control room, canteen, locker rooms, parking. A near-zero-FTE plant looks more like a data center: remote monitoring, automated systems, minimal human-occupied space. That could strip $50-100M from the $354M building cost, flowing directly into overnight capital and LCOE. Together, near-zero staffing and the associated building scope reduction would drop the floor from $7.1/MWh to roughly $4.2/MWh, leaving $5.8/MWh of budget for the fusion core. At the limit, automation does not just reduce O&M; it removes building scope.
 
 ![Levelized cost of electricity for different power plants with a free fusion core and fuel. The scenarios are: 1 GWe baseline - 1 GWe, 85% availability, 7% WACC, 30yr lifetime, 6yr build; 2 GWe aggressive - 2 GWe, 95%, 3%, 50yr, 3yr; and 3 GWe aggressive - 3 GWe, 95%, 3%, 50yr, 3yr.](lower_bound_floor_chart.png)
 
@@ -148,7 +148,7 @@ Direct energy conversion is less mature than thermal conversion, and its cost un
 
 **1. D-T floor can reach $10/MWh, but the margin is razor-thin.** At 5 GWe with the most aggressive financial conditions, D-T crosses $10/MWh with current staffing, but leaves no budget for the core. At 2 GWe, it requires cutting staffing to about half of current levels. The buildings ($570M), radiation-specific staffing, and the procedures required to handle neutrons and tritium eat most of the budget. D-T can reach the target, but only at extreme scale with favorable financing, and with negligible budget for the fusion core.
 
-**2. Fuel choice is a BOP decision, not just a core decision.** The $220M building cost gap between D-T ($570M) and p-B11 ($354M) is larger than most fusion core cost-reduction scenarios. Aneutronic fuel downgrades the buildings from enhanced-industrial to industrial, and removes tritium infrastructure entirely. These savings compound through indirect costs and financing. The D-T floor ($29/MWh) is roughly 60% higher than the p-B11 floor ($18/MWh). The D-He3 floor falls in between on BOP ($19/MWh) but is burdened by helium-3 fuel costs.
+**2. Fuel choice is a BOP decision, not just a core decision.** The $220M building cost gap between D-T ($570M) and p-B11 ($354M) is larger than most fusion core cost-reduction scenarios. Aneutronic fuel downgrades the buildings from enhanced-industrial to industrial, and removes tritium infrastructure entirely. These savings compound through indirect costs and financing. The D-T floor ($29/MWh) is roughly 70% higher than the p-B11 floor ($17/MWh). The D-He3 floor falls in between on BOP ($18/MWh) but is burdened by helium-3 fuel costs.
 
 **3. No single parameter reaches** $10/MWh**.** At standard financial conditions, even the p-B11 LCOE floor is 1.8x the target with a free fusion core. Reaching $10/MWh requires at least four favorable conditions simultaneously: scale (2+ GWe), high availability (95%+), low-cost financing (3% WACC or below), and fast construction (3 years or less). Each of these is individually achievable. Together they represent a systems integration challenge as much as an engineering one.
 
@@ -160,7 +160,7 @@ Direct energy conversion is less mature than thermal conversion, and its cost un
 
 The lower bound is a useful limit case. No fusion core will be free. But the exercise reveals where the constraints on ultra-low-cost fusion power lie: not in the fusion core, but in the industrial cost structure around it.
 
-A p-B11 fusion plant at 2 GWe scale, with 95% availability, 3% cost of capital, 3-year construction, and 50-year life, has a balance-of-plant floor of $7.6/MWh and a fusion core budget of $920/kW. That budget is extremely tight, and it grows with scale.
+A p-B11 fusion plant at 2 GWe scale, with 95% availability, 3% cost of capital, 3-year construction, and 50-year life, has a balance-of-plant floor of $7.1/MWh and a fusion core budget of $1,145/kW. That budget is extremely tight, and it grows with scale.
 
 Reaching $10/MWh fusion energy is a whole-plant problem. It requires large plants, high availability, fast construction, low-cost financing, long plant life, and a fuel that does not burden the balance of plant with radioactivity safety requirements. Every component of this path (industrial buildings, large turbines, high-availability operations, government-backed financing, long-lived civil structures) has existence proofs in other industries and at the required scale.
 

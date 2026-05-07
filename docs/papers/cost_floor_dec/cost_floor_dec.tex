@@ -57,13 +57,13 @@ governed primarily by fuel choice rather than by plant design. A
 deuterium-tritium plant exhibits a baseline floor of \$29/MWh at
 1\,GWe, falling to \$9.6/MWh only at 5\,GWe under aggressive
 financial and operational assumptions; a proton-boron-11 plant
-attains \$18/MWh at baseline and \$5.3/MWh at the same aggressive
-limit, leaving meaningful budget for the costed core. Two
+attains \$17/MWh at baseline and \$5.0/MWh at the same aggressive
+limit, leaving meaningful budget for the fusion core itself. Two
 charged-particle direct energy conversion (DEC) architectures are
 then evaluated against thermal-cycle baselines: a venetian-blind
 collector applicable to linear devices and an inductive recovery
 scheme applicable to compressed plasmoids. For p-B11, bremsstrahlung
-carries 83\% of the fusion power and constrains DEC to capturing only
+carries 83\% or more of the fusion power and constrains DEC to capturing only
 the charged-particle margin, producing no measurable reduction in the
 balance-of-plant floor. For D-He3, an inductive scheme reduces the
 required fusion power and the helium-3 burn rate but substitutes a
@@ -78,22 +78,24 @@ energy conversion \and aneutronic fusion}
 \section{Introduction}
 \label{sec:intro}
 
-Published estimates for the levelized cost of electricity (LCOE)
-from commercial fusion power plants span more than an order of
-magnitude. Optimistic n-th-of-a-kind advanced tokamaks have been
+Published cost estimates for commercial fusion power plants vary
+widely. A recent compilation of first-of-a-kind capital expenditure
+projections spans more than an order of magnitude, from \$1{,}400
+to \$43{,}000 per kilowatt installed \citep{Tang2026}. Levelized
+cost of electricity (LCOE) projections vary by roughly a factor of
+three: optimistic n-th-of-a-kind advanced tokamaks have been
 projected at \$47/MWh \citep{Najmabadi2006}; first-generation
-EU-DEMO scenarios reach \$160/MWh and above \citep{Entler2018}; most
-serious estimates fall between \$50 and \$130/MWh
-\citep{SheffieldMilora2016, Lindley2023}. A recent compilation of
-first-of-a-kind capital expenditure estimates reports an
-approximately thirty-fold spread, from \$1{,}400 to \$43{,}000 per
-kilowatt installed \citep{Tang2026}. The variability reflects genuine
+EU-DEMO scenarios reach \$160/MWh and above \citep{Entler2018};
+most serious estimates fall between \$50 and \$130/MWh
+\citep{SheffieldMilora2016, Lindley2023}. The variability reflects genuine
 disagreement about the cost of the fusion core (magnets, blanket,
 heating systems, vacuum vessel, structure), which has no current
 deployed analog at utility scale.
 
-This paper examines the cost target of one cent per kilowatt-hour
-(\$10/MWh) by separating the question into two components.
+This paper examines minimum cost of electricity from a fusion power plant, 
+working with the thesis that an electricisy cost of one cent per 
+kilowatt-hour (\$10/MWh) is revolutionary, and would more than justify the
+investment in fusion development. The analysis proceeds in two parts.
 Section~\ref{sec:floor} characterizes the cost floor that remains
 when the fusion core is assumed to cost nothing, isolating the
 contribution of buildings, balance-of-plant equipment, indirect
@@ -288,7 +290,7 @@ Different fuel choices yield different floors
 approximately 6\% of its primary-reaction energy as neutrons via
 D-D side reactions, requiring some shielding and modest tritium
 monitoring; buildings amount to \$388M and the BOP-only floor at
-1\,GWe is \$19/MWh. The D-He3 plant carries a separate burden:
+1\,GWe is \$18/MWh. The D-He3 plant carries a separate burden:
 at an optimistic helium-3 price of \$2M/kg, fuel contributes
 \$74/MWh to LCOE \citep{Shea2010}; the DOE-allocated price of
 approximately \$4.5M/kg doubles this. Helium-3 is not
@@ -298,7 +300,7 @@ a separate D-D fusion source.
 Proton-boron-11 (p-B11) is aneutronic: 99.8\% of the
 primary-reaction energy emerges as charged alpha particles.
 Buildings are constructed to conventional industrial standards,
-yielding \$354M at 1\,GWe and a BOP-only floor of \$18/MWh.
+yielding \$354M at 1\,GWe and a BOP-only floor of \$17/MWh.
 Staffing requirements correspond to those of a conventional thermal
 plant supplemented by fusion-specific roles (magnet technicians,
 vacuum systems, plasma control), without radiation-specific
@@ -314,8 +316,8 @@ function of fuel cycle at 1\,GWe with a free fusion core.}
 Fuel & Buildings (1\,GWe) & BOP floor & Staffing \\
 \midrule
 D-T & \$570M & \$29/MWh & 78 FTE \\
-D-He3 & \$388M & \$19/MWh & 39 FTE \\
-p-B11 & \$354M & \$18/MWh & 36 FTE \\
+D-He3 & \$388M & \$18/MWh & 39 FTE \\
+p-B11 & \$354M & \$17/MWh & 36 FTE \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -328,13 +330,13 @@ The fuel choice establishes the floor before the fusion core enters
 the calculation.
 
 For p-B11 under the aggressive scenario, the floor falls to
-\$7.6/MWh, leaving \$2.4/MWh for the fusion core (approximately
-\$920/kW of overnight capital). This figure is comparable to the
-overnight cost of a natural gas combined-cycle plant
+\$7.1/MWh, leaving \$2.9/MWh for the fusion core (approximately
+\$1{,}145/kW of overnight capital). This figure sits squarely
+inside the overnight cost of a natural gas combined-cycle plant
 (\$900--1{,}200/kW), with the difference that the fusion core
 lacks the deployment scale and manufacturing maturity of
 combined-cycle hardware. At 5\,GWe, 2\% WACC, 50-year life, and
-3-year construction, the p-B11 floor falls to \$5.3/MWh.
+3-year construction, the p-B11 floor falls to \$5.0/MWh.
 
 Floor LCOE values across fuel cycles and scenario levels are
 summarized in Figure~\ref{fig:lower-bound}.
@@ -368,9 +370,9 @@ For p-B11, where no radiation-specific roles exist, automation
 extends to a data-center-like operating model that strips both
 staffing and the buildings supporting human occupancy. Together,
 near-zero staffing and the associated building scope reduction
-lower the 2\,GWe aggressive p-B11 floor from \$7.6/MWh to
-approximately \$4.3/MWh, widening the available budget for the
-costed core to \$5.7/MWh.
+lower the 2\,GWe aggressive p-B11 floor from \$7.1/MWh to
+approximately \$4.2/MWh, widening the available budget for the
+costed core to \$5.8/MWh.
 
 \subsection{Floor Findings}
 \label{sec:floor-findings}
@@ -576,9 +578,9 @@ core.}
 \toprule
 Configuration & Floor (\$/MWh) & Overnight (\$/kW) \\
 \midrule
-Thermal only (sCO\textsubscript{2} Brayton, 47\%) & 18 & 1{,}221 \\
-VB DEC at 48\% + thermal (hybrid) & 19 & 1{,}253 \\
-VB DEC at 60\% + thermal (hybrid) & 19 & 1{,}246 \\
+Thermal only (sCO\textsubscript{2} Brayton, 47\%) & 17 & 1{,}221 \\
+VB DEC at 48\% + thermal (hybrid) & 18 & 1{,}253 \\
+VB DEC at 60\% + thermal (hybrid) & 18 & 1{,}246 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -588,7 +590,7 @@ With 83\% of fusion energy in bremsstrahlung, the DEC captures 90\%
 of the 17\% charged-particle margin. At the demonstrated 48\%
 efficiency the DEC hardware adds cost without meaningful improvement
 in conversion. Even at 60\% (never demonstrated on real plasma),
-the hybrid floor is \$19/MWh, \$1/MWh above thermal-only, with
+the hybrid floor is \$18/MWh, \$1/MWh above thermal-only, with
 \$25--30/kW additional overnight capital. Eliminating
 the turbine entirely and rejecting the bremsstrahlung is not viable
 for p-B11: a non-thermal plant requires roughly 11\,GW of fusion
@@ -660,7 +662,7 @@ core. Helium-3 fuel cost assumed \$2M/kg.}
 Configuration & BOP floor (\$/MWh) & He-3 fuel (\$/MWh) & Total
 (\$/MWh) \\
 \midrule
-Thermal only (sCO\textsubscript{2} Brayton, 47\%) & 19 & 74 & 93 \\
+Thermal only (sCO\textsubscript{2} Brayton, 47\%) & 18 & 74 & 92 \\
 Pulsed inductive (85\% $\eta$, no turbine) & 24 & 36 & 59 \\
 \bottomrule
 \end{tabular}
@@ -670,7 +672,7 @@ The BOP floor is \$6/MWh higher than the thermal baseline
 (Table~\ref{tab:pulsed}). The turbine island is not the dominant
 cost in the thermal plant; buildings (\$354M), the electrical
 plant (\$96M), the operations and maintenance budget
-(\$37M per year), and financing charges together exceed it.
+(\$31M per year), and financing charges together exceed it.
 Eliminating the turbine and synchronous generator removes
 \$186M of overnight capital, but the \$593M
 pulsed-power chain that replaces it more than offsets the savings.
@@ -728,10 +730,10 @@ the pulsed-power chain is more expensive than the turbine.
 \toprule
 Approach & p-B11 & D-He3 (\$2M/kg) & D-He3 (self-bred) \\
 \midrule
-Thermal only (sCO\textsubscript{2}, 47\%) & 7.6 & 82\footnote{Aggressive
+Thermal only (sCO\textsubscript{2}, 47\%) & 7.1 & 82\footnote{Aggressive
 financing reduces the BOP-floor contribution; the helium-3 fuel
 cost at \$2M/kg is independent of plant financing.} & 8 \\
-VB DEC 60\% + thermal (hybrid) & 7.9 & 82 & 9 \\
+VB DEC 60\% + thermal (hybrid) & 7.3 & 82 & 9 \\
 Pulsed inductive (85\%, no turbine) & n/a & 55 & 14 \\
 \bottomrule
 \end{tabular}
@@ -753,9 +755,9 @@ capital; and for expensive fuels, the lower fusion power also
 reduces the fuel bill. The two fuel cycles respond differently.
 
 For D-He3 at 1\,GWe baseline, the venetian-blind hybrid lowers
-LCOE from \$114/MWh to \$104/MWh, with a modest \$23M
+LCOE from \$119/MWh to \$109/MWh, with a modest \$22M
 increase in core cost partially offset by reduced heating-system
-capacity. The pulsed inductive scheme lowers LCOE to \$76/MWh,
+capacity. The pulsed inductive scheme lowers LCOE to \$81/MWh,
 with the savings driven primarily by fuel rather than by hardware:
 higher conversion efficiency, the deuterium-rich operating mix, and
 inter-shot helium-3 recovery together reduce external helium-3
@@ -766,9 +768,9 @@ For p-B11 (negligible fuel cost), the second channel disappears
 and only the core-shrinkage channel remains. Because bremsstrahlung
 dominates the energy split, even an efficient DEC captures only the
 17\% charged-particle margin and does not meaningfully reduce the
-required fusion power. Thermal LCOE is \$37/MWh; the
-venetian-blind DEC at 60\% yields \$37/MWh as well, with core
-costs of \$1{,}202M and \$1{,}234M respectively. The DEC overlay
+required fusion power. Thermal LCOE is \$42/MWh; the
+venetian-blind DEC at 60\% yields \$42/MWh as well, with core
+costs of \$1{,}553M and \$1{,}585M respectively. The DEC overlay
 neither lowers the floor nor shrinks the core enough to pay for
 itself.
 

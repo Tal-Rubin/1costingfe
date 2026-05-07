@@ -299,11 +299,14 @@ def test_cas220103_stellarator_higher_than_tokamak():
     assert stell["C220103"] > tok["C220103"]
 
 
-def test_cas220103_mirror_cheaper_than_tokamak():
-    """Mirror: lower markup -> cheaper."""
+def test_cas220103_mirror_comparable_to_tokamak():
+    """Mirror: lower markup (2.5x vs 8x) is offset by n_coils=10 worth of
+    independent solenoids in a HAMMIR-class tandem layout, so coil cost lands
+    within ~20% of tokamak rather than dramatically below it. The mirror's
+    overall cost advantage comes from BOP/blanket simplicity, not C220103."""
     tok = _make_cas22_coil(concept=ConfinementConcept.TOKAMAK)
     mir = _make_cas22_coil(concept=ConfinementConcept.MIRROR)
-    assert mir["C220103"] < tok["C220103"]
+    assert 0.8 < mir["C220103"] / tok["C220103"] < 1.2
 
 
 def test_cas220103_material_affects_cost():

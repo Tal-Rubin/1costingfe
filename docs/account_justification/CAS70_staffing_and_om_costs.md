@@ -303,13 +303,43 @@ Staffing does not scale linearly with plant capacity. The INL SFR data (Sort_673
 
 INL models this as: operations and maintenance staff scale with reactor count, while administration, technical, and offsite staff are 50% fixed + 50% proportional to the O&M headcount change. Fitting a power law (staff ∝ P^α) to the endpoints (165 → 3,108 MWe) gives **α ≈ 0.5**.
 
-The cost model uses this exponent:
+The cost model uses this scaling:
 
 ```
-annual_om = om_cost(fuel) * (P_net / 1 GWe)^0.5
+annual_om = om_cost(fuel) * concept_scale(concept) * (P_net / 1 GWe)^0.5
 ```
 
-This produces the expected economy-of-scale behavior — smaller plants have higher per-MW O&M costs due to the fixed staffing component:
+`concept_scale` modulates the fuel-driven staffing baseline by
+confinement geometry. The fuel-baseline numbers above are calibrated
+to a toroidal device (tokamak/stellarator); linear/open-end geometries
+(mirror) require fewer maintenance and operations FTEs because blanket
+rings and first-wall components can be exchanged axially without
+re-establishing toroidal vacuum/structural continuity, scheduled
+outages are shorter, and the planned-maintenance crew rotation is
+smaller.
+
+| Concept | `om_concept_scale` | Rationale |
+|---------|------------------:|-----------|
+| Tokamak | 1.0 | Reference (toroidal, port-limited maintenance access). |
+| Stellarator | 1.0 | Toroidal; 3D coil geometry does not improve maintenance access. |
+| Mirror | 0.85 | Axial extraction of blanket rings and first-wall modules; smaller scheduled-maintenance crew. |
+| Other | 1.0 | No concept-specific maintenance basis claimed. |
+
+The mirror scale is set conservatively at 0.85 because health physics,
+tritium accountability, engineering staff, and security are
+fuel-driven and concept-agnostic — they are the majority of the
+fuel-baseline FTE count. The accessible savings are concentrated in
+the maintenance and hot-cell-operator categories. Capex on the same
+maintenance basis carries a steeper 0.55x discount in C220110 (see
+`CAS220110_remote_handling.md`) because a larger fraction of remote-
+handling hardware is geometry-specific (in-vessel transporters,
+divertor cassette handlers) than is staffing.
+
+This concept_scale lives in `om_concept_scale` in
+`src/costingfe/layers/costs.py`.
+
+This produces the expected economy-of-scale behavior — smaller plants
+have higher per-MW O&M costs due to the fixed staffing component:
 
 | Plant size | DT annual O&M | Effective k$/MW/yr |
 |-----------|--------------|-------------------|

@@ -723,6 +723,7 @@ class CostModel:
             p_dee=pt.p_dee,
             pulsed_conversion=self.pulsed_conversion,
             f_rep=params.get("f_rep", 0.0),
+            concept=self.concept,
         )
         c80 = cas80_fuel(
             cc,

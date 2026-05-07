@@ -29,20 +29,26 @@ from costingfe.types import (
 # Concept-dependent coil defaults (from pyFECONs cas220103_coils.py)
 # markup: manufacturing complexity multiplier over raw conductor cost
 # path_factor: extra coil path length for 3D geometries (stellarator)
+# n_coils: number of discrete coils — only used for mirror (G = n_coils * 4*pi);
+#         ignored by tokamak/stellarator branches whose G is empirical total-system
 # None → no confinement magnets (IFE drivers, magnet-free pulsed concepts)
 _COIL_DEFAULTS = {
     # MFE / electrostatic — full confinement magnets
-    ConfinementConcept.TOKAMAK: {"markup": 8.0, "path_factor": 1.0},
-    ConfinementConcept.STELLARATOR: {"markup": 12.0, "path_factor": 2.0},
-    ConfinementConcept.MIRROR: {"markup": 2.5, "path_factor": 1.0},
-    ConfinementConcept.PULSED_FRC: {"markup": 1.5, "path_factor": 1.0},
-    ConfinementConcept.THETA_PINCH: {"markup": 1.5, "path_factor": 1.0},
-    ConfinementConcept.ORBITRON: {"markup": 1.5, "path_factor": 1.0},
-    ConfinementConcept.POLYWELL: {"markup": 2.0, "path_factor": 1.0},
+    ConfinementConcept.TOKAMAK: {"markup": 8.0, "path_factor": 1.0, "n_coils": 0},
+    ConfinementConcept.STELLARATOR: {"markup": 12.0, "path_factor": 2.0, "n_coils": 0},
+    # Mirror n_coils calibrated to Realta HAMMIR-class tandem mirror:
+    # 4 end-plug HTS coils (2 per end, Hammer evolution) + ~6 LTS central-cell
+    # solenoid coils discretizing the 50 m central cell. Simple-mirror devices
+    # (WHAM/BEAM/Anvil) would use n_coils ≈ 4.
+    ConfinementConcept.MIRROR: {"markup": 2.5, "path_factor": 1.0, "n_coils": 10},
+    ConfinementConcept.PULSED_FRC: {"markup": 1.5, "path_factor": 1.0, "n_coils": 0},
+    ConfinementConcept.THETA_PINCH: {"markup": 1.5, "path_factor": 1.0, "n_coils": 0},
+    ConfinementConcept.ORBITRON: {"markup": 1.5, "path_factor": 1.0, "n_coils": 0},
+    ConfinementConcept.POLYWELL: {"markup": 2.0, "path_factor": 1.0, "n_coils": 0},
     # MIF — guide-field solenoids (simpler, smaller than full confinement)
-    ConfinementConcept.MAG_TARGET: {"markup": 1.5, "path_factor": 1.0},
-    ConfinementConcept.PLASMA_JET: {"markup": 1.5, "path_factor": 1.0},
-    ConfinementConcept.MAGLIF: {"markup": 2.0, "path_factor": 1.0},
+    ConfinementConcept.MAG_TARGET: {"markup": 1.5, "path_factor": 1.0, "n_coils": 0},
+    ConfinementConcept.PLASMA_JET: {"markup": 1.5, "path_factor": 1.0, "n_coils": 0},
+    ConfinementConcept.MAGLIF: {"markup": 2.0, "path_factor": 1.0, "n_coils": 0},
     # IFE / magnet-free pulsed — no confinement magnets
     ConfinementConcept.LASER_IFE: None,
     ConfinementConcept.ZPINCH: None,
@@ -57,17 +63,18 @@ _MU0 = 4 * math.pi * 1e-7  # Vacuum permeability (T·m/A)
 def _compute_geometry_factor(
     concept: ConfinementConcept,
     path_factor: float,
+    n_coils: int,
 ) -> float:
     """Geometry factor G for conductor quantity scaling.
 
     total_kAm = G * B * R^2 / (mu_0 * 1000)
 
     Tokamak: G = 4pi^2 — empirical total-system (TF+CS+PF) scaling.
-    Mirror:  G = 4 * 4*pi — 4 independent solenoid coils.
+    Mirror:  G = n_coils * 4*pi — sum over independent solenoid coils.
     Stellarator: G = 4*pi^2 * path_factor — 3D coil paths ~2x longer.
     """
     if concept == ConfinementConcept.MIRROR:
-        return 4 * 4 * math.pi  # n_coils=4 for mirror
+        return n_coils * 4 * math.pi
     elif concept == ConfinementConcept.STELLARATOR:
         return 4 * math.pi**2 * path_factor
     else:  # tokamak (default)
@@ -165,7 +172,8 @@ def cas22_reactor_plant_equipment(
     else:
         coil_markup = defaults["markup"]
         path_factor = defaults["path_factor"]
-        G = _compute_geometry_factor(concept, path_factor)
+        n_coils = defaults["n_coils"]
+        G = _compute_geometry_factor(concept, path_factor, n_coils)
         total_kAm = G * b_max * r_coil**2 / (_MU0 * 1000)
         conductor_cost = total_kAm * coil_material.default_cost_per_kAm / 1e6
         c220103 = conductor_cost * coil_markup

@@ -30,7 +30,7 @@ from costingfe.layers.physics import (
     Q_DT,
     Q_PB11,
 )
-from costingfe.types import Fuel, PulsedConversion
+from costingfe.types import ConfinementConcept, Fuel, PulsedConversion
 
 
 def _total_project_time(cc, construction_time, fuel, noak):
@@ -269,6 +269,7 @@ def cas70_om(
     p_dee=0.0,
     pulsed_conversion=None,
     f_rep=0.0,
+    concept=None,
 ):
     """CAS70: Annualized O&M + scheduled replacement. Returns (total, cas71, cas72).
 
@@ -277,10 +278,23 @@ def cas70_om(
            annualized via CRF). core_lifetime is in FPY, converted to calendar
            years via availability.
     """
-    # CAS71: Annual O&M — fuel-dependent staffing-based coefficient
+    # CAS71: Annual O&M — fuel-dependent staffing-based coefficient,
+    # modulated by concept-dependent maintenance ergonomics.
     # Power-law exponent 0.5: staffing economy of scale (INL SFR data).
+    # Concept scale: linear/open-end concepts (mirror) need fewer maintenance
+    # FTEs because blanket rings slide off axially and components are reachable
+    # without entering a closed torus through narrow ports. Same logic as the
+    # 0.55x scale on C220110 remote-handling capex; the opex effect is smaller
+    # because health physics, tritium accountability, and engineering staffing
+    # are fuel-driven and concept-agnostic.
     # Source: docs/account_justification/CAS70_staffing_and_om_costs.md
-    annual_om = cc.om_cost(fuel) * (p_net / 1000.0) ** 0.5  # M$
+    om_concept_scale = {
+        ConfinementConcept.TOKAMAK: 1.0,
+        ConfinementConcept.STELLARATOR: 1.0,
+        ConfinementConcept.MIRROR: 0.85,
+    }
+    om_scale = om_concept_scale.get(concept, 1.0)
+    annual_om = cc.om_cost(fuel) * om_scale * (p_net / 1000.0) ** 0.5  # M$
     t_project = _total_project_time(cc, construction_time, fuel, noak)
     cas71 = levelized_annual_cost(
         annual_om, interest_rate, inflation_rate, lifetime_yr, t_project

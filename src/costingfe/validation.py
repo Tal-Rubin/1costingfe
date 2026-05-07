@@ -19,6 +19,25 @@ from costingfe.types import (
 
 _PLASMA_0D_FIELDS = ["q95", "f_GW", "M_ion", "lambda_q", "use_0d_model"]
 
+
+def default_availability(concept: ConfinementConcept) -> float:
+    """Concept-aware availability default.
+
+    Linear/open-end geometries (mirror) achieve higher steady-state availability
+    than port-limited toroidal geometries because blanket and first-wall
+    components can be exchanged axially without re-establishing toroidal
+    vacuum/structural continuity. Same physical basis as the C220110 0.55x
+    remote-handling capex scaling and the CAS70 0.85x O&M scaling.
+
+    Tokamak/stellarator: 0.85 (pyFECONs/ARIES heritage).
+    Mirror: 0.87 (shorter scheduled outages).
+    Other concepts: 0.85 (no concept-specific basis to claim better).
+    """
+    if concept == ConfinementConcept.MIRROR:
+        return 0.87
+    return 0.85
+
+
 _VALIDATION_PHYSICS = dict(
     n_e=1.0e20,
     T_e=15.0,
@@ -57,7 +76,12 @@ class CostingInput(BaseModel):
     net_electric_mw: float = Field(gt=0)
 
     # --- Customer parameters (with defaults) ---
-    availability: float = Field(default=0.85, gt=0, le=1)
+    # availability defaults to None → resolved per-concept in default_availability().
+    # Concept-aware default reflects the planned-outage advantage of linear
+    # geometries: a mirror's blanket rings can be lifted axially without
+    # re-establishing toroidal continuity, shortening scheduled-outage duration
+    # versus port-limited toroidal access. Override by passing a value.
+    availability: float | None = Field(default=None, gt=0, le=1)
     lifetime_yr: float = Field(default=40.0, gt=0)
     n_mod: int = Field(default=1, ge=1, strict=True)
     construction_time_yr: float = Field(default=6.0, gt=0)
@@ -150,6 +174,13 @@ class CostingInput(BaseModel):
         "eta_pin",
         "p_target",
     ]
+
+    @model_validator(mode="after")
+    def fill_concept_defaults(self):
+        """Fill customer parameters that depend on the concept when not set."""
+        if self.availability is None:
+            self.availability = default_availability(self.concept)
+        return self
 
     @model_validator(mode="after")
     def check_family_required_params(self):

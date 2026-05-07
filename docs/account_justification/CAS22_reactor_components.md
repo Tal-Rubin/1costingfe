@@ -115,9 +115,14 @@ $40–80M raw material.  The higher cost reflects:
 
 where:
 - **G** = geometry factor (tokamak: 4π², stellarator: 4π²×path_factor,
-  mirror: 4×4π)
+  mirror: n_coils×4π)
 - **B_max** = peak field on conductor (default 12 T)
 - **R_coil** = effective coil radius (default 1.85 m)
+- **n_coils** = number of independent solenoid coils (mirror only;
+  default 10, calibrated to a Realta HAMMIR-class tandem mirror with
+  4 end-plug HTS coils plus ~6 LTS central-cell solenoid coils
+  discretizing the 50 m central cell. Simple-mirror devices like
+  WHAM/BEAM/Anvil use n_coils ≈ 4)
 - **$/kAm** = conductor cost per kilo-amp-meter
 - **markup** = manufacturing complexity multiplier
 
@@ -142,7 +147,7 @@ are actively working to reduce.
 |---------|-------:|-----------|
 | Tokamak | 8.0× | TF + CS + PF coil systems. Complex D-shaped winding, insulation, quench protection, structural casing, cryostat integration. Conductor is ~10–15% of finished magnet cost. |
 | Stellarator | 12.0× | Non-planar 3D coil geometry. Tighter tolerances, longer winding paths (2× path factor), higher manufacturing complexity. |
-| Mirror | 2.5× | Simple solenoid coils. Well-established manufacturing. 4 independent coils. |
+| Mirror | 2.5× | Simple solenoid coils. Well-established manufacturing. n_coils=10 default (HAMMIR-class tandem: 4 end-plug HTS + 6 central-cell LTS solenoids over a 50 m central cell). Simple-mirror devices (WHAM/BEAM/Anvil) use n_coils≈4. |
 | Pulsed FRC | 1.5× | Theta-pinch formation coils. Simple, repetitive geometry. |
 | Theta pinch | 1.5× | Compression coils. Simple solenoid geometry. |
 | MagLIF | 2.0× | Axial field solenoid. Moderate complexity (pulsed duty). |
@@ -162,6 +167,20 @@ At reference (B=12T, R=1.85m, REBCO @ $50/kAm, 8× markup):
 
 CFS SPARC used ~300 km of REBCO tape for a ~2m-class magnet.
 A full tokamak power plant coil set is ~5–10× larger.
+
+For mirrors at the same reference (B=12T, R=1.85m, REBCO @ $50/kAm,
+2.5× markup, n_coils=10): total conductor 4.1M kAm, raw conductor
+$205M, finished coil system $513M. With the previous n_coils=4
+assumption the coil system was $205M, which understated a tandem
+mirror's actual coil burden by 2.5×. Realta's commercial design
+target is HAMMIR, a tandem mirror with a 50 m central cell flanked by
+two end plugs (each end plug carrying two HTS mirror coils in the
+Hammer evolution); 10 is a conservative count covering the four
+end-plug HTS coils plus ~6 LTS central-cell solenoids at coarse pitch
+along the central cell. Simple-mirror devices (Anvil/WHAM/BEAM) use
+2 HTS end coils plus a small LTS central solenoid and would set
+n_coils≈4. The value lives in `_COIL_DEFAULTS[MIRROR]` in
+`src/costingfe/layers/cas22.py`.
 
 ---
 
