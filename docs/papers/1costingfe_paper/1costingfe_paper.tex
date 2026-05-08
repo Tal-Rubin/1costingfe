@@ -488,7 +488,51 @@ Parameter & Autodiff & FD & Relative error \\
 \subsection{Other API surfaces}
 \label{sec:tour-api}
 
-% TASK 7 fills this section.
+The forward call of \cref{sec:tour-forward} is the headline entry
+point. Three other API surfaces address common variants on the
+underlying question.
+
+\paragraph{Cost overrides.} A vendor quote may replace a parametric
+estimate without re-running the physics:
+
+\begin{lstlisting}
+result = model.forward(
+    net_electric_mw=1000.0, lifetime_yr=30,
+    cost_overrides={"C220103": 436.0},  # M$, mirror coil quote
+)
+\end{lstlisting}
+
+Downstream rollups (CAS22, total capital, LCOE) recompute
+automatically. Mirror coils are typically smaller absolute cost than
+tokamak TF/CS/PF systems, reflecting the simpler solenoid topology.
+
+\paragraph{Batch sweeps.} Vectorised over JAX \texttt{vmap},
+suitable for uncertainty-band propagation and Monte Carlo:
+
+\begin{lstlisting}
+lcoes = model.batch_lcoe(
+    {"dhe3_f_T": [0.3, 0.4, 0.5, 0.6, 0.7]},
+    base_params=result.params,
+)
+\end{lstlisting}
+
+The swept parameter here is the secondary D-T burn fraction, which
+controls how much of the D-${}^3$He plant's neutron load comes from
+D-D-bred tritium.
+
+\paragraph{Backcasting.} Solves the inverse problem: which value of a
+single parameter hits a target LCOE, given everything else fixed.
+
+\begin{lstlisting}
+from costingfe.analysis.backcast import backcast_single
+eta_de_target = backcast_single(
+    model, target_lcoe=60.0, param_name="eta_de",
+    param_range=(0.50, 0.85), base_params=result.params,
+)
+\end{lstlisting}
+
+The question above is what venetian-blind efficiency would bring the
+mirror reference plant to a 60\,\$/MWh LCOE.
 
 %% ============================================================
 \section{Economics Module}
