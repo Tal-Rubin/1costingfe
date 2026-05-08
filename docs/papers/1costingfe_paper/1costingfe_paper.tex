@@ -279,7 +279,94 @@ the accounts for which independent justification studies have been completed.
 \subsection{Forward call from physics outputs}
 \label{sec:tour-forward}
 
-% TASK 3 fills this section.
+The framework's headline use case is consuming physics outputs from an
+external model and producing a complete CAS-account rollup and LCOE.
+This subsection walks one such handoff for a 1\,GWe D-${}^3$He steady-state
+mirror with venetian-blind direct energy conversion. Numbers are
+illustrative; the canonical script is
+\texttt{examples/external\_physics\_handoff.py}.
+
+The physics outputs supplied as forward arguments are summarised in
+\cref{tab:tour-inputs}.
+
+\begin{table}[htbp]
+\caption{Physics outputs handed to \textsc{1costingfe} for the
+Section~\ref{sec:tour} reference scenario.}
+\label{tab:tour-inputs}
+\centering
+\begin{tabular}{lll}
+\toprule
+Quantity & Value & Notes \\
+\midrule
+Concept       & Mirror              & linear, tandem-style \\
+Fuel          & D-${}^3$He          & aneutronic primary; D-D side reactions \\
+$L$           & 80 m                & central cell length \\
+$r_p$         & 0.4 m               & plasma radius at midplane \\
+$B_{\max}$    & 12 T                & peak field on conductor \\
+$T_e$         & 70 keV              & per Section~3.1.3 example \\
+$n_e$         & $3.3 \times 10^{19}$ m${}^{-3}$ & per Section~3.1.3 example \\
+$\eta_{\text{th}}$ & 0.40           & thermal cycle for residual neutrons + bremsstrahlung \\
+$\eta_{\text{de}}$ & 0.70           & venetian-blind direct conversion (single-pass; \texttt{eta\_de}) \\
+$f_{\text{dec}}$ & 0.90             & charged-particle collection fraction (\texttt{f\_dec}) \\
+$f_T^*$       & 0.5                 & secondary D-T burn (\texttt{dhe3\_f\_T}) \\
+$f_{{}^3\text{He}}^*$ & 0.1         & secondary D-${}^3$He burn (\texttt{dhe3\_f\_He3}) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The forward call is:
+
+\begin{lstlisting}
+from costingfe import ConfinementConcept, CostModel, Fuel
+model  = CostModel(concept=ConfinementConcept.MIRROR, fuel=Fuel.DHE3)
+result = model.forward(
+    net_electric_mw=1000.0, availability=0.87, lifetime_yr=30,
+    chamber_length=80.0, plasma_t=0.4, b_max=12.0,
+    T_e=70.0, n_e=3.3e19,
+    eta_th=0.40, eta_de=0.70, f_dec=0.90,
+    dhe3_f_T=0.5, dhe3_f_He3=0.1,
+)
+\end{lstlisting}
+
+The fusion power is derived by inverse power balance from the
+target net electric output, not supplied as an input; for the inputs
+above the framework returns $P_{\text{fus}} \approx$ 1880\,MW. The
+group-level cost rollup is shown in \cref{tab:tour-rollup}.
+
+\begin{table}[htbp]
+\caption{CAS-account rollup for the Section~\ref{sec:tour} reference
+scenario, in 2025\,USD. Reproduced by
+\texttt{examples/external\_physics\_handoff.py}.}
+\label{tab:tour-rollup}
+\centering
+\begin{tabular}{lr}
+\toprule
+Group & M\$ \\
+\midrule
+CAS10                  & 14.5 \\
+CAS21                  & 323.3 \\
+CAS22                  & 1739.8 \\
+CAS23--26              & 231.6 \\
+CAS27--30              & 466.1 \\
+CAS40                  & 23.0 \\
+CAS50                  & 177.5 \\
+CAS60                  & 572.0 \\
+\midrule
+Total overnight        & 3547.8 \\
+Overnight specific cost (\$/kW) & 3548 \\
+\midrule
+CAS70 (M\$/yr)         & 34.5 \\
+CAS80 (M\$/yr)         & 438.4 \\
+CAS90 (M\$/yr)         & 285.9 \\
+\midrule
+\textbf{LCOE (\$/MWh)} & \textbf{99.6} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+This rollup is the canonical citable reference: other papers and
+analyses can point to \cref{tab:tour-rollup} for the 1\,GWe D-${}^3$He
+mirror NOAK breakdown.
 
 \subsection{Sensitivity from automatic differentiation}
 \label{sec:tour-sensitivity}
