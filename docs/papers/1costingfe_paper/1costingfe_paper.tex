@@ -732,11 +732,6 @@ or a doped plasma may alter the radiation losses or the plasma optical thickness
 \citep{frank2022}. So these and other coefficients are exposed as first-class
 parameters amenable to sensitivity analysis via automatic differentiation.
 
-Lumped efficiency parameters are used for characterizing the power flow and thermal cycle.
-A more involved power plant thermodynamics model could be implemented in the future,
-which would allow the selection of a thermal cycle (Brayton vs. Rankine, etc.) and working
-fluid.
-
 The power balance above is concept-agnostic: given $P_{\text{fus}}$
 and the engineering coefficients, it produces $P_{\text{net}}$
 regardless of confinement scheme. To close the loop and determine
@@ -1209,172 +1204,9 @@ $1/Q_{\text{eng}}$ is a key figure of merit: lower recirculating
 fractions leave more power for sale and directly reduce the LCOE
 denominator.
 
-\subsection{Pulsed Power Balance}
-\label{sec:pulsed-balance}
-
-Pulsed confinement concepts (laser IFE, Z-pinch, and inductive
-recovery schemes) differ from the steady-state balance above in two
-respects: (i)~energy is delivered in discrete pulses rather than as
-continuous heating, and (ii)~charged-particle energy may be recovered
-electromagnetically rather than thermally. \textsc{1costingfe}
-provides two pulsed power balance variants, selected by the
-\texttt{PulsedConversion} parameter.
-
-\subsubsection{Per-pulse energy framework.}
-The user specifies three primary inputs: the target net electric power
-$P_{\text{net}}^*$, the engineering gain $Q_{\text{eng}} = P_{\text{et}}
-/ P_{\text{recirc}}$, and the repetition rate $f_{\text{rep}}$ (Hz).
-From these, the model derives the required driver energy per pulse
-$E_{\text{drv}}$ (MJ), the average driver power
-$P_{\text{drv}} = E_{\text{drv}} \, f_{\text{rep}}$, and the fusion
-power $P_{\text{fus}}$.  The scientific gain
-$Q_{\text{sci}} = P_{\text{fus}} / P_{\text{drv}}$ falls out as a
-derived quantity.  The driver wall-plug efficiency $\eta_{\text{pin}}$
-relates stored energy to delivered energy:
-$E_{\text{stored}} = E_{\text{drv}} / \eta_{\text{pin}}$. Note that
-$\eta_{\text{pin}}$ characterises pulsed-driver hardware (laser, ion
-beam, capacitor bank) and is distinct from the steady-state auxiliary
-heating efficiency $\eta_{\text{aux}}$ used in \cref{eq:p-recirc}.
-The charged-particle fraction $f_{\text{cp}}$ is derived from the fuel
-type and determines the ash--neutron split, while
-$f_{\text{rad}}$ is the fraction of ash power radiated during the burn.
-
-$Q_{\text{eng}}$ is preferred over $Q_{\text{sci}}$ as the primary input
-because it directly determines economic viability ($Q_{\text{eng}} \le 1$
-means no net power; $Q_{\text{eng}} \approx 2$ means 50\% recirculation),
-and it works uniformly across thermal and DEC conversion pathways without
-requiring concept-dependent parameterization.
-
-\subsubsection{Pulsed thermal conversion.}
-For laser IFE and Z-pinch concepts the driver energy thermalises into
-the blanket alongside neutron and radiation power.  The thermal pool
-is:
-\begin{equation}
-P_{\text{th}} = M_n P_n + P_{\text{cp}} + P_{\text{drv}} + \eta_p \, P_{\text{pump}}
-\end{equation}
-where $M_n$ is the neutron energy multiplier and $\eta_p$ is the
-pump-power thermalisation fraction (matching the steady-state
-convention of \cref{eq:p-thermal}).  All electrical output
-comes from the thermal cycle at efficiency $\eta_{\text{th}}$, and
-the full driver draw $P_{\text{drv}}/\eta_{\text{pin}}$ enters the
-recirculating load.
-
-\subsubsection{Pulsed inductive DEC conversion.}
-For inductive recovery concepts (e.g.\ pulsed FRCs with capacitor-bank-driven compression), the driver
-energy circulates in an electromagnetic loop: capacitor bank $\to$
-compression coils $\to$ plasma $\to$ coils $\to$ capacitor bank.
-Charged-particle energy does PdV work on the expanding plasmoid,
-which is recovered inductively.  The fraction of net charged-particle
-power that couples as PdV work is
-\begin{equation}
-f_{\text{pdv}} = 1 - \left(\frac{r_{\min}}{r_{\max}}\right)^{\!2(\gamma-1)}
-\end{equation}
-with $\gamma = 5/3$ for an ideal monatomic plasma.  The recovered and
-net DEC powers are then
-\begin{align}
-P_{\text{recovered}} &= \eta_{\text{dec}} \bigl(P_{\text{drv}}
-  + f_{\text{pdv}} \, P_{\text{ch,net}}\bigr), \\
-P_{\text{dee}} &= P_{\text{recovered}} - P_{\text{drv}},
-\end{align}
-where $P_{\text{ch,net}} = (1 - f_{\text{rad}})\,P_{\text{cp}}$
-and $\eta_{\text{dec}}$ is the round-trip efficiency of the
-inductive recovery circuit.
-
-A key distinction from the steady-state balance is the recirculating
-load: because the capacitor bank energy goes out and comes back each
-cycle, only the charging \emph{losses}
-$P_{\text{drv}}\,(1/\eta_{\text{pin}} - 1)$ are drawn from the grid,
-not the full $P_{\text{drv}}/\eta_{\text{pin}}$.
-
-Neutrons, bremsstrahlung, and undirected charged particles still enter
-a thermal blanket.  When $\eta_{\text{th}} > 0$ a conventional thermal
-cycle runs in parallel with the DEC, and the total gross electric is
-$P_{\text{et}} = P_{\text{dee}} + P_{\text{the}}$.  When
-$\eta_{\text{th}} = 0$ the concept is purely inductive and all
-thermal loads (pumps, balance of plant (BOP)) are zeroed automatically.
-
-For inductive DEC, the capacitor bank is costed on a \$/J stored-energy
-basis (Account~22.01.07, \cref{sec:cas2207}): $C_{220107} = c_{\text{cap}}
-\times E_{\text{stored}}$, where $c_{\text{cap}}$ is the all-in installed
-cost per joule.  The NOAK default and its justification are discussed in
-\cref{sec:cas2207}.
-
-For the DEC inverse, the model takes the scientific gain $Q_{\text{sci}}$
-as input and derives the required stored energy per pulse:
-\begin{equation}
-E_{\text{stored}} = \frac{P_{\text{net}}}{f_{\text{rep}} \bigl(
-  \eta_{\text{eff}}\,(1 + Q_{\text{sci}}\,f_{\text{cp}}) - 1 \bigr)
-  \,\eta_{\text{pin}}}
-\end{equation}
-where $\eta_{\text{eff}}$ combines the DEC and thermal conversion
-efficiencies.  This ensures that higher DEC efficiency correctly reduces
-the required capacitor bank size rather than inflating it.
-
-\subsection{Inverse Power Balance}
-\label{sec:inverse-balance}
-
-The costing model operates in ``inverse'' mode: given a target net
-electric output $P_{\text{net}}^*$, determine the required fusion power
-$P_{\text{fus}}$.
-
-\subsubsection{Pulsed inverse.}
-For pulsed concepts, $Q_{\text{eng}}$ determines the gross electric and
-recirculating powers directly:
-\begin{align}
-P_{\text{et}} &= P_{\text{net}}^* \cdot \frac{Q_{\text{eng}}}{Q_{\text{eng}} - 1}, \\
-P_{\text{recirc}} &= P_{\text{et}} / Q_{\text{eng}}.
-\end{align}
-The driver power follows from the recirculating budget.  For thermal
-conversion, $P_{\text{recirc}} = P_{\text{drv}}/\eta_{\text{pin}}
-+ P_{\text{fixed}}$; for inductive DEC,
-$P_{\text{recirc}} = P_{\text{drv}}(1/\eta_{\text{pin}} - 1)
-+ P_{\text{fixed}}$, where $P_{\text{fixed}}$ collects
-pumping, subsystem, auxiliary, cryogenic, target, and coil loads.
-Then $E_{\text{drv}} = P_{\text{drv}} / f_{\text{rep}}$, and
-$P_{\text{fus}}$ is obtained from the forward energy balance
-with the derived $E_{\text{drv}}$.  The inversion is closed-form
-(linear in $P_{\text{drv}}$ and $P_{\text{fus}}$).
-
-\subsubsection{Steady-state inverse.}  Substituting the forward power balance into
-\cref{eq:p-net} gives $P_{\text{net}}(P_{\text{fus}})$; the inverse
-problem is to find the root
-$P_{\text{net}}(P_{\text{fus}}) = P_{\text{net}}^*$.
-
-For fixed plasma parameters $(n_e, T_e, B)$, the radiated power
-$P_{\text{rad}}$ is independent of $P_{\text{fus}}$.  However, the
-effective heating power (\cref{eq:p-input-eff}) introduces a
-nonlinearity: when $P_{\text{rad}} > P_{\text{cp}} + P_{\text{in}}$,
-the effective heating depends on $P_{\text{cp}} = f_{\text{cp}} \,
-P_{\text{fus}}$ (where $f_{\text{cp}}$ is the charged-particle
-fraction), making $P_{\text{in,eff}}$ a function of $P_{\text{fus}}$.
-The net electric power is therefore piecewise linear in
-$P_{\text{fus}}$, with two regimes:
-
-\begin{enumerate}
-\item \textbf{Uncapped} ($P_{\text{rad}} < P_{\text{cp}} + P_{\text{in}}$):
-  $P_{\text{in,eff}} = P_{\text{in}}$ (constant); the forward balance
-  is linear in $P_{\text{fus}}$ and admits a closed-form solution.
-\item \textbf{Radiation-limited} ($P_{\text{rad}} \geq P_{\text{cp}} + P_{\text{in}}$):
-  $P_{\text{in,eff}} = P_{\text{rad}} - f_{\text{cp}}\,P_{\text{fus}}$;
-  the forward balance is linear with a different slope (increasing
-  $P_{\text{fus}}$ provides more ash power to offset radiation, reducing
-  required heating).
-\end{enumerate}
-
-\noindent The inverse solver uses Newton iteration with an analytical
-piecewise-constant Jacobian, initialized from the closed-form uncapped
-solution.  Because $P_{\text{net}}(P_{\text{fus}})$ is piecewise linear,
-convergence is exact in at most two iterations.  The Newton step is:
-
-\begin{equation}
-P_{\text{fus}}^{(k+1)} = P_{\text{fus}}^{(k)}
-  - \frac{P_{\text{net}}(P_{\text{fus}}^{(k)}) - P_{\text{net}}^*}
-         {\mathrm{d}P_{\text{net}}/\mathrm{d}P_{\text{fus}}\big|_{P_{\text{fus}}^{(k)}}}
-\end{equation}
-
-\noindent where the derivative is computed analytically for each regime
-rather than via automatic differentiation, avoiding nested
-differentiation during sensitivity analysis.
+Pulsed concepts (laser IFE, Z-pinch, inductive recovery) and the
+inverse-balance solver used by the costing model are presented in
+\cref{sec:pulsed-and-inverse-balance}.
 
 
 %% ------------------------------------------------------------
@@ -3013,6 +2845,178 @@ This maps the cylinder to a torus of equivalent volume
 ($V = 2\pi^2 R a^2 \kappa \to \pi a^2 L$ for $\kappa = 1$). The
 wall reflectivity $R_w$ is reduced for mirrors (default 0.4 vs.\ 0.6
 for tokamaks) to account for radiation escaping through the open ends.
+
+
+%% ============================================================
+\section{Pulsed and inverse power balances}
+\label{sec:pulsed-and-inverse-balance}
+
+\subsection{Pulsed power balance}
+\label{sec:pulsed-balance}
+
+Pulsed confinement concepts (laser IFE, Z-pinch, and inductive
+recovery schemes) differ from the steady-state balance above in two
+respects: (i)~energy is delivered in discrete pulses rather than as
+continuous heating, and (ii)~charged-particle energy may be recovered
+electromagnetically rather than thermally. \textsc{1costingfe}
+provides two pulsed power balance variants, selected by the
+\texttt{PulsedConversion} parameter.
+
+\subsubsection{Per-pulse energy framework.}
+The user specifies three primary inputs: the target net electric power
+$P_{\text{net}}^*$, the engineering gain $Q_{\text{eng}} = P_{\text{et}}
+/ P_{\text{recirc}}$, and the repetition rate $f_{\text{rep}}$ (Hz).
+From these, the model derives the required driver energy per pulse
+$E_{\text{drv}}$ (MJ), the average driver power
+$P_{\text{drv}} = E_{\text{drv}} \, f_{\text{rep}}$, and the fusion
+power $P_{\text{fus}}$.  The scientific gain
+$Q_{\text{sci}} = P_{\text{fus}} / P_{\text{drv}}$ falls out as a
+derived quantity.  The driver wall-plug efficiency $\eta_{\text{pin}}$
+relates stored energy to delivered energy:
+$E_{\text{stored}} = E_{\text{drv}} / \eta_{\text{pin}}$. Note that
+$\eta_{\text{pin}}$ characterises pulsed-driver hardware (laser, ion
+beam, capacitor bank) and is distinct from the steady-state auxiliary
+heating efficiency $\eta_{\text{aux}}$ used in \cref{eq:p-recirc}.
+The charged-particle fraction $f_{\text{cp}}$ is derived from the fuel
+type and determines the ash--neutron split, while
+$f_{\text{rad}}$ is the fraction of ash power radiated during the burn.
+
+$Q_{\text{eng}}$ is preferred over $Q_{\text{sci}}$ as the primary input
+because it directly determines economic viability ($Q_{\text{eng}} \le 1$
+means no net power; $Q_{\text{eng}} \approx 2$ means 50\% recirculation),
+and it works uniformly across thermal and DEC conversion pathways without
+requiring concept-dependent parameterization.
+
+\subsubsection{Pulsed thermal conversion.}
+For laser IFE and Z-pinch concepts the driver energy thermalises into
+the blanket alongside neutron and radiation power.  The thermal pool
+is:
+\begin{equation}
+P_{\text{th}} = M_n P_n + P_{\text{cp}} + P_{\text{drv}} + \eta_p \, P_{\text{pump}}
+\end{equation}
+where $M_n$ is the neutron energy multiplier and $\eta_p$ is the
+pump-power thermalisation fraction (matching the steady-state
+convention of \cref{eq:p-thermal}).  All electrical output
+comes from the thermal cycle at efficiency $\eta_{\text{th}}$, and
+the full driver draw $P_{\text{drv}}/\eta_{\text{pin}}$ enters the
+recirculating load.
+
+\subsubsection{Pulsed inductive DEC conversion.}
+For inductive recovery concepts (e.g.\ pulsed FRCs with capacitor-bank-driven compression), the driver
+energy circulates in an electromagnetic loop: capacitor bank $\to$
+compression coils $\to$ plasma $\to$ coils $\to$ capacitor bank.
+Charged-particle energy does PdV work on the expanding plasmoid,
+which is recovered inductively.  The fraction of net charged-particle
+power that couples as PdV work is
+\begin{equation}
+f_{\text{pdv}} = 1 - \left(\frac{r_{\min}}{r_{\max}}\right)^{\!2(\gamma-1)}
+\end{equation}
+with $\gamma = 5/3$ for an ideal monatomic plasma.  The recovered and
+net DEC powers are then
+\begin{align}
+P_{\text{recovered}} &= \eta_{\text{dec}} \bigl(P_{\text{drv}}
+  + f_{\text{pdv}} \, P_{\text{ch,net}}\bigr), \\
+P_{\text{dee}} &= P_{\text{recovered}} - P_{\text{drv}},
+\end{align}
+where $P_{\text{ch,net}} = (1 - f_{\text{rad}})\,P_{\text{cp}}$
+and $\eta_{\text{dec}}$ is the round-trip efficiency of the
+inductive recovery circuit.
+
+A key distinction from the steady-state balance is the recirculating
+load: because the capacitor bank energy goes out and comes back each
+cycle, only the charging \emph{losses}
+$P_{\text{drv}}\,(1/\eta_{\text{pin}} - 1)$ are drawn from the grid,
+not the full $P_{\text{drv}}/\eta_{\text{pin}}$.
+
+Neutrons, bremsstrahlung, and undirected charged particles still enter
+a thermal blanket.  When $\eta_{\text{th}} > 0$ a conventional thermal
+cycle runs in parallel with the DEC, and the total gross electric is
+$P_{\text{et}} = P_{\text{dee}} + P_{\text{the}}$.  When
+$\eta_{\text{th}} = 0$ the concept is purely inductive and all
+thermal loads (pumps, balance of plant (BOP)) are zeroed automatically.
+
+For inductive DEC, the capacitor bank is costed on a \$/J stored-energy
+basis (Account~22.01.07, \cref{sec:cas2207}): $C_{220107} = c_{\text{cap}}
+\times E_{\text{stored}}$, where $c_{\text{cap}}$ is the all-in installed
+cost per joule.  The NOAK default and its justification are discussed in
+\cref{sec:cas2207}.
+
+For the DEC inverse, the model takes the scientific gain $Q_{\text{sci}}$
+as input and derives the required stored energy per pulse:
+\begin{equation}
+E_{\text{stored}} = \frac{P_{\text{net}}}{f_{\text{rep}} \bigl(
+  \eta_{\text{eff}}\,(1 + Q_{\text{sci}}\,f_{\text{cp}}) - 1 \bigr)
+  \,\eta_{\text{pin}}}
+\end{equation}
+where $\eta_{\text{eff}}$ combines the DEC and thermal conversion
+efficiencies.  This ensures that higher DEC efficiency correctly reduces
+the required capacitor bank size rather than inflating it.
+
+\subsection{Inverse power balance}
+\label{sec:inverse-balance}
+
+The costing model operates in ``inverse'' mode: given a target net
+electric output $P_{\text{net}}^*$, determine the required fusion power
+$P_{\text{fus}}$.
+
+\subsubsection{Pulsed inverse.}
+For pulsed concepts, $Q_{\text{eng}}$ determines the gross electric and
+recirculating powers directly:
+\begin{align}
+P_{\text{et}} &= P_{\text{net}}^* \cdot \frac{Q_{\text{eng}}}{Q_{\text{eng}} - 1}, \\
+P_{\text{recirc}} &= P_{\text{et}} / Q_{\text{eng}}.
+\end{align}
+The driver power follows from the recirculating budget.  For thermal
+conversion, $P_{\text{recirc}} = P_{\text{drv}}/\eta_{\text{pin}}
++ P_{\text{fixed}}$; for inductive DEC,
+$P_{\text{recirc}} = P_{\text{drv}}(1/\eta_{\text{pin}} - 1)
++ P_{\text{fixed}}$, where $P_{\text{fixed}}$ collects
+pumping, subsystem, auxiliary, cryogenic, target, and coil loads.
+Then $E_{\text{drv}} = P_{\text{drv}} / f_{\text{rep}}$, and
+$P_{\text{fus}}$ is obtained from the forward energy balance
+with the derived $E_{\text{drv}}$.  The inversion is closed-form
+(linear in $P_{\text{drv}}$ and $P_{\text{fus}}$).
+
+\subsubsection{Steady-state inverse.}  Substituting the forward power balance into
+\cref{eq:p-net} gives $P_{\text{net}}(P_{\text{fus}})$; the inverse
+problem is to find the root
+$P_{\text{net}}(P_{\text{fus}}) = P_{\text{net}}^*$.
+
+For fixed plasma parameters $(n_e, T_e, B)$, the radiated power
+$P_{\text{rad}}$ is independent of $P_{\text{fus}}$.  However, the
+effective heating power (\cref{eq:p-input-eff}) introduces a
+nonlinearity: when $P_{\text{rad}} > P_{\text{cp}} + P_{\text{in}}$,
+the effective heating depends on $P_{\text{cp}} = f_{\text{cp}} \,
+P_{\text{fus}}$ (where $f_{\text{cp}}$ is the charged-particle
+fraction), making $P_{\text{in,eff}}$ a function of $P_{\text{fus}}$.
+The net electric power is therefore piecewise linear in
+$P_{\text{fus}}$, with two regimes:
+
+\begin{enumerate}
+\item \textbf{Uncapped} ($P_{\text{rad}} < P_{\text{cp}} + P_{\text{in}}$):
+  $P_{\text{in,eff}} = P_{\text{in}}$ (constant); the forward balance
+  is linear in $P_{\text{fus}}$ and admits a closed-form solution.
+\item \textbf{Radiation-limited} ($P_{\text{rad}} \geq P_{\text{cp}} + P_{\text{in}}$):
+  $P_{\text{in,eff}} = P_{\text{rad}} - f_{\text{cp}}\,P_{\text{fus}}$;
+  the forward balance is linear with a different slope (increasing
+  $P_{\text{fus}}$ provides more ash power to offset radiation, reducing
+  required heating).
+\end{enumerate}
+
+\noindent The inverse solver uses Newton iteration with an analytical
+piecewise-constant Jacobian, initialized from the closed-form uncapped
+solution.  Because $P_{\text{net}}(P_{\text{fus}})$ is piecewise linear,
+convergence is exact in at most two iterations.  The Newton step is:
+
+\begin{equation}
+P_{\text{fus}}^{(k+1)} = P_{\text{fus}}^{(k)}
+  - \frac{P_{\text{net}}(P_{\text{fus}}^{(k)}) - P_{\text{net}}^*}
+         {\mathrm{d}P_{\text{net}}/\mathrm{d}P_{\text{fus}}\big|_{P_{\text{fus}}^{(k)}}}
+\end{equation}
+
+\noindent where the derivative is computed analytically for each regime
+rather than via automatic differentiation, avoiding nested
+differentiation during sensitivity analysis.
 
 \bibliographystyle{unsrtnat}
 \bibliography{references}
