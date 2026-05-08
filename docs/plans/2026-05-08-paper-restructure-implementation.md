@@ -316,10 +316,10 @@ $B_{\max}$    & 12 T                & peak field on conductor \\
 $T_i$         & 70 keV              & per Section~3.1.3 example \\
 $n_e$         & $3.3 \times 10^{19}$ m${}^{-3}$ & per Section~3.1.3 example \\
 $\eta_{\text{th}}$ & 0.40           & thermal cycle for residual neutrons + bremsstrahlung \\
-$\eta_{\text{dec}}$ & 0.70          & venetian-blind direct conversion \\
-$f_{\text{dec}}$ & 0.90             & charged-particle collection fraction \\
-$f_T^*$       & 0.5                 & secondary D-T burn (steady-state mirror default) \\
-$f_{{}^3\text{He}}^*$ & 0.1         & secondary D-${}^3$He burn (steady-state default) \\
+$\eta_{\text{de}}$ & 0.70           & venetian-blind direct-conversion (single-pass; \texttt{eta\_de}) \\
+$f_{\text{dec}}$ & 0.90             & charged-particle collection fraction (\texttt{f\_dec}) \\
+$f_T^*$       & 0.5                 & secondary D-T burn (\texttt{dhe3\_f\_T}) \\
+$f_{{}^3\text{He}}^*$ & 0.1         & secondary D-${}^3$He burn (\texttt{dhe3\_f\_He3}) \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -330,11 +330,11 @@ The forward call is:
 from costingfe import ConfinementConcept, CostModel, Fuel
 model  = CostModel(concept=ConfinementConcept.MIRROR, fuel=Fuel.DHE3)
 result = model.forward(
-    net_electric_mw=1000.0, lifetime_yr=30,
-    p_fus=2400.0, chamber_length=80.0, plasma_t=0.4, b_max=12.0,
+    net_electric_mw=1000.0, availability=0.87, lifetime_yr=30,
+    chamber_length=80.0, plasma_t=0.4, b_max=12.0,
     T_e=70.0, n_e=3.3e19,
-    eta_th=0.40, eta_dec=0.70, f_dec=0.90,
-    f_T_secondary=0.5, f_He3_secondary=0.1,
+    eta_th=0.40, eta_de=0.70, f_dec=0.90,
+    dhe3_f_T=0.5, dhe3_f_He3=0.1,
 )
 \end{lstlisting}
 
@@ -538,11 +538,11 @@ TABLE_OUT = OUT_DIR / "_outputs" / "tornado_table.txt"
 def base_model_and_result():
     model = CostModel(concept=ConfinementConcept.MIRROR, fuel=Fuel.DHE3)
     result = model.forward(
-        net_electric_mw=1000.0, lifetime_yr=30,
-        p_fus=2400.0, chamber_length=80.0, plasma_t=0.4, b_max=12.0,
+        net_electric_mw=1000.0, availability=0.87, lifetime_yr=30,
+        chamber_length=80.0, plasma_t=0.4, b_max=12.0,
         T_e=70.0, n_e=3.3e19,
-        eta_th=0.40, eta_dec=0.70, f_dec=0.90,
-        f_T_secondary=0.5, f_He3_secondary=0.1,
+        eta_th=0.40, eta_de=0.70, f_dec=0.90,
+        dhe3_f_T=0.5, dhe3_f_He3=0.1,
         use_0d_model=False,
     )
     return model, result
@@ -771,7 +771,7 @@ suitable for uncertainty-band propagation and Monte Carlo:
 
 \begin{lstlisting}
 lcoes = model.batch_lcoe(
-    {"f_T_secondary": [0.3, 0.4, 0.5, 0.6, 0.7]},
+    {"dhe3_f_T": [0.3, 0.4, 0.5, 0.6, 0.7]},
     base_params=result.params,
 )
 \end{lstlisting}
@@ -785,8 +785,8 @@ single parameter hits a target LCOE, given everything else fixed.
 
 \begin{lstlisting}
 from costingfe.analysis.backcast import backcast_single
-eta_dec_target = backcast_single(
-    model, target_lcoe=60.0, param_name="eta_dec",
+eta_de_target = backcast_single(
+    model, target_lcoe=60.0, param_name="eta_de",
     param_range=(0.50, 0.85), base_params=result.params,
 )
 \end{lstlisting}
