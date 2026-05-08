@@ -125,7 +125,7 @@ def render_tornado(rows: list[tuple[str, float, str]], out_path: Path) -> None:
     ax.legend(
         handles,
         [_LABELS[k] for k in _SENS_TO_BUCKET.values()],
-        loc="lower right",
+        loc="lower left",
         frameon=False,
         fontsize="small",
     )
