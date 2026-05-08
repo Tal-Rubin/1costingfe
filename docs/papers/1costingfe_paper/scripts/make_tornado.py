@@ -13,7 +13,7 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 
-from costingfe import ConfinementConcept, CostModel, Fuel
+from costingfe import ConfinementConcept, CostModel, ForwardResult, Fuel
 
 # Three-bucket assignment.
 # model.sensitivity() returns keys: "engineering", "financial", "costing".
@@ -36,9 +36,13 @@ _LABELS = {
     "financial": "Financial / methodology",
 }
 
-OUT_DIR = Path(__file__).resolve().parent
-FIG_DIR = OUT_DIR.parent / "figures"
-TABLE_OUT = OUT_DIR / "_outputs" / "tornado_table.txt"
+assert set(_LABELS) == set(_COLORS) == set(_SENS_TO_BUCKET.values()), (
+    "_LABELS, _COLORS, and _SENS_TO_BUCKET must share the same bucket keys"
+)
+
+_SCRIPT_DIR = Path(__file__).resolve().parent
+FIG_DIR = _SCRIPT_DIR.parent / "figures"
+TABLE_OUT = _SCRIPT_DIR / "_outputs" / "tornado_table.txt"
 
 # Canonical kwargs matching examples/external_physics_handoff.py exactly.
 _BASE_KWARGS: dict = dict(
@@ -88,7 +92,7 @@ _BASE_KWARGS: dict = dict(
 )
 
 
-def base_model_and_result():
+def base_model_and_result() -> tuple[CostModel, ForwardResult]:
     model = CostModel(concept=ConfinementConcept.MIRROR, fuel=Fuel.DHE3)
     result = model.forward(**_BASE_KWARGS)
     return model, result
@@ -106,7 +110,7 @@ def collect_elasticities(model: CostModel, base) -> list[tuple[str, float, str]]
 
 
 def render_tornado(rows: list[tuple[str, float, str]], out_path: Path) -> None:
-    rows = rows[:18]  # keep top 18 to fit on one page
+    rows = rows[:18]  # top 18 rows fit on one PDF page at this figsize
     rows_plot = list(reversed(rows))  # largest at top in matplotlib horizontal bar
     fig, ax = plt.subplots(figsize=(7.0, 0.32 * len(rows_plot) + 1.2))
     for i, (param, e, bucket) in enumerate(rows_plot):
@@ -170,7 +174,7 @@ def write_fd_table(
     for param, e_auto, _ in top_rows[:k]:
         e_fd = _centered_fd_elasticity(model, base, param)
         rel = abs(e_auto - e_fd) / max(abs(e_auto), 1e-12)
-        lines.append(f"{param:<16s} {e_auto:+.6f}  {e_fd:+.6f}  {rel:.2e}")
+        lines.append(f"{param:<16s} {e_auto:+13.6f}  {e_fd:+13.6f}  {rel:.2e}")
     out_path.write_text("\n".join(lines) + "\n")
 
 
