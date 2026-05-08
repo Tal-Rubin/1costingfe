@@ -1426,6 +1426,18 @@ breakthrough2022}, superseding ARIES/pyFECONS values.
 
 
 %% ------------------------------------------------------------
+\subsection{Inherited sub-accounts}
+\label{sec:cas22-inherited}
+
+Sub-accounts CAS22.01.01 (first wall + blanket), 22.01.02 (shield),
+22.01.05 (primary structure), 22.01.06 (vacuum system), 22.01.08
+(divertor), and 22.01.11 (installation labor) inherit the methodology
+of the pyFECONS implementation \citep{woodruff2026} unchanged: hybrid
+volume + thermal-intensity scaling for component accounts and
+percentage-of-subtotal for installation labor. They are not
+re-derived in this paper.
+
+%% ------------------------------------------------------------
 \subsection{CAS22.01.03: Superconducting Coils}
 \label{sec:cas2203}
 
@@ -1780,6 +1792,19 @@ B-11 (enriched) & 10{,}000 & FOAK estimate (B-10 tails) \\
 \end{tabular}
 \end{table}
 
+
+%% ------------------------------------------------------------
+\subsection{CAS22.02--.07: Plant-wide reactor systems}
+\label{sec:cas2207-cluster}
+
+The plant-wide reactor systems CAS22.02 (main and secondary coolant),
+CAS22.03 (auxiliary cooling and cryoplant), CAS22.04 (radioactive
+waste management), CAS22.05 (fuel handling and storage), CAS22.06
+(other reactor plant equipment), and CAS22.07 (instrumentation and
+control) inherit pyFECONS power-scaling laws with exponents in the
+range 0.65--0.85 and pyFECONS reference-plant unit costs. CAS22.05
+is fuel-dependent (D-T tritium accounting versus aneutronic fuel
+handling); the others are concept- and fuel-agnostic.
 
 %% ------------------------------------------------------------
 \subsection{CAS23--26: Balance of Plant Equipment}
