@@ -41,7 +41,6 @@ def main() -> None:
         r_coil=1.85,  # m, effective winding bore radius
         # Power balance (Section 2.2 Table)
         p_input=50.0,  # MW, NBI heating (neutral beams sustain mirror)
-        p_nbi=50.0,  # MW (all heating via NBI)
         eta_pin=0.60,  # heating wall-plug efficiency
         eta_p=0.50,  # pumping efficiency
         p_coils=5.0,  # MW, solenoid + mirror coils
@@ -55,7 +54,7 @@ def main() -> None:
         # Conversion: venetian-blind DEC on end-loss ions + thermal
         eta_th=0.40,  # thermal cycle efficiency (steam)
         eta_de=0.70,  # venetian-blind DEC efficiency on end-loss ions
-        f_dec=0.50,  # fraction of transport power routed to DEC
+        f_dec=0.90,  # fraction of transport power routed to DEC
         # Plasma parameters for radiation calculation (Section 2.2 Table)
         n_e=3.3e19,  # m^-3, electron density
         T_e=70.0,  # keV, electron temperature
@@ -71,8 +70,6 @@ def main() -> None:
         dhe3_dd_frac=0.131,  # D-D side-reaction fraction
         dd_f_T=0.969,
         dd_f_He3=0.689,
-        pb11_f_alpha_n=0.0,
-        pb11_f_p_n=0.0,
     )
 
     costs = result.costs
@@ -84,8 +81,7 @@ def main() -> None:
         ("CAS21", costs.cas21),
         ("CAS22", costs.cas22),
         ("CAS23-26", costs.cas23 + costs.cas24 + costs.cas25 + costs.cas26),
-        ("CAS27-29", costs.cas27 + costs.cas28 + costs.cas29),
-        ("CAS30", costs.cas30),
+        ("CAS27-30", costs.cas27 + costs.cas28 + costs.cas29 + costs.cas30),
         ("CAS40", costs.cas40),
         ("CAS50", costs.cas50),
         ("CAS60", costs.cas60),
