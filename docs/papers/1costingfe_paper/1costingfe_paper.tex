@@ -104,24 +104,27 @@ The code uses the Code of Accounts Structure (CAS) approach, used in
 the ARIES program and later formalized by the Generation~IV Economic
 Modeling Working Group, and adopted and developed under ARPA-E funding
 by Woodruff and colleagues in the pyFECONS code.
+The framework covers D-T, p-${}^{11}$B, and D-D and D-${}^3$He
+cycles across the uncatalyzed, semi-catalyzed, and fully catalyzed
+regimes, with tritium and ${}^3$He burn-up fractions exposed as
+independent parameters. It spans the several confinement families
+across magnetic, inertial, and magneto-inertial confinement schemes.
+\textsc{1costingfe} is developed to assist in the identification 
+of technological corridors compatible with an aspirational 1~cent/kWh 
+LCOE target. A plant competitive at this level would displace incumbent 
+baseload generation at scale, so \textsc{1costingfe} defaults represent 
+Nth-of-a-kind costs after learning-curve effects are applied.
 \textsc{1costingfe}'s principal contribution is rebuilding the cost
-accounts most sensitive to fuel cycle and confinement family, namely
+accounts most sensitive to fuel cycle and confinement family:
 buildings, magnets, drivers, direct energy converters, isotope
 separation, and staffing, from current procurement data, vendor
 pricing, and cross-industry benchmarks, in place of the heritage
 scaling that dominates these accounts in prior fusion cost models.
 Accounts that are largely fuel- and concept-agnostic inherit prior
 conventions where appropriate.
-Defaults represent Nth-of-a-kind costs after learning-curve effects
-are applied; first-of-a-kind treatment is supported.
-The framework spans the four candidate fuel cycles (D-T, D-D,
-D-${}^3$He, p-${}^{11}$B) and the principal confinement families
-(tokamak, stellarator, mirror, field-reversed configuration, laser
-and Z-pinch inertial systems, and magneto-inertial concepts).
 It is implemented in JAX with reverse-mode automatic differentiation,
 exposing exact LCOE gradients to support sensitivity analysis,
-Monte Carlo uncertainty propagation, and identification of
-technological corridors compatible with a 1~cent/kWh LCOE target.
+and Monte Carlo uncertainty propagation.
 The economics, physics, and cost-account methodology are described
 in turn, and the framework is exercised against two reference designs,
 ARC and ARIES-AT, as a calibration cross-check, with divergences
@@ -129,7 +132,7 @@ attributed to specific accounts where procurement data departs
 from heritage scaling.
 \end{abstract}
 
-\keywords{fusion energy \and LCOE \and cost estimation \and automatic differentiation \and JAX}
+\keywords{fusion energy \and LCOE \and cost estimation}
 
 
 %% ============================================================
@@ -283,6 +286,11 @@ availability (capacity factor), and 8760 is the number of hours per year.
 The computation of $P_{\text{net}}$ from fusion power and
 engineering coefficients is described in the physics module
 (\cref{sec:physics-module}).
+The default availability is concept-aware: 0.85 for toroidal concepts
+(tokamak, stellarator) and 0.87 for mirrors, reflecting the shorter
+scheduled-outage duration achievable with axial extraction of blanket
+and first-wall components versus port-limited toroidal access.
+Explicit values passed by the user override this default.
 
 \Cref{fig:cashflow} illustrates the cash-flow structure. Total capital
 expenditure (CAPEX) is disbursed during the construction period, after
@@ -1339,10 +1347,17 @@ C_{220103} = \frac{G \cdot B_{\max} \cdot R_{\text{coil}}^2}
 \end{equation}
 
 \noindent where $G$ is a geometry factor (tokamak: $4\pi^2$;
-stellarator: $4\pi^2 \times f_{\text{path}}$; mirror: $16\pi$),
+stellarator: $4\pi^2 \times f_{\text{path}}$; mirror:
+$n_{\text{coils}} \cdot 4\pi$, where $n_{\text{coils}}$ is the
+number of independent solenoid coils in the mirror layout),
 $c_{\text{kAm}}$ is the conductor cost per kA-metre, and
 $M_{\text{concept}}$ is a manufacturing markup capturing winding,
 insulation, quench protection, structural casing, cryostat, and testing.
+The mirror $n_{\text{coils}}$ default is 10, calibrated to a Realta
+HAMMIR-class tandem mirror: four end-plug HTS coils (two per end, in
+the Hammer evolution) plus six LTS solenoids discretizing the 50~m
+central cell at conservative pitch. Simple-mirror devices
+(WHAM/BEAM/Anvil) use $n_{\text{coils}} \approx 4$.
 
 \begin{table}[htbp]
 \caption{CAS22.01.03 manufacturing markups and path factors by confinement concept.}
@@ -1354,7 +1369,7 @@ Concept & Markup & Path factor & Example (12~T, 1.85~m) & Rationale \\
 \midrule
 Tokamak     &  8$\times$ & 1.0 & \$516M & TF+CS+PF complexity \\
 Stellarator & 12$\times$ & 2.0 & \$1{,}546M & Non-planar 3D coils \\
-Mirror      &  2.5$\times$ & 1.0 & \$26M & Simple solenoids \\
+Mirror      &  2.5$\times$ & 1.0 & \$513M & 10 simple solenoids (HAMMIR-class) \\
 Pulsed FRC  &  1.5$\times$ & 1.0 & n/a & Theta-pinch formation coils \\
 Theta pinch &  1.5$\times$ & 1.0 & n/a & Compression coils \\
 MagLIF      &  2.0$\times$ & 1.0 & n/a & Axial field solenoid \\
@@ -2149,10 +2164,12 @@ twice the conventional CCGT level, reflecting fusion-specific system
 complexity (vacuum, magnets, plasma-facing components) rather than
 regulatory burden.
 
-Annual O\&M scales with plant size via a power law:
+Annual O\&M scales with plant size via a power law and is modulated by
+a concept-dependent factor reflecting maintenance ergonomics:
 \begin{equation}
 \label{eq:cas71}
-\text{CAS71}_{\text{annual}} = C_{\text{O\&M}}(f) \times
+\text{CAS71}_{\text{annual}} = C_{\text{O\&M}}(f) \cdot
+               S_{\text{O\&M}}(c) \cdot
                \left(\frac{P_{\text{net}}}{1000}\right)^{0.5}
 \end{equation}
 
@@ -2162,6 +2179,22 @@ The INL SFR data \citep{prosser2024} shows staff scaling from
 driven by the large fixed component in administration, technical, and
 offsite divisions. The same exponent is used for CAS40
 (\cref{sec:cas40}), which shares the same staffing basis.
+
+The concept factor $S_{\text{O\&M}}(c)$ is 1.0 for toroidal geometries
+(tokamak, stellarator) and 0.85 for linear/open-end geometries
+(mirror). The fuel-baseline numbers in \cref{tab:cas71-staffing} are
+calibrated to a toroidal device; mirrors require fewer maintenance
+and operations FTEs because blanket rings and first-wall components
+can be exchanged axially without re-establishing toroidal vacuum and
+structural continuity, scheduled outages are shorter, and the
+planned-maintenance crew rotation is smaller. The 0.85 scale is
+conservative because health physics, tritium accountability,
+engineering, and security staffing are fuel-driven and concept-
+agnostic; the accessible concept-specific savings are concentrated in
+maintenance and hot-cell-operator categories. The same maintenance
+ergonomics drive the 0.55$\times$ capex scaling on CAS22.01.10
+remote handling (\cref{sec:cas2210}) and the 0.87 default
+availability for mirrors versus 0.85 for toroidal concepts.
 
 \subsubsection{Levelization.}
 Both sub-accounts are levelized using the procedure of \cref{sec:lac};
