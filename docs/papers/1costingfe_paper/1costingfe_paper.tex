@@ -140,7 +140,7 @@ exposing exact LCOE gradients to support sensitivity analysis,
 and Monte Carlo uncertainty propagation.
 A worked tour from physics outputs to LCOE, including JAX-derived
 sensitivities across physics, cost, and financial parameters, is
-presented as the canonical use case (\cref{sec:tour}).
+presented in \cref{sec:tour}.
 The economics, physics, and cost-account methodology are described
 in turn, and the framework is exercised against two reference designs,
 ARC and ARIES-AT, as a calibration cross-check, with divergences
@@ -270,7 +270,7 @@ The remainder of this paper is organized as follows.
 the accounts for which independent justification studies have been completed.
 \Cref{sec:tokamak-model} presents the 0D tokamak model.
 
-The worked tour in \cref{sec:tour} is the headline operational
+The worked tour in \cref{sec:tour} presents a representative
 example: a single concept handed off from an external physics model
 into the costing pipeline, with a sensitivity tornado over the
 combined parameter set. Concept-agnosticism is exercised by running
@@ -343,11 +343,11 @@ external physics in hand.}
 \subsection{Forward call from physics outputs}
 \label{sec:tour-forward}
 
-The framework's headline use case is consuming physics outputs from an
+The primary use case is consuming physics outputs from an
 external model and producing a complete CAS-account rollup and LCOE.
-This subsection walks one such handoff for a 1\,GWe D-${}^3$He steady-state
+This subsection presents one such handoff for a 1\,GWe D-${}^3$He steady-state
 mirror with venetian-blind direct energy conversion. Numbers are
-illustrative; the canonical script is
+illustrative; the reference script is
 \texttt{examples/external\_physics\_handoff.py}.
 
 The physics outputs supplied as forward arguments are summarised in
@@ -428,9 +428,8 @@ CAS90 (M\$/yr)         & 285.9 \\
 \end{tabular}
 \end{table}
 
-This rollup is the canonical citable reference: other papers and
-analyses can point to \cref{tab:tour-rollup} for the 1\,GWe D-${}^3$He
-mirror NOAK breakdown.
+\Cref{tab:tour-rollup} provides the reference NOAK cost breakdown for the
+1\,GWe D-${}^3$He mirror scenario; other analyses may cite it directly.
 
 \subsection{Sensitivity from automatic differentiation}
 \label{sec:tour-sensitivity}
@@ -448,8 +447,8 @@ construction time, and contingency assumptions).
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.85\linewidth]{figures/tornado.pdf}
-\caption{Sensitivity tornado for the canonical 1\,GWe D-${}^3$He
-mirror reference. Bars give LCOE elasticity
+\caption{Sensitivity tornado for the 1\,GWe D-${}^3$He
+mirror reference scenario. Bars give LCOE elasticity
 $\epsilon_p = (\partial \text{LCOE}/\partial p)(p/\text{LCOE})$
 computed by JAX reverse-mode autodiff on the full forward pipeline.
 A bar of length $0.10$ means a $+1\%$ perturbation of the parameter
@@ -458,10 +457,9 @@ moves LCOE by $+0.10\%$. Reproduced by
 \label{fig:tornado}
 \end{figure}
 
-The tornado is the headline operational output of the framework: a
-single figure tells a physics team where simulation effort buys the
-most LCOE certainty, and a procurement team where vendor data does
-the same. For the reference scenario, the most consequential
+The tornado identifies, in a single figure, the parameters whose uncertainty
+dominates LCOE: those with long bars indicate where simulation effort or
+vendor data reduces cost uncertainty most efficiently. For the reference scenario, the most consequential
 physics-output parameter is \texttt{availability} (elasticity $-0.54$),
 the most consequential cost unit price is \texttt{fuel\_recovery}
 ($-7.19$), and the most consequential financial parameter is
@@ -479,9 +477,8 @@ and \texttt{inflation\_rate} $+0.17$.
 \subsection{Other API surfaces}
 \label{sec:tour-api}
 
-The forward call of \cref{sec:tour-forward} is the headline entry
-point. Three other API surfaces address common variants on the
-underlying question.
+The forward call of \cref{sec:tour-forward} is the primary API entry
+point. Three additional API surfaces address common variants.
 
 \paragraph{Cost overrides.} A vendor quote may replace a parametric
 estimate without re-running the physics:
@@ -522,7 +519,7 @@ eta_de_target = backcast_single(
 )
 \end{lstlisting}
 
-The question above is what venetian-blind efficiency would bring the
+This example determines the venetian-blind efficiency required to bring the
 mirror reference plant to a 60\,\$/MWh LCOE.
 
 %% ============================================================
@@ -560,7 +557,7 @@ The default availability is concept-aware: 0.85 for toroidal concepts
 (tokamak, stellarator) and 0.87 for mirrors, reflecting the shorter
 scheduled-outage duration achievable with axial extraction of blanket
 and first-wall components versus port-limited toroidal access.
-Explicit values passed by the user override this default.
+Explicit values supplied at call time override this default.
 
 \Cref{fig:cashflow} illustrates the cash-flow structure. Total capital
 expenditure (CAPEX) is disbursed during the construction period, after
@@ -743,11 +740,11 @@ every energy channel from the plasma to the grid: energy split between fusion as
 radiation losses, blanket multiplication, thermal and direct energy conversion, and
 recirculating power.
 
-Many concepts will deviate significantly from the defaults - a non-Maxwellian
+Many concepts will deviate significantly from the defaults; a non-Maxwellian
 deuterium plasma may alter the burn rates of the secondary D-D reactions,
 or a doped plasma may alter the radiation losses or the plasma optical thickness
-\citep{frank2022}. So these and other coefficients are exposed as first-class
-parameters amenable to sensitivity analysis via automatic differentiation.
+\citep{frank2022}. These and other coefficients are therefore exposed as
+first-class parameters amenable to sensitivity analysis via automatic differentiation.
 
 The power balance above is concept-agnostic: given $P_{\text{fus}}$
 and the engineering coefficients, it produces $P_{\text{net}}$
@@ -1041,8 +1038,8 @@ high-energy electron tail, which is responsible for most of the
 emission at optically thin harmonics \citep{ochs2024}. This
 self-consistent kinetic effect can reduce the net synchrotron loss by
 up to an order of magnitude relative to the thermal prediction. For
-such regimes the user should supply a radiation power override
-informed by kinetic Fokker--Planck modeling rather than rely on the
+such regimes a radiation power override informed by kinetic
+Fokker--Planck modeling should be supplied in place of the
 Albajar formula.
 
 \subsubsection{Impurity line radiation.}
@@ -1452,7 +1449,7 @@ Sub-accounts CAS22.01.01 (first wall + blanket), 22.01.02 (shield),
 of the pyFECONS implementation \citep{woodruff2026} unchanged: hybrid
 volume + thermal-intensity scaling for component accounts and
 percentage-of-subtotal for installation labor. They are not
-re-derived in this paper.
+re-derived here.
 
 %% ------------------------------------------------------------
 \subsection{CAS22.01.03: Superconducting Coils}
@@ -1519,9 +1516,9 @@ conductor) is \$7/kA-m at maturity, and NbTi (LHC heritage) is
 similar.
 
 This is a deliberate design choice: the model targets NOAK economics
-for a mature fusion industry, not FOAK procurement costs.  Users
-performing FOAK sensitivity analysis should override the conductor
-cost to \$150--300/kA-m, which roughly triples the coil account.
+for a mature fusion industry, not FOAK procurement costs.  For FOAK
+sensitivity analysis, the conductor cost may be overridden to
+\$150--300/kA-m, which roughly triples the coil account.
 Unlike B-11 enrichment (where the FOAK/NOAK gap reflects a missing
 industrial supply chain requiring \$10{,}000/kg falling to \$75/kg), the
 REBCO cost trajectory is a manufacturing learning curve for an
@@ -1635,7 +1632,7 @@ systems study rather than a procurement reference. The capacitor-bank
 \$/J basis used for pulsed concepts is procurement-grounded
 (commercial high-voltage capacitor pricing). Substituting a
 procurement reference for the steady-state MFE figure is left to
-follow-on work; users with a vendor quote should override
+follow-on work; a vendor quote may be applied via
 \texttt{cost\_overrides=\{"C220107": <value>\}} until that
 substitution lands.
 
@@ -1954,7 +1951,7 @@ no independent benchmark has yet been adopted. CAS28 is therefore
 the lowest-information account in the framework and the figure is
 treated as a placeholder with wide uncertainty. Closing this gap
 requires sourcing one or more independent quotes for plant digital
-twin integration; users wishing to vary the figure should override
+twin integration; the figure may be varied via
 \texttt{cost\_overrides=\{"CAS28": <value>\}} until that work
 completes.
 
@@ -2452,13 +2449,13 @@ modeled. The framework thus equates CAS90 with CAS93 (cost of money).
 \section{Benchmarking and Cross-Validation}
 \label{sec:benchmark}
 
-This section exercises \textsc{1costingfe} against two published
+\textsc{1costingfe} is exercised against two published
 reference designs, ARC \citep{sorbom2015arc} and ARIES-AT
 \citep{najmabadi2006ariesat}, as a calibration cross-check. The
-framework's stated contribution is procurement-grounded re-derivation
+framework's contribution is procurement-grounded re-derivation
 of the cost accounts most sensitive to fuel cycle and confinement
 family; divergence from heritage-scaling estimates is therefore
-expected, and the question is whether the divergences land in the
+expected, and the check is whether the divergences fall in the
 accounts where the methodological change predicts they should.
 All published costs are escalated to 2025~USD via the BLS Consumer
 Price Index for All Urban Consumers (CPI-U), matching the convention
@@ -2471,7 +2468,7 @@ basis is in FY2014~USD (paper p.~25, Section 6.6). The CPI-U
 escalation factors used are 2.295 for ARIES-AT (1992~USD $\to$
 2025~USD) and 1.360 for ARC (2014~USD $\to$ 2025~USD).
 
-\subsection{ARC: Headline Comparison}
+\subsection{ARC: Top-Level Comparison}
 \label{sec:benchmark-arc}
 
 ARC \citep{sorbom2015arc} is a 270\,MWe demountable-coil high-field
@@ -2638,7 +2635,7 @@ exploration tractable.
 Several limitations remain. Only a single confinement-specific physics
 layer (the 0D tokamak model of \cref{sec:tokamak-model}) is implemented;
 analogous models for stellarators, mirrors, FRCs, and inertial systems
-are planned but not yet exercised in this paper. Calibration cross-checks
+are planned but not yet exercised. Calibration cross-checks
 against the ARC and ARIES-AT reference designs are presented in
 \cref{sec:benchmark}; cross-validation against pyFECONS reference cases
 at the per-account level is left to future work.
@@ -2940,8 +2937,8 @@ power $P_{\text{fus}}$.  The scientific gain
 $Q_{\text{sci}} = P_{\text{fus}} / P_{\text{drv}}$ falls out as a
 derived quantity.  The driver wall-plug efficiency $\eta_{\text{pin}}$
 relates stored energy to delivered energy:
-$E_{\text{stored}} = E_{\text{drv}} / \eta_{\text{pin}}$. Note that
-$\eta_{\text{pin}}$ characterises pulsed-driver hardware (laser, ion
+$E_{\text{stored}} = E_{\text{drv}} / \eta_{\text{pin}}$.
+Here $\eta_{\text{pin}}$ characterises pulsed-driver hardware (laser, ion
 beam, capacitor bank) and is distinct from the steady-state auxiliary
 heating efficiency $\eta_{\text{aux}}$ used in \cref{eq:p-recirc}.
 The charged-particle fraction $f_{\text{cp}}$ is derived from the fuel
