@@ -3,8 +3,7 @@
 Reads the canonical mirror+D-3He+DEC scenario, computes elasticities via
 JAX autodiff (model.sensitivity), and renders a horizontal bar chart with
 three colored bands: physics outputs, cost unit prices, financial /
-methodology. Also writes a small text table comparing the top-5 autodiff
-elasticities against centered finite differences as an exactness check.
+methodology.
 """
 
 from __future__ import annotations
@@ -42,7 +41,6 @@ assert set(_LABELS) == set(_COLORS) == set(_SENS_TO_BUCKET.values()), (
 
 _SCRIPT_DIR = Path(__file__).resolve().parent
 FIG_DIR = _SCRIPT_DIR.parent / "figures"
-TABLE_OUT = _SCRIPT_DIR / "_outputs" / "tornado_table.txt"
 
 # Canonical kwargs matching examples/external_physics_handoff.py exactly.
 _BASE_KWARGS: dict = dict(
@@ -135,56 +133,11 @@ def render_tornado(rows: list[tuple[str, float, str]], out_path: Path) -> None:
     plt.close(fig)
 
 
-def _centered_fd_elasticity(
-    model: CostModel, base, param: str, h: float = 1e-3
-) -> float:
-    """Centered finite-difference elasticity at the base point.
-
-    Uses a 0.1% perturbation of the named parameter.  Reconstructs the
-    full kwargs dict from base.params, overriding only the one parameter.
-    """
-    p0 = float(base.params[param])
-    p_lo = p0 * (1.0 - h)
-    p_hi = p0 * (1.0 + h)
-
-    # Use batch_lcoe: two-point evaluation via a single vmap call.
-    lcoe_lo, lcoe_hi = model.batch_lcoe(
-        param_sets={param: [p_lo, p_hi]},
-        params=base.params,
-    )
-    base_lcoe = float(base.costs.lcoe)
-    d_lcoe = lcoe_hi - lcoe_lo
-    d_param = p_hi - p_lo
-    return (d_lcoe / d_param) * (p0 / base_lcoe)
-
-
-def write_fd_table(
-    model: CostModel,
-    base,
-    top_rows: list[tuple[str, float, str]],
-    out_path: Path,
-    k: int = 5,
-) -> None:
-    """Write centered finite differences vs autodiff for the top-k elasticities."""
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    lines = [
-        "param            autodiff       FD             rel_err",
-        "----------------------------------------------------------",
-    ]
-    for param, e_auto, _ in top_rows[:k]:
-        e_fd = _centered_fd_elasticity(model, base, param)
-        rel = abs(e_auto - e_fd) / max(abs(e_auto), 1e-12)
-        lines.append(f"{param:<16s} {e_auto:+13.6f}  {e_fd:+13.6f}  {rel:.2e}")
-    out_path.write_text("\n".join(lines) + "\n")
-
-
 def main() -> None:
     model, base = base_model_and_result()
     rows = collect_elasticities(model, base)
     render_tornado(rows, FIG_DIR / "tornado.pdf")
-    write_fd_table(model, base, rows, TABLE_OUT)
     print(f"Wrote {FIG_DIR / 'tornado.pdf'}")
-    print(f"Wrote {TABLE_OUT}")
 
 
 if __name__ == "__main__":

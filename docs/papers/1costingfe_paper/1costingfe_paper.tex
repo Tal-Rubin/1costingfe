@@ -454,36 +454,16 @@ the same. For the reference scenario, the most consequential
 physics-output parameter is \texttt{availability} (elasticity $-0.54$),
 the most consequential cost unit price is \texttt{fuel\_recovery}
 ($-7.19$), and the most consequential financial parameter is
-\texttt{interest\_rate} ($+0.38$). The \texttt{fuel\_recovery} entry
-dominates because unrecovered helium-3 is both expensive and directly
-proportional to the fuel cycle cost component of LCOE. The financial
-bucket entries are modest for this reference scenario, reflecting the
-relatively low capital intensity of mirror designs: \texttt{interest\_rate}
-carries an elasticity of $+0.38$ and \texttt{inflation\_rate} $+0.17$.
-
-Because the gradients are exact rather than approximate, autodiff and
-finite differences agree to machine precision at any non-singular
-point. \Cref{tab:tornado-fd} reports a centered finite-difference
-spot-check at the base point for the top five entries.
-
-\begin{table}[htbp]
-\caption{Autodiff elasticities versus centered finite differences for
-the top five entries of \cref{fig:tornado}. Reproduced by
-\texttt{scripts/make\_tornado.py}.}
-\label{tab:tornado-fd}
-\centering
-\begin{tabular}{lrrr}
-\toprule
-Parameter & Autodiff & FD & Relative error \\
-\midrule
-\texttt{fuel\_recovery}  & $-7.192796$ & $-7.192848$ & $7.10{\times}10^{-6}$ \\
-\texttt{availability}    & $-0.539476$ & $-0.539393$ & $1.54{\times}10^{-4}$ \\
-\texttt{u\_he3}          & $+0.454599$ & $+0.454637$ & $8.45{\times}10^{-5}$ \\
-\texttt{eta\_de}         & $-0.398529$ & $-0.398611$ & $2.06{\times}10^{-4}$ \\
-\texttt{interest\_rate}  & $+0.384562$ & $+0.385012$ & $1.17{\times}10^{-3}$ \\
-\bottomrule
-\end{tabular}
-\end{table}
+\texttt{interest\_rate} ($+0.38$). The unusually large
+\texttt{fuel\_recovery} elasticity reflects proximity to a physical
+limit: at the NOAK default of 0.99 the residual loss fraction
+$(1 - f_r) = 0.01$ is small in absolute terms, so a one-percentage-point
+absolute improvement halves it, and for a D-${}^3$He plant where the
+helium-3 market price is itself a major cost-side lever this propagates
+strongly to LCOE. The financial bucket entries are modest for this
+reference scenario, reflecting the relatively low capital intensity of
+mirror designs: \texttt{interest\_rate} carries an elasticity of $+0.38$
+and \texttt{inflation\_rate} $+0.17$.
 
 \subsection{Other API surfaces}
 \label{sec:tour-api}
@@ -2764,8 +2744,8 @@ against the ARC and ARIES-AT reference designs are presented in
 \cref{sec:benchmark}; cross-validation against pyFECONS reference cases
 at the per-account level is left to future work.
 Gradient-enabled use cases (sensitivity tornados, target-driven inverse
-design, autodiff-versus-finite-difference comparisons) are supported by
-the framework but are not demonstrated in the present text.
+design) are supported by the framework but are not fully demonstrated
+in the present text.
 
 %% ============================================================
 \section*{Acknowledgments}
