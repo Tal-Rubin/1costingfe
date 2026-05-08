@@ -235,7 +235,9 @@ class CostingConstants:
     burn_fraction: float = (
         0.05  # Fraction of injected fuel that undergoes fusion per pass
     )
-    fuel_recovery: float = 0.95  # Fraction of unburned fuel recovered and recycled
+    fuel_recovery: float = (
+        0.99  # Fraction of unburned fuel recovered and recycled (NOAK default)
+    )
 
     def replace(self, **kwargs):
         return replace(self, **kwargs)

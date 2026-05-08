@@ -168,19 +168,19 @@ A_fuel_eff = A_fuel × [1 + (1 - β_burn) / β_burn × (1 - η_rec)]
 
 Where:
 - `β_burn`: fraction of injected fuel that fuses per pass (default 0.05)
-- `η_rec`: fraction of unburned fuel recovered and recycled (default 0.95)
+- `η_rec`: fraction of unburned fuel recovered and recycled (default 0.99)
 
-The multiplier equals 1 when either β=1 (complete burn) or η=1 (perfect recovery). At default values (β=0.05, η=0.95): multiplier = 1.95.
+The multiplier equals 1 when either β=1 (complete burn) or η=1 (perfect recovery). At default values (β=0.05, η=0.99): multiplier = 1.19.
 
 **Impact by fuel:**
 
 | Fuel | Raw annual cost (1 GWe) | With burn correction | Dominant isotope |
 |------|------------------------|---------------------|-----------------|
-| DT | ~$1.0M/yr | ~$2.0M/yr | Deuterium (cheap) — negligible vs LCOE |
-| DD | ~$0.5M/yr | ~$1.0M/yr | Deuterium only — negligible |
-| DHe3 | ~$50M/yr | ~$98M/yr | He-3 ($2M/kg) — LCOE-dominant |
-| pB11 (NOAK) | ~$1.5M/yr | ~$2.9M/yr | B-11 at NOAK pricing — modest |
-| pB11 (FOAK) | ~$200M/yr | ~$390M/yr | B-11 at $10k/kg — LCOE-dominant |
+| DT | ~$1.0M/yr | ~$1.2M/yr | Deuterium (cheap) — negligible vs LCOE |
+| DD | ~$0.5M/yr | ~$0.6M/yr | Deuterium only — negligible |
+| DHe3 | ~$50M/yr | ~$60M/yr | He-3 ($2M/kg) — LCOE-dominant |
+| pB11 (NOAK) | ~$1.5M/yr | ~$1.8M/yr | B-11 at NOAK pricing — modest |
+| pB11 (FOAK) | ~$200M/yr | ~$238M/yr | B-11 at $10k/kg — LCOE-dominant |
 
 For DT and DD, fuel cost is <1% of LCOE regardless of burn-fraction assumptions. For DHe3, fuel cost dominates LCOE and is extremely sensitive to He-3 pricing and burn fraction. For pB11, the FOAK/NOAK transition is the critical parameter.
 
@@ -201,7 +201,7 @@ The annual fuel cost is levelized using the same growing-annuity procedure as CA
 
 1. **He-3 pricing** ($2M/kg) is a placeholder. Terrestrial He-3 supply (~15 kg/yr from tritium decay) cannot support even one DHe3 fusion plant (~105 kg/yr). Lunar mining or catalyzed DD self-production would change the economics entirely, but neither exists. DHe3 LCOE projections should be treated as aspirational.
 2. **B-11 NOAK pricing** ($75/kg) assumes industrial-scale chemical exchange distillation. This process is proven for B-10 production but not demonstrated at the scale needed for a fleet of pB11 plants (~811 kg/GWe-yr). The FOAK price ($10,000/kg) is better grounded.
-3. **Burn fraction** (default 5%) and **fuel recovery** (default 95%) are generic MCF assumptions, not concept-specific. Actual values depend on confinement scheme, fueling method, and exhaust processing design. For DHe3, where fuel cost dominates LCOE, these parameters warrant concept-specific analysis.
+3. **Burn fraction** (default 5%) and **fuel recovery** (default 99%) are NOAK assumptions. The 99% recovery default is grounded in mature fuel-cycle recycling targets (ITER tritium plants are designed for ~99% recovery); FOAK plants may be closer to 95%. Actual values depend on confinement scheme, fueling method, and exhaust processing design. For DHe3, where fuel cost dominates LCOE, these parameters warrant concept-specific analysis.
 4. **Li-6 enrichment capacity** (~1-2 t/yr globally) is a fleet-level bottleneck for DT fusion. Per-plant fuel cost is low, but the supply chain does not currently exist at fleet scale.
 
 **What does NOT matter:**
