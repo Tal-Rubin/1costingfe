@@ -10,9 +10,9 @@
   CAS60                          572.0
   Total overnight               3547.8
   CAS70 (M$/yr)                   34.5
-  CAS80 (M$/yr)                  438.4
+  CAS80 (M$/yr)                  267.5
   CAS90 (M$/yr)                  285.9
-  LCOE                            99.6
+  LCOE                            77.1
 
 Power balance:
   P_fus:   1880 MW
@@ -21,4 +21,4 @@ Power balance:
   Recirc:  13.4%
 
 Overnight specific cost: 3548 $/kW
-LCOE: 99.6 $/MWh
+LCOE: 77.1 $/MWh
