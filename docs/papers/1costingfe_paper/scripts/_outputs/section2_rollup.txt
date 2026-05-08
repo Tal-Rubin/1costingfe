@@ -1,0 +1,25 @@
+1 GWe D-3He mirror with venetian-blind DEC, NOAK reference
+
+  CAS10                           14.5
+  CAS21                          367.6
+  CAS22                         1835.4
+  CAS23-26                       319.5
+  CAS27-29                         6.0
+  CAS30                          505.7
+  CAS40                           23.0
+  CAS50                          188.6
+  CAS60                          626.7
+  Total overnight               3887.0
+  CAS70 (M$/yr)                   33.5
+  CAS80 (M$/yr)                  515.9
+  CAS90 (M$/yr)                  313.2
+  LCOE                           113.2
+
+Power balance:
+  P_fus:   2212 MW
+  P_net:   1000 MW
+  Q_eng:   7.47
+  Recirc:  13.4%
+
+Overnight specific cost: 3887 $/kW
+LCOE: 113.2 $/MWh
