@@ -1,0 +1,41 @@
+<svg viewBox="0 0 720 148" width="720" height="148" xmlns="http://www.w3.org/2000/svg">
+<defs><style>
+.t-text { fill: #333; font-family: sans-serif; font-size: 14px; }
+.t-header { font-weight: 600; }
+.t-line { stroke: #b5b5b5; stroke-width: 0.75; }
+.t-hline { stroke: #555; stroke-width: 1.5; }
+@media (prefers-color-scheme: dark) {
+  .t-text { fill: #e0e0e0; }
+  .t-line { stroke: #6a6a6a; }
+  .t-hline { stroke: #bbb; }
+}
+</style></defs>
+
+<line class="t-hline" x1="0" y1="40" x2="720" y2="40"/>
+<line class="t-line" x1="0" y1="76" x2="720" y2="76"/>
+<line class="t-line" x1="0" y1="112" x2="720" y2="112"/>
+
+<g class="t-text t-header">
+  <text x="16" y="26">Configuration</text>
+  <text x="474" y="26" text-anchor="end">LCOE ($/MWh)</text>
+  <text x="584" y="26" text-anchor="end">Core cost</text>
+  <text x="704" y="26" text-anchor="end">He-3 fuel ($/MWh)</text>
+</g>
+
+<g class="t-text">
+  <text x="16" y="63">Thermal only magnetic mirror (47%)</text>
+  <text x="474" y="63" text-anchor="end">119</text>
+  <text x="584" y="63" text-anchor="end">$1,654M</text>
+  <text x="704" y="63" text-anchor="end">74</text>
+
+  <text x="16" y="99">Magnetic mirror with VB DEC 60% (hybrid-thermal)</text>
+  <text x="474" y="99" text-anchor="end">109</text>
+  <text x="584" y="99" text-anchor="end">$1,676M</text>
+  <text x="704" y="99" text-anchor="end">67</text>
+
+  <text x="16" y="135">Pulsed inductive (85%)</text>
+  <text x="474" y="135" text-anchor="end">81</text>
+  <text x="584" y="135" text-anchor="end">$2,033M</text>
+  <text x="704" y="135" text-anchor="end">36</text>
+</g>
+</svg>

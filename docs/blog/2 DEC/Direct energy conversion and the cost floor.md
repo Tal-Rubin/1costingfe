@@ -4,6 +4,8 @@ Every fusion power plant has to turn plasma energy into electricity. The default
 
 The thermal conversion default has two drawbacks. Physics sets a low efficiency ceiling, and its hardware is expensive. Direct energy conversion (DEC) is used loosely here for any architecture that skips the heat cycle, the turbine, or both. Solar photovoltaics (PV) skip both, turning photons directly into current. Wind and hydro skip just the heat cycle, converting kinetic energy through a turbine to electricity. MHD generators skip just the turbine, extracting current from a conducting fluid in a magnetic field. Charged-particle DEC skips both, turning plasma particles directly into current by decelerating them against an electric potential, or by inducing current in surrounding coils as the plasma expands.
 
+![Power flow in a 1 GWe p-B11 thermal-only mirror: 83% of fusion power (1,990 MW) is radiated as bremsstrahlung, 17% (448 MW) escapes as charged-particle transport, and both feed a single sCO2 turbine at 47%.](<p-B11 Thermal Cycle.svg>)
+
 The thermodynamic motivation for DEC is clear. Charged-particle DEC interacts directly with the plasma, whose temperature is 10⁸-10⁹ K, so the Carnot ceiling on efficiency η ≤ 1 − T_cold/T_hot is essentially 100%. The thermal default is bounded by what first-wall and blanket materials tolerate (500-700°C for RAFM steel and SiC composites), capping the Carnot limit around 60-65% against a 300 K cold sink. In practice, real thermal cycles lose another 10-15 percentage points to heat-exchanger and turbine irreversibilities, which is why sCO2 Brayton sits at 47% and combined cycle at 53%. Similar considerations inevitably reduce the efficiency of any DEC scheme as well.
 
 Different confinements need different capture hardware: venetian-blind grids for mirrors, inductive coils for pulsed concepts. This post walks through two charged-particle DEC paths, what each would need to deliver, and where the room to run actually is. The costing framework builds on our [prior analysis](https://1cf.energy/fusions-cost-floor-what-if-the-core-were-free/) of the industrial floor on fusion electricity cost (the LCOE remaining when the fusion core is treated as free); we reference it when free-core numbers appear, but this piece stands alone.
@@ -14,11 +16,11 @@ Fusion DEC only works on charged particles. Neutrons carry no charge, and photon
 
 Photon emission from a fusion plasma comes from plasma dynamics, not nuclear physics: electrons radiate bremsstrahlung as they scatter off ions. At fusion temperatures it becomes a debilitating loss channel. For p-B11, the high plasma temperature (>100 keV) and Z=5 boron drive intense bremsstrahlung: roughly 97% of fusion power in a thermonuclear plasma, leaving a 3% margin ([Putvinski et al., 2019](https://doi.org/10.1088/1741-4326/ab1a60)). Driving the plasma out of equilibrium widens the margin to about 17% ([Ochs et al., 2022](https://doi.org/10.1103/PhysRevE.106.055215)), but photons still carry 83% of the fusion power, and they hit the walls as heat. A thermal plant is the clear candidate to convert this heat to electricity.
 
+D-T puts 20% of its energy in 3.5 MeV alphas, a charged fraction that nominally exceeds p-B11's 17% non-equilibrium margin. From the DEC standpoint D-T resembles p-B11: the bulk of the energy (80% in 14.1 MeV neutrons rather than bremsstrahlung) forces a full thermal plant, so DEC could at best be a small bottoming overlay on the alpha channel. D-T also carries the radioactivity burden p-B11 avoids: neutron activation of structural materials, lithium breeding blankets, and tritium inventory handling all raise plant cost without changing the DEC arithmetic. D-T is fundamentally a thermal fuel, and we do not consider it further here.
+
 D-He3 is the best DEC fuel by these criteria. The primary D-He3 reaction is aneutronic, but D-D side reactions produce neutrons and tritium. The output split depends on temperature, D/³He ratio, and confinement time. In a [steady-state plasma](https://global.oup.com/academic/product/tokamaks-9780199592234) at 50/50 mix and T = 70 keV, the bred tritium fuses with D and adds 14 MeV neutrons. A magneto-inertial plasmoid (Helion-style) holds the plasma too briefly for the secondary D-T reaction; the unburned tritium is exhausted, eliminating the 14 MeV neutron channel. The D/³He mix can then be chosen to minimize bremsstrahlung: D-rich (n_D/n_³He = 3.2) at T = 100 keV is the Helion-likely operating point. The figure below contrasts the two cases; see the [companion script](https://github.com/1cfe/1costingfe/blob/master/examples/dhe3_mix_optimization.py) for the Bosch-Hale + relativistic-bremsstrahlung calculation.
 
 ![Fractional split of fusion energy by output channel, by fuel and operating point.](<energy_channel_distribution.svg>)
-
-![Power flow in a 1 GWe p-B11 thermal-only mirror: 83% of fusion power (1,990 MW) is re-radiated as bremsstrahlung, 17% (448 MW) escapes as charged-particle transport, and both feed a single sCO2 turbine at 47%.](<p-B11 Thermal Cycle.svg>)
 
 ## Two Paths to Fusion DEC
 
@@ -51,8 +53,6 @@ Options 3 and 4 do not have a demonstrated path. Today, the thermal plant is the
 
 Synchrotron is the other photon channel, and it does not impose a comparable constraint. The fundamental electron cyclotron frequency at 10 T is 280 GHz (1.2 × 10⁻³ eV), with harmonics extending into the THz band at fusion electron temperatures, six orders of magnitude below bremsstrahlung. Mm-wave synchrotron reflects at >99% from polished metallic first walls and is typically recycled into the plasma rather than captured; the few-percent escaping fraction could in principle feed a rectenna using mature GHz-band hardware, but the upside is bounded.
 
-![Power flow in a 1 GWe p-B11 mirror with a venetian-blind DEC at 60% hybrid with a thermal cycle: 83% of fusion power (1,901 MW) radiates as bremsstrahlung and feeds the turbine, while the DEC captures only the 17% charged-particle margin (386 MW).](<p-B11 VB DEC.svg>)
-
 ## Modeled Approaches
 
 We modeled two DEC architectures (venetian blind hybrid and pulsed inductive) with a free fusion core, using the same methodology as the [previous dispatch](https://1cf.energy/fusions-cost-floor-what-if-the-core-were-free/). The "floor" is the LCOE that remains after zeroing out the fusion core: the irreducible balance-of-plant, buildings, O&M, and financing cost a fusion plant carries even if the heat source were free. Baseline conditions throughout this post are 1 GWe net, 85% availability, 7% WACC, 30-year life, and 6-year construction; aggressive conditions push these to 2 GWe, 95%, 3% WACC, 50 years, and 3 years. Numbers can be reproduced with the [companion script](https://github.com/1cfe/1costingfe/blob/master/examples/dec_blog_numbers.py).
@@ -75,17 +75,15 @@ Sizing the VB hardware to 400 MWe DEC output (2024 NOAK) lands at roughly $125M 
 
 We model the hybrid with the DEC capturing 90% of the charged-particle transport. This is a geometric assumption that 10% of particles do not reach the venetian blind, e.g. lost radially.
 
-| Configuration (1 GWe, pB11, free core) | Floor ($/MWh) | Overnight ($/kW) |
-| --- | --- | --- |
-| Thermal only (sCO2 Brayton, 47%) | 17 | 1,221 |
-| VB DEC at 48% + thermal (hybrid) | 18 | 1,253 |
-| VB DEC at 60% + thermal (hybrid) | 18 | 1,246 |
+![Floor LCOE and overnight capital for a 1 GWe p-B11 plant with a free fusion core: thermal only vs venetian-blind hybrids at 48% and 60% DEC efficiency.](<p-B11 free-core table.svg>)
 
 The venetian blind doesn't lower the floor. With 83% of fusion energy radiated as bremsstrahlung, the DEC captures 90% of the 17% charged-particle margin. At the demonstrated 48% efficiency, the DEC hardware adds cost without meaningfully improving conversion. Even at 60% (never demonstrated on real plasma), the hybrid floor sits at $18/MWh, $1/MWh above thermal-only at $17/MWh, and adds about $25-30/kW on overnight capital. Eliminating the turbine entirely and wasting the bremsstrahlung is not viable for p-B11: without a thermal cycle, the plant needs 16 GW of fusion power for 1 GWe net, driving the fully costed LCOE far above the thermal path ($42/MWh).
 
 The numbers above use the mirror baseline heating power of 40 MW. If the heating power is larger, the picture shifts. The heating power leaves the plasma in the charged-particle transport channel, and is mostly captured by the VB. But at a heating wall-plug efficiency of 50% (the model's NBI default) the injection chain draws 2 MW of gross electric per 1 MW delivered to the plasma, while the transport channel returns only 0.58 MW in the VB 60% hybrid. Each MW of heating therefore costs roughly 1.4 MW of gross electric output, and the fusion core upsizes to cover the shortfall. Holding net output at 1 GWe, LCOE rises by $2-6/MWh as heating goes from 150 to 400 MW; beyond 600 MW the recirculating fraction exceeds 50%. Thermal-only stays cheaper than the thermal+VB hybrid by about $0.9/MWh at every heating level: the VB hardware cost scales with DEC throughput alongside the recovery it provides, so the gap stays roughly flat across the sweep.
 
 Flipping the analysis: at fixed VB hardware cost, what efficiency would justify adding the DEC? At the 1 GWe p-B11 baseline the VB outputs roughly 232 MWe, from 90% capture of the 429 MW charged-particle margin at 60% conversion, and the model scales the VB hardware to about $85M at this plant scale. Holding that fixed, no VB efficiency between 30% and 100% breaks even with thermal-only; the VB hardware exceeds turbine-side savings across the entire physically accessible band. Break-even enters the physically accessible window only if the VB capex at this plant scale falls by roughly 3x, to around $30M, at which point a 54% VB suffices. The leverage is narrow: only 15% of fusion power flows through the DEC, so each percentage point of VB efficiency moves only 0.15 percentage points of plant-level conversion.
+
+![Power flow in a 1 GWe p-B11 mirror with a venetian-blind DEC at 60% hybrid with a thermal cycle: 83% of fusion power (1,901 MW) radiates as bremsstrahlung and feeds the turbine, while the DEC captures only the 17% charged-particle margin (386 MW).](<p-B11 VB DEC.svg>)
 
 ### Pulsed Inductive (D-He3)
 
@@ -100,10 +98,7 @@ With no turbine, the BOP becomes a pulsed-power chain: pulse-rated switchgear, c
 
 The compression bank itself ($351M) is accounted for as part of the driver (core).
 
-| Configuration (1 GWe, D-He3, free core) | BOP floor ($/MWh) | He-3 fuel ($/MWh) | Total ($/MWh) |
-| --- | --- | --- | --- |
-| Thermal only (sCO2 Brayton, 47%) | 18 | 74 | 92 |
-| Pulsed inductive (85% η, no turbine) | 24 | 36 | 59 |
+![BOP floor, He-3 fuel, and total LCOE for a 1 GWe D-He3 plant with a free fusion core: thermal only vs pulsed inductive at 85% round-trip efficiency.](<D-He3 free-core table.svg>)
 
 The BOP floor comes in $6/MWh above thermal: $24/MWh vs $18/MWh. The turbine island is not the dominant cost. Buildings ($354M), the electrical plant ($96M), O&M ($37M/yr), and financing charges together dwarf the turbine, and the pulsed-power chain that replaces it costs more than the turbine. Eliminating the turbine and its synchronous generator (including the GSU transformer and sync/protection gear) removes about $186M of overnight capital, but the $593M of pulsed-power hardware needed to shape, store, and grid-tie the recovered energy more than offsets those savings.
 
@@ -121,11 +116,7 @@ How much cheaper does the pulsed-power hardware need to be for Helion to compete
 
 Pushing every parameter to aggressive limits (2 GWe, 95% availability, 3% WACC, 50-year life, 3-year construction) collapses the gap between thermal and DEC, for both fuels:
 
-| Approach (2 GWe, free core, aggressive) | p-B11 ($/MWh) | D-He3, He-3 at $2M/kg | D-He3, self-bred |
-| --- | --- | --- | --- |
-| Thermal only (sCO2 Brayton, 47%) | 7.1 | 92 | 8 |
-| VB DEC 60% + thermal (hybrid) | 7.3 | 85 | 9 |
-| Pulsed inductive (85%, no turbine) | not viable | 55 | 14 |
+![LCOE under aggressive conditions (2 GWe, 95% availability, 3% WACC, 50-year life, 3-year construction) for p-B11, D-He3 with purchased He-3, and D-He3 with self-bred He-3.](<Aggressive 2 GWe table.svg>)
 
 For p-B11, hybrid DEC and thermal land within $0.2/MWh: the DEC overlay costs about as much as the thermal hardware it partially replaces. (Pulsed inductive is not viable for p-B11: wasting 83% of fusion energy as bremsstrahlung without a thermal cycle requires an enormous core that more than offsets the turbine savings.) For D-He3, He-3 fuel at $2M/kg dominates everything else; self-breeding closes that gap and pulsed inductive then ends up $6/MWh higher than thermal because the pulsed-power chain is more expensive than the turbine.
 
@@ -141,11 +132,7 @@ The floor represents the LCOE of a fusion plant with a free fusion core. Since t
 
 In the fully costed D-He3 plant at 1 GWe baseline conditions:
 
-| Configuration | LCOE ($/MWh) | Core cost | He-3 fuel ($/MWh) |
-| --- | --- | --- | --- |
-| Thermal only magnetic mirror (47%) | 119 | $1,654M | 74 |
-| Magnetic mirror with VB DEC 60% (hybrid-thermal) | 109 | $1,676M | 67 |
-| Pulsed inductive (85%) | 81 | $2,033M | 36 |
+![Fully-costed D-He3 at 1 GWe baseline: LCOE, core cost, and He-3 fuel cost for thermal-only magnetic mirror, venetian-blind hybrid, and pulsed inductive. Pulsed inductive cuts LCOE primarily through reduced He-3 demand.](<D-He3 fully-costed table.svg>)
 
 For the venetian blind, the core cost rises modestly ($22M): the added DEC hardware partially offsets the savings from a smaller heating system. For pulsed inductive, the core jumps about $380M because the pulsed-power chain that replaces the turbine (dominated by the recovery cap bank) is substantial. LCOE drops $10/MWh with the venetian blind and $38/MWh with pulsed inductive, but the pulsed savings come mostly from fuel: higher efficiency, the D-rich operating mix, and active He-3 recovery between shots all reduce external He-3 demand. For D-He3, DEC is primarily a fuel-saving technology.
 
