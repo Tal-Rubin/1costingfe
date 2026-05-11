@@ -481,7 +481,7 @@ estimate without re-running the physics:
 
 \begin{lstlisting}
 result = model.forward(
-    net_electric_mw=1000.0, lifetime_yr=30,
+    net_electric_mw=1000.0, availability=0.87, lifetime_yr=30,
     cost_overrides={"C220103": 436.0},  # M$, mirror coil quote
 )
 \end{lstlisting}
@@ -496,7 +496,7 @@ suitable for uncertainty-band propagation and Monte Carlo:
 \begin{lstlisting}
 lcoes = model.batch_lcoe(
     {"dhe3_f_T": [0.3, 0.4, 0.5, 0.6, 0.7]},
-    base_params=result.params,
+    params=result.params,
 )
 \end{lstlisting}
 
@@ -1363,10 +1363,10 @@ no fission-style containment structure.
 \toprule
 Fuel & \$/kW & M\$ at 1\,GWe & Construction grade \\
 \midrule
-D-T    & 502 & 577 & Enhanced industrial (tritium confinement, hot cell, rad-HVAC) \\
-D-D    & 446 & 513 & Enhanced industrial (reduced tritium/activation scope) \\
-D-${}^3$He & 339 & 390 & Light enhanced industrial \\
-p-${}^{11}$B & 308 & 354 & Industrial (no hot cell, no tritium, standard HVAC) \\
+D-T    & 626 & 626 & Enhanced industrial (tritium confinement, hot cell, rad-HVAC) \\
+D-D    & 573 & 573 & Enhanced industrial (reduced tritium/activation scope) \\
+D-${}^3$He & 450 & 450 & Light enhanced industrial \\
+p-${}^{11}$B & 384 & 384 & Industrial (no hot cell, no tritium, standard HVAC) \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -1427,9 +1427,9 @@ Fission nuclear (Part~50) & 800--1{,}300 & Nuclear-grade \\
 \end{tabular}
 \end{table}
 
-The fusion p-${}^{11}$B figure of 308~\$/kW sits at roughly
-1.5$\times$ CCGT, and the D-T figure of 502~\$/kW at roughly
-2.5$\times$ CCGT.
+The fusion p-${}^{11}$B figure of 384~\$/kW sits at roughly
+1.7$\times$ CCGT, and the D-T figure of 626~\$/kW at roughly
+3.0$\times$ CCGT.
 The values are derived from-scratch using industrial construction
 benchmarks \citep{cushman_wakefield_2025, netl2022, nrel_atb2024,
 breakthrough2022}, superseding ARIES/pyFECONS values.
@@ -2407,10 +2407,11 @@ at $\beta_{\text{burn}} = 0.05$ and $\eta_{\text{rec}} = 0.90$,
 it rises to $2.9\times$.
 
 Default values are $\beta_{\text{burn}} = 0.05$ and
-$\eta_{\text{rec}} = 0.95$, reflecting typical MCF plasma
+$\eta_{\text{rec}} = 0.99$, reflecting typical MCF plasma
 conditions where single-pass burn fractions of 1--10\% are
 expected and modern exhaust fuel processing achieves high
-recovery rates.
+recovery rates. At the default values the multiplier is
+$1 + 19 \times 0.01 = 1.19$.
 
 \subsubsection{Levelization}
 CAS80 is levelized using the same growing-annuity procedure as
