@@ -134,18 +134,13 @@ separation, and staffing, from current procurement data, vendor
 pricing, and cross-industry benchmarks, in place of the heritage
 scaling that dominates these accounts in prior fusion cost models.
 Accounts that are largely fuel- and concept-agnostic inherit prior
-conventions where appropriate.
-It is implemented in JAX with reverse-mode automatic differentiation,
-exposing exact LCOE gradients to support sensitivity analysis,
-and Monte Carlo uncertainty propagation.
-A worked tour from physics outputs to LCOE, including JAX-derived
-sensitivities across physics, cost, and financial parameters, is
-presented in \cref{sec:tour}.
-The economics, physics, and cost-account methodology are described
-in turn, and the framework is exercised against two reference designs,
-ARC and ARIES-AT, as a calibration cross-check, with divergences
-attributed to specific accounts where procurement data departs
-from heritage scaling.
+conventions. The framework is implemented in JAX with reverse-mode
+automatic differentiation, exposing exact LCOE gradients for
+sensitivity analysis and Monte Carlo uncertainty propagation. A
+worked tour from physics outputs to LCOE is included as a use case,
+and the framework is calibrated against the ARC and ARIES-AT
+reference designs, with divergences attributed to specific accounts
+where procurement data departs from heritage scaling.
 \end{abstract}
 
 \keywords{fusion energy \and LCOE \and cost estimation}
@@ -176,15 +171,16 @@ with extensive historical data, with fission plants exhibiting significant
 cost overruns and schedule delays \citep{eashgates2020}. Applying this
 framework to fusion introduces two further challenges:
 \begin{enumerate}
-\item No combination of confinement approach (magnetic, inertial,
+\item Fusion physics remains uncertain at the plant level: no
+  combination of confinement approach (magnetic, inertial,
   magneto-inertial), system (tokamak, stellarator, laser-driven, etc.)
   and fuel cycle (D-T, D-D, D-${}^3$He, or p-${}^{11}$B) has yet
-  demonstrated sustained net electricity generation, and it remains unclear
-  which will prove commercially viable.
-\item Most proposed fusion plant designs are pre-conceptual, with
-  incomplete physics models and unfinalized engineering geometry, making
-  the subsystem and material inputs to the cost accounts inherently
-  uncertain.
+  demonstrated sustained net electricity generation, and the
+  configuration that will prove commercially viable is not yet known.
+\item Plant designs are pre-conceptual: physics models, engineering
+  geometry, manufacturing costs, and procurement data are all
+  incompletely specified, so the subsystem and material inputs to
+  the cost accounts carry inherent uncertainty.
 \end{enumerate}
 
 To pursue this search systematically, \texttt{1costingfe} is under active development as a
