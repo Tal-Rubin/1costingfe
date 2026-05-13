@@ -551,6 +551,7 @@ class CostModel:
         r_coil = params.get("r_coil", 1.85)
         b_max = params.get("b_max", 12.0)
         coil_material = CoilMaterial(params.get("coil_material", "rebco_hts"))
+        n_coils = params.get("n_coils", None)
 
         # Heating mix: use explicit breakdown if provided, else default
         # all p_input to NBI (backward-compatible).
@@ -588,6 +589,7 @@ class CostModel:
             b_max=b_max,
             r_coil=r_coil,
             coil_material=coil_material,
+            n_coils=n_coils,
             p_nbi=p_nbi,
             p_ecrh=p_ecrh,
             p_icrf=p_icrf,

@@ -113,6 +113,7 @@ def cas22_reactor_plant_equipment(
     q_sci: float = 0.0,
     f_ch: float = 0.0,
     eta_dec: float = 0.0,
+    n_coils: int | None = None,
 ) -> dict[str, float]:
     """Compute all CAS22 sub-accounts. Returns dict of account_code -> M$.
 
@@ -172,8 +173,9 @@ def cas22_reactor_plant_equipment(
     else:
         coil_markup = defaults["markup"]
         path_factor = defaults["path_factor"]
-        n_coils = defaults["n_coils"]
-        G = _compute_geometry_factor(concept, path_factor, n_coils)
+        # Honor per-call override; fall back to concept default
+        n_coils_eff = n_coils if n_coils is not None else defaults["n_coils"]
+        G = _compute_geometry_factor(concept, path_factor, n_coils_eff)
         total_kAm = G * b_max * r_coil**2 / (_MU0 * 1000)
         conductor_cost = total_kAm * coil_material.default_cost_per_kAm / 1e6
         c220103 = conductor_cost * coil_markup
