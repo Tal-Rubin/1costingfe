@@ -71,6 +71,62 @@ def test_thermal_inverse_roundtrip():
 
 
 # ---------------------------------------------------------------------------
+# Pulsed hybrid (thermal + partial direct capture) power balance tests
+# ---------------------------------------------------------------------------
+
+
+def test_hybrid_forward_default_matches_pure_thermal():
+    """f_dec=0 (default) should produce identical results to the prior thermal."""
+    pt_pure = pulsed_thermal_forward(**THERMAL_PARAMS)
+    pt_hybrid_zero = pulsed_thermal_forward(**THERMAL_PARAMS, f_dec=0.0, eta_de=0.6)
+    assert pt_hybrid_zero.p_net == pt_pure.p_net
+    assert pt_hybrid_zero.p_th == pt_pure.p_th
+    assert pt_hybrid_zero.p_dee == 0.0
+
+
+def test_hybrid_forward_produces_direct_electric():
+    """f_dec>0 should generate non-zero p_dee."""
+    pt = pulsed_thermal_forward(**THERMAL_PARAMS, f_dec=0.5, eta_de=0.6)
+    assert pt.p_dee > 0
+    assert pt.p_et > pt.p_the  # gross = thermal + direct
+
+
+def test_hybrid_forward_more_direct_means_less_thermal():
+    """Increasing f_dec reroutes ash energy from thermal to direct."""
+    pt_low = pulsed_thermal_forward(**THERMAL_PARAMS, f_dec=0.1)
+    pt_high = pulsed_thermal_forward(**THERMAL_PARAMS, f_dec=0.7)
+    assert pt_high.p_dee > pt_low.p_dee
+    assert pt_high.p_th < pt_low.p_th
+
+
+def test_hybrid_inverse_roundtrip():
+    """Inverse + forward with f_dec>0 should round-trip on p_fus and e_driver."""
+    params = dict(THERMAL_PARAMS, p_fus=1500.0, e_driver_mj=80.0)
+    pt = pulsed_thermal_forward(**params, f_dec=0.4, eta_de=0.7)
+    inv_params = {
+        k: v for k, v in params.items() if k not in ("p_fus", "fuel", "e_driver_mj")
+    }
+    p_fus_recovered, e_driver_recovered = pulsed_thermal_inverse(
+        p_net_target=pt.p_net,
+        fuel=Fuel.DT,
+        q_eng=pt.q_eng,
+        f_dec=0.4,
+        eta_de=0.7,
+        **inv_params,
+    )
+    assert abs(p_fus_recovered - 1500.0) < 0.5
+    assert abs(e_driver_recovered - 80.0) < 0.5
+
+
+def test_hybrid_pb11_beats_pure_thermal():
+    """Aneutronic p-B11 hybrid capture should beat pure thermal on q_eng."""
+    pb11_params = dict(THERMAL_PARAMS, p_fus=1500.0, fuel=Fuel.PB11, mn=1.0)
+    pt_thermal = pulsed_thermal_forward(**pb11_params, f_dec=0.0)
+    pt_hybrid = pulsed_thermal_forward(**pb11_params, f_dec=0.6, eta_de=0.7)
+    assert pt_hybrid.q_eng > pt_thermal.q_eng
+
+
+# ---------------------------------------------------------------------------
 # Pulsed DEC (inductive) power balance tests
 # ---------------------------------------------------------------------------
 

@@ -216,6 +216,13 @@ class CostModel:
                 p_coils=params.get("p_coils", 0.0),
                 **fuel_frac_kw,
             )
+            # Hybrid-thermal parameters: only threaded for pure-thermal path.
+            # INDUCTIVE_DEC has its own driver-side DEC and shouldn't receive
+            # ash-side f_dec/eta_de.
+            thermal_kw = dict(
+                f_dec=params.get("f_dec", 0.0),
+                eta_de=params.get("eta_de", 0.6),
+            )
 
             if self.pulsed_conversion == PulsedConversion.INDUCTIVE_DEC:
                 dec_kw = dict(
@@ -243,11 +250,13 @@ class CostModel:
                     p_net_target=p_net_per_mod,
                     q_eng=q_eng,
                     **common_kw,
+                    **thermal_kw,
                 )
                 common_kw["e_driver_mj"] = e_driver_solved
                 pt = pulsed_thermal_forward(
                     p_fus=p_fus,
                     **common_kw,
+                    **thermal_kw,
                 )
 
         else:

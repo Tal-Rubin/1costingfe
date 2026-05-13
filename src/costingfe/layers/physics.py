@@ -546,6 +546,8 @@ def pulsed_thermal_forward(
     p_cryo: float,
     p_target: float,
     p_coils: float = 0.0,
+    f_dec: float = 0.0,
+    eta_de: float = 0.6,
     dd_f_T: float = DD_F_T_DEFAULT,
     dd_f_He3: float = DD_F_HE3_DEFAULT,
     dhe3_dd_frac: float = 0.131,
@@ -557,8 +559,11 @@ def pulsed_thermal_forward(
     """Pulsed thermal forward power balance: fusion power -> net electric.
 
     Unified pulsed-confinement balance using per-pulse energy parameters
-    (e_driver_mj, f_rep) and a radiation loss fraction (f_rad).  All ash
-    thermalises into the blanket (no DEC).
+    (e_driver_mj, f_rep) and a radiation loss fraction (f_rad).  Supports
+    partial charged-particle direct capture via f_dec (default 0 = all ash
+    thermalises) and eta_de (DEC efficiency).  Mirrors the steady-state
+    hybrid formula: fraction f_dec of non-radiated ash is collected at
+    eta_de, remaining ash and all radiation thermalise into the blanket.
 
     CRITICAL: All conditionals on float parameters use jnp.where because
     these parameters may be JAX tracers during sensitivity analysis.
@@ -583,18 +588,20 @@ def pulsed_thermal_forward(
     p_rad = f_rad * p_ash
     p_charged_net = p_ash - p_rad
 
-    # Step 3: Thermal power — all ash thermalises (p_rad + p_charged_net = p_ash)
-    # Driver energy also thermalises. Pump power included only when thermal
-    # conversion is active (eta_th > 0).
-    p_th = mn * p_neutron + p_ash + p_driver + jnp.where(eta_th > 0, p_pump, 0.0)
+    # Step 3: Direct charged-particle capture (hybrid mode; f_dec=0 means pure thermal)
+    p_direct = f_dec * p_charged_net
+    p_dee = eta_de * p_direct
+    p_dec_waste = (1.0 - eta_de) * p_direct  # lost; not added to thermal
 
-    # Step 4: Thermal electric
+    # Step 4: Thermal power — (1-f_dec) of non-radiated ash + all radiation +
+    # driver + pump thermalise. Pump only when thermal conversion is active.
+    p_thermal_ash = (1.0 - f_dec) * p_charged_net + p_rad
+    pump_term = jnp.where(eta_th > 0, p_pump, 0.0)
+    p_th = mn * p_neutron + p_thermal_ash + p_driver + pump_term
+
+    # Step 5: Thermal electric and gross
     p_the = eta_th * p_th
-
-    # Step 5: Gross electric (no DEC)
-    p_et = p_the
-    p_dee = 0.0
-    p_dec_waste = 0.0
+    p_et = p_the + p_dee
 
     # Step 6: Wall load from charged particles
     p_wall = p_charged_net
@@ -685,6 +692,8 @@ def pulsed_thermal_inverse(
     p_cryo: float,
     p_target: float,
     p_coils: float = 0.0,
+    f_dec: float = 0.0,
+    eta_de: float = 0.6,
     dd_f_T: float = DD_F_T_DEFAULT,
     dd_f_He3: float = DD_F_HE3_DEFAULT,
     dhe3_dd_frac: float = 0.131,
@@ -693,10 +702,11 @@ def pulsed_thermal_inverse(
     pb11_f_alpha_n: float = 0.0,
     pb11_f_p_n: float = 0.0,
 ) -> tuple[float, float]:
-    """Inverse pulsed thermal power balance.
+    """Inverse pulsed thermal (possibly hybrid) power balance.
 
-    Target net electric -> required P_fus and E_driver.
-    Derives driver energy from q_eng, then solves for P_fus.
+    Target net electric -> required P_fus and E_driver.  Derives driver
+    energy from q_eng, then solves for P_fus accounting for the hybrid
+    DEC contribution (f_dec, eta_de).  f_dec=0 reduces to pure thermal.
     """
     # Derive gross electric and recirculating from q_eng
     p_et = p_net_target * q_eng / (q_eng - 1.0)
@@ -725,11 +735,14 @@ def pulsed_thermal_inverse(
     )
     neutron_frac = 1.0 - ash_frac
 
-    # p_et = eta_th * p_th
-    # p_th = (mn*nfrac + ash_frac)*p_fus + p_driver + pump
+    # p_et = eta_th * p_th + p_dee
+    # p_th = mn*nfrac*p_fus + thermal_ash_coeff*p_fus + p_driver + pump
+    # p_dee = eta_de * f_dec * (1-f_rad) * ash_frac * p_fus
     # Solve for p_fus
-    c_th = mn * neutron_frac + ash_frac
-    p_fus = (p_et / eta_th - p_driver - pump_term) / c_th
+    thermal_ash_coeff = ash_frac * ((1.0 - f_dec) * (1.0 - f_rad) + f_rad)
+    dee_coeff = eta_de * f_dec * (1.0 - f_rad) * ash_frac
+    c_et = eta_th * (mn * neutron_frac + thermal_ash_coeff) + dee_coeff
+    p_fus = (p_et - eta_th * (p_driver + pump_term)) / c_et
     return p_fus, e_driver_mj
 
 
