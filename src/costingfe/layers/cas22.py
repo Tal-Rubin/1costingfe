@@ -175,6 +175,8 @@ def cas22_reactor_plant_equipment(
         path_factor = defaults["path_factor"]
         # Honor per-call override; fall back to concept default
         n_coils_eff = n_coils if n_coils is not None else defaults["n_coils"]
+        if n_coils_eff < 0:
+            raise ValueError(f"n_coils must be >= 0, got {n_coils_eff}")
         G = _compute_geometry_factor(concept, path_factor, n_coils_eff)
         total_kAm = G * b_max * r_coil**2 / (_MU0 * 1000)
         conductor_cost = total_kAm * coil_material.default_cost_per_kAm / 1e6

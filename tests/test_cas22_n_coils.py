@@ -57,3 +57,24 @@ def test_n_coils_ignored_for_tokamak():
     assert float(r_default.cas22_detail["C220103"]) == float(
         r_with.cas22_detail["C220103"]
     )
+
+
+def test_n_coils_negative_raises():
+    """Negative n_coils should raise ValueError, not produce a negative cost."""
+    import pytest
+
+    model = CostModel(concept=ConfinementConcept.MIRROR, fuel=Fuel.DT)
+    with pytest.raises(ValueError, match="n_coils must be >= 0"):
+        model.forward(n_coils=-1, **_base_kwargs())
+
+
+def test_n_coils_ignored_for_stellarator():
+    """STELLARATOR uses path_factor for G; n_coils kwarg must be a no-op."""
+    model = CostModel(concept=ConfinementConcept.STELLARATOR, fuel=Fuel.DT)
+    r_default = model.forward(**_base_kwargs())
+    r_with = model.forward(n_coils=3, **_base_kwargs())
+    assert float(r_default.cas22_detail["C220103"]) == float(
+        r_with.cas22_detail["C220103"]
+    )
+    # Sanity: STELLARATOR C220103 should be non-zero so this test is meaningful
+    assert float(r_default.cas22_detail["C220103"]) > 0
