@@ -33,6 +33,11 @@ BASELINE_KW = dict(
     availability=0.85,
     lifetime_yr=30,
     inflation_rate=INFLATION,
+    f_dec=0.0,  # Pure thermal-only floor: no direct energy conversion.
+    # The mirror-concept default (f_dec=0.3) would route some
+    # transport-channel energy through DEC and understate the
+    # thermal BOP. DEC architectures are analyzed in the
+    # follow-on dispatch.
 )
 
 TARGET = 10.0
@@ -49,6 +54,7 @@ r = m_pb11.forward(
     availability=0.85,
     lifetime_yr=30,
     inflation_rate=INFLATION,
+    f_dec=0.0,
     cost_overrides=FREE_CORE,
 )
 c = r.costs
@@ -90,11 +96,11 @@ print("=" * 70)
 scenarios = [
     (
         "Baseline: 1 GWe, 85%, 7%, 30yr, 6yr",
-        dict(net_electric_mw=1000.0, availability=0.85, lifetime_yr=30),
+        dict(net_electric_mw=1000.0, availability=0.85, lifetime_yr=30, f_dec=0.0),
     ),
     (
         "2 GWe, 85%, 7%, 30yr, 6yr",
-        dict(net_electric_mw=2000.0, availability=0.85, lifetime_yr=30),
+        dict(net_electric_mw=2000.0, availability=0.85, lifetime_yr=30, f_dec=0.0),
     ),
     (
         "2 GWe, 95%, 3%, 50yr, 3yr",
@@ -104,6 +110,7 @@ scenarios = [
             lifetime_yr=50,
             interest_rate=0.03,
             construction_time_yr=3.0,
+            f_dec=0.0,
         ),
     ),
     (
@@ -114,6 +121,7 @@ scenarios = [
             lifetime_yr=50,
             interest_rate=0.03,
             construction_time_yr=3.0,
+            f_dec=0.0,
         ),
     ),
     (
@@ -124,6 +132,7 @@ scenarios = [
             lifetime_yr=50,
             interest_rate=0.02,
             construction_time_yr=3.0,
+            f_dec=0.0,
         ),
     ),
 ]
@@ -213,6 +222,7 @@ agg_kw = dict(
     inflation_rate=INFLATION,
     interest_rate=0.03,
     construction_time_yr=3.0,
+    f_dec=0.0,
 )
 free_agg = m_pb11.forward(**agg_kw, cost_overrides=FREE_CORE)
 full_agg = m_pb11.forward(**agg_kw)
@@ -282,6 +292,7 @@ threshold_kw = dict(
     inflation_rate=INFLATION,
     interest_rate=0.03,
     construction_time_yr=3.0,
+    f_dec=0.0,
 )
 energy_thr = 8760 * 2000 * 0.95
 
@@ -311,6 +322,7 @@ threshold_mega = dict(
     inflation_rate=INFLATION,
     interest_rate=0.02,
     construction_time_yr=3.0,
+    f_dec=0.0,
 )
 energy_mega = 8760 * 5000 * 0.95
 
@@ -358,6 +370,7 @@ free_base = m_pb11.forward(
     availability=0.85,
     lifetime_yr=30,
     inflation_rate=INFLATION,
+    f_dec=0.0,
     cost_overrides=FREE_CORE,
 )
 full_base = m_pb11.forward(
@@ -365,6 +378,7 @@ full_base = m_pb11.forward(
     availability=0.85,
     lifetime_yr=30,
     inflation_rate=INFLATION,
+    f_dec=0.0,
 )
 
 print(f"  Free-core LCOE floor:   ${free_base.costs.lcoe:.1f}/MWh")
@@ -395,6 +409,7 @@ for cycle in [PowerCycle.RANKINE, PowerCycle.BRAYTON_SCO2, PowerCycle.COMBINED]:
         availability=0.85,
         lifetime_yr=30,
         inflation_rate=INFLATION,
+        f_dec=0.0,
         cost_overrides=FREE_CORE,
     )
     print(

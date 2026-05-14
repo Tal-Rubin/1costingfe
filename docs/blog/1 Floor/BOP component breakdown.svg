@@ -1,0 +1,47 @@
+<svg viewBox="0 0 1000 220" width="1000" height="220" xmlns="http://www.w3.org/2000/svg">
+<defs><style>
+.t-text { fill: #333; font-family: sans-serif; font-size: 14px; }
+.t-header { font-weight: 600; }
+.t-line { stroke: #b5b5b5; stroke-width: 0.75; }
+.t-hline { stroke: #555; stroke-width: 1.5; }
+@media (prefers-color-scheme: dark) {
+  .t-text { fill: #e0e0e0; }
+  .t-line { stroke: #6a6a6a; }
+  .t-hline { stroke: #bbb; }
+}
+</style></defs>
+
+<line class="t-hline" x1="0" y1="40" x2="1000" y2="40"/>
+<line class="t-line" x1="0" y1="76" x2="1000" y2="76"/>
+<line class="t-line" x1="0" y1="112" x2="1000" y2="112"/>
+<line class="t-line" x1="0" y1="148" x2="1000" y2="148"/>
+<line class="t-line" x1="0" y1="184" x2="1000" y2="184"/>
+
+<g class="t-text t-header">
+  <text x="16" y="26">Component (D-T, 1 GWe, sCO2)</text>
+  <text x="320" y="26" text-anchor="end">Cost</text>
+  <text x="344" y="26">What it is</text>
+</g>
+
+<g class="t-text">
+  <text x="16" y="63">Turbine and generator</text>
+  <text x="320" y="63" text-anchor="end">$181M</text>
+  <text x="344" y="63">sCO2 turbomachinery, comparable to gas plant hardware</text>
+
+  <text x="16" y="99">Electrical plant</text>
+  <text x="320" y="99" text-anchor="end">$98M</text>
+  <text x="344" y="99">Switchgear, transformers, grid connection</text>
+
+  <text x="16" y="135">Miscellaneous equipment</text>
+  <text x="320" y="135" text-anchor="end">$60M</text>
+  <text x="344" y="135">Cranes, compressed air, fire protection</text>
+
+  <text x="16" y="171">Heat rejection</text>
+  <text x="320" y="171" text-anchor="end">$55M</text>
+  <text x="344" y="171">Cooling towers and circulating water</text>
+
+  <text x="16" y="207" font-weight="600">BOP subtotal</text>
+  <text x="320" y="207" text-anchor="end" font-weight="600">$393M</text>
+  <text x="344" y="207" font-weight="600"></text>
+</g>
+</svg>

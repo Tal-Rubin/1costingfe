@@ -1,0 +1,35 @@
+<svg viewBox="0 0 880 112" width="880" height="112" xmlns="http://www.w3.org/2000/svg">
+<defs><style>
+.t-text { fill: #333; font-family: sans-serif; font-size: 14px; }
+.t-header { font-weight: 600; }
+.t-line { stroke: #b5b5b5; stroke-width: 0.75; }
+.t-hline { stroke: #555; stroke-width: 1.5; }
+@media (prefers-color-scheme: dark) {
+  .t-text { fill: #e0e0e0; }
+  .t-line { stroke: #6a6a6a; }
+  .t-hline { stroke: #bbb; }
+}
+</style></defs>
+
+<line class="t-hline" x1="0" y1="40" x2="880" y2="40"/>
+<line class="t-line" x1="0" y1="76" x2="880" y2="76"/>
+
+<g class="t-text t-header">
+  <text x="16" y="26">Scenario (D-T, free core)</text>
+  <text x="430" y="26" text-anchor="end">Floor ($/MWh)</text>
+  <text x="610" y="26" text-anchor="end">Capital only ($/MWh)</text>
+  <text x="864" y="26" text-anchor="end">Staffing threshold for $10/MWh</text>
+</g>
+
+<g class="t-text">
+  <text x="16" y="63">2 GWe, 95%, 3% WACC, 50 yr, 3 yr</text>
+  <text x="430" y="63" text-anchor="end">13.6</text>
+  <text x="610" y="63" text-anchor="end">5.8</text>
+  <text x="864" y="63" text-anchor="end">54% of current (42 FTE)</text>
+
+  <text x="16" y="99">5 GWe, 95%, 2% WACC, 50 yr, 3 yr</text>
+  <text x="430" y="99" text-anchor="end">9.5</text>
+  <text x="610" y="99" text-anchor="end">4.3</text>
+  <text x="864" y="99" text-anchor="end">108% of current (no cuts)</text>
+</g>
+</svg>

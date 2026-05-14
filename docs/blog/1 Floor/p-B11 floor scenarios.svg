@@ -1,0 +1,53 @@
+<svg viewBox="0 0 880 220" width="880" height="220" xmlns="http://www.w3.org/2000/svg">
+<defs><style>
+.t-text { fill: #333; font-family: sans-serif; font-size: 14px; }
+.t-header { font-weight: 600; }
+.t-line { stroke: #b5b5b5; stroke-width: 0.75; }
+.t-hline { stroke: #555; stroke-width: 1.5; }
+@media (prefers-color-scheme: dark) {
+  .t-text { fill: #e0e0e0; }
+  .t-line { stroke: #6a6a6a; }
+  .t-hline { stroke: #bbb; }
+}
+</style></defs>
+
+<line class="t-hline" x1="0" y1="40" x2="880" y2="40"/>
+<line class="t-line" x1="0" y1="76" x2="880" y2="76"/>
+<line class="t-line" x1="0" y1="112" x2="880" y2="112"/>
+<line class="t-line" x1="0" y1="148" x2="880" y2="148"/>
+<line class="t-line" x1="0" y1="184" x2="880" y2="184"/>
+
+<g class="t-text t-header">
+  <text x="16" y="26">Scenario (p-B11, free core)</text>
+  <text x="470" y="26" text-anchor="end">Floor ($/MWh)</text>
+  <text x="670" y="26" text-anchor="end">Overnight ($/kW)</text>
+  <text x="864" y="26" text-anchor="end">Core budget ($/MWh)</text>
+</g>
+
+<g class="t-text">
+  <text x="16" y="63">Baseline: 1 GWe, 85%, 7% WACC, 30 yr, 6 yr</text>
+  <text x="470" y="63" text-anchor="end">17</text>
+  <text x="670" y="63" text-anchor="end">1,221</text>
+  <text x="864" y="63" text-anchor="end">-7.3</text>
+
+  <text x="16" y="99">2 GWe, 85%, 7%, 30 yr, 6 yr</text>
+  <text x="470" y="99" text-anchor="end">14</text>
+  <text x="670" y="99" text-anchor="end">1,058</text>
+  <text x="864" y="99" text-anchor="end">-4.4</text>
+
+  <text x="16" y="135">2 GWe, 95%, 3%, 50 yr, 3 yr</text>
+  <text x="470" y="135" text-anchor="end">7.1</text>
+  <text x="670" y="135" text-anchor="end">846</text>
+  <text x="864" y="135" text-anchor="end">+2.9</text>
+
+  <text x="16" y="171">3 GWe, 95%, 3%, 50 yr, 3 yr</text>
+  <text x="470" y="171" text-anchor="end">6.3</text>
+  <text x="670" y="171" text-anchor="end">802</text>
+  <text x="864" y="171" text-anchor="end">+3.7</text>
+
+  <text x="16" y="207">5 GWe, 95%, 2%, 50 yr, 3 yr</text>
+  <text x="470" y="207" text-anchor="end">5.0</text>
+  <text x="670" y="207" text-anchor="end">759</text>
+  <text x="864" y="207" text-anchor="end">+5.0</text>
+</g>
+</svg>

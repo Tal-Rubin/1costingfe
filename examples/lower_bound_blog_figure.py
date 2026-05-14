@@ -74,14 +74,18 @@ for label, kw in scenarios:
     energy = 8760 * kw["net_electric_mw"] * kw["availability"]
 
     # D-T
-    r_dt = m_dt.forward(**kw, inflation_rate=INFLATION, cost_overrides=FREE_CORE)
+    r_dt = m_dt.forward(
+        **kw, inflation_rate=INFLATION, f_dec=0.0, cost_overrides=FREE_CORE
+    )
     staff_dt = r_dt.costs.cas71 * 1e6 / energy
     dt_full.append(float(r_dt.costs.lcoe))
     dt_half.append(float(r_dt.costs.lcoe - staff_dt * 0.5))
     dt_zero.append(float(r_dt.costs.lcoe - staff_dt))
 
     # D-He3 BOP only (subtract fuel)
-    r_dhe3 = m_dhe3.forward(**kw, inflation_rate=INFLATION, cost_overrides=FREE_CORE)
+    r_dhe3 = m_dhe3.forward(
+        **kw, inflation_rate=INFLATION, f_dec=0.0, cost_overrides=FREE_CORE
+    )
     fuel_mwh = r_dhe3.costs.cas80 * 1e6 / energy
     staff_dhe3 = r_dhe3.costs.cas71 * 1e6 / energy
     bop = float(r_dhe3.costs.lcoe - fuel_mwh)
@@ -89,7 +93,9 @@ for label, kw in scenarios:
     dhe3_zero.append(bop - staff_dhe3)
 
     # p-B11
-    r_pb = m_pb11.forward(**kw, inflation_rate=INFLATION, cost_overrides=FREE_CORE)
+    r_pb = m_pb11.forward(
+        **kw, inflation_rate=INFLATION, f_dec=0.0, cost_overrides=FREE_CORE
+    )
     staff_pb = r_pb.costs.cas71 * 1e6 / energy
     pb_full.append(float(r_pb.costs.lcoe))
     pb_zero.append(float(r_pb.costs.lcoe - staff_pb))
